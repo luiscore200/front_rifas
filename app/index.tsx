@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View,TextInput, Alert, TouchableOpacity } from 'react-native';
 import ButtonGradient from '../button';
 
@@ -8,35 +8,59 @@ import { login as loginApi} from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../services/authContext2';
 import { MaterialIcons } from '@expo/vector-icons';
+import { loginValidationRules, validateForm } from '../config/Validators';
 
 
 
 export default function index() {
 
   const {login}=useAuth();
-  const handleLogin = async () => {
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
+  const [errors, setErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({email: false, password: false });
+
   
-    try {
-      const data = await loginApi(email, password);
-      console.log(data);
-    const a=  await login(data);
-    console.log(a);
-     
+  useEffect(() => {
+    setErrors(validateForm({ email, password }, touchedFields,loginValidationRules));
+  }, [ email, password, touchedFields]);
 
-    } catch (error:any) {
-      console.log(error.message);
-      alert(error.message);
+  const handleBlur = (fieldName: string) => {
+    setTouchedFields({ ...touchedFields, [fieldName]: true });
+  };
 
-    }
-      //await saveLocalStorage(data);
+
+ 
+  const handleLogin = async () => {
+    setTouchedFields({  email: true, password: true });
+    const formErrors = validateForm({  email, password }, touchedFields, loginValidationRules);
+
+
+    if (Object.keys(formErrors).length === 0) {
+      try {
+        const data = await loginApi(email, password);
+        console.log(data);
+      const a=  await login(data);
+      console.log(a);
+       
+  
+      } catch (error:any) {
+        console.log(error.message);
+        alert(error.message);
+  
+      }
     
-
-      
-    /*  router.navigate({
-          pathname: '/[token]',
-          params: { token: data.access_token },
-        });
-      */
+      /*  router.navigate({
+            pathname: '/[token]',
+            params: { token: data.access_token },
+          });
+        */ 
+  
+    } else {
+      console.log('Formulario inválido:', formErrors);
+    }
+   
     
    
   };
@@ -44,9 +68,7 @@ export default function index() {
 
   
   
-   const [email,setEmail]=useState("");
-   const [password,setPassword]=useState("");
-   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
+
    
    return (
     <LinearGradient
@@ -72,7 +94,9 @@ export default function index() {
                 placeholder="m@example.com"
                 placeholderTextColor={"#cccc"}
                 onChangeText={setEmail}
-              />
+                onBlur={() => handleBlur('email')}
+                />
+                {touchedFields.email && errors.email && <Text style={{ color: 'red' }}>{errors.email}</Text>}
             </View>
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>Contraseña</Text>
@@ -83,10 +107,13 @@ export default function index() {
                     placeholderTextColor={"#cccc"}
                     secureTextEntry={!isPasswordVisible}
                     onChangeText={setPassword}
+                    
+                    onBlur={() => handleBlur('password')}
                   />
                   <TouchableOpacity
                     style={styles.passwordToggle}
                     onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+            
                   >
                     <MaterialIcons
                       name={isPasswordVisible ? "visibility" : "visibility-off"}
@@ -95,6 +122,7 @@ export default function index() {
                     />
                   </TouchableOpacity>
                 </View>
+                {touchedFields.password && errors.password && <Text style={{ color: 'red' }}>{errors.password}</Text>}
               </View>
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <Text style={styles.buttonText}>Iniciar</Text>

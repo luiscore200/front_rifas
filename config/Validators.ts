@@ -1,4 +1,4 @@
-const validationRules: any = {
+const registerValidationRules: any = {
     name: [
       {
         condition: (value: string) => value.length > 0,
@@ -45,7 +45,7 @@ const validationRules: any = {
         message: 'Por favor, ingresa tu correo electrónico.',
       },
       {
-        condition: (value: string) => value.includes('@') && value.includes('.'),
+        condition: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
         message: 'El formato del correo electrónico no es válido.',
       },
     ],
@@ -65,7 +65,36 @@ const validationRules: any = {
     ],
   };
   
-  const validateRegisterField = (fieldName: string, value: string) => {
+
+  const loginValidationRules: any = {
+    email: [
+      {
+        condition: (value: string) => value.length > 0,
+        message: 'Por favor, ingresa tu correo electrónico.',
+      },
+      {
+        condition: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+        message: 'El formato del correo electrónico no es válido.',
+      },
+    ],
+    password: [
+      {
+        condition: (value: string) => value.length > 0,
+        message: 'Por favor, ingresa una contraseña.',
+      },
+      {
+        condition: (value: string) => value.length >= 6,
+        message: 'La contraseña es demasiado corta.',
+      },
+      {
+        condition: (value: string) => value.length <= 20,
+        message: 'La contraseña es demasiado larga.',
+      },
+    ],
+  };
+  
+
+  const validateField = (fieldName: string, value: string,validationRules:any) => {
     const rules = validationRules[fieldName];
     for (const rule of rules) {
       if (!rule.condition(value)) {
@@ -75,11 +104,11 @@ const validationRules: any = {
     return '';
   };
   
-  const validateRegisterForm = (values: any, touchedFields: any) => {
+  const validateForm = (values: any, touchedFields: any, validationRules:any) => {
     const newErrors: any = {};
     for (const field in touchedFields) {
       if (touchedFields[field]) {
-        const errorMessage = validateRegisterField(field, values[field]);
+        const errorMessage = validateField(field, values[field],validationRules);
         if (errorMessage) {
           newErrors[field] = errorMessage;
         }
@@ -88,5 +117,5 @@ const validationRules: any = {
     return newErrors;
   };
   
-  export { validateRegisterField, validateRegisterForm };
+  export { validateField, validateForm , registerValidationRules, loginValidationRules  };
   
