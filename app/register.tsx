@@ -8,7 +8,7 @@ import { useAuth } from '../services/authContext2';
 import { phoneCode as code } from '../config/Interfaces';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
-import { validateRegisterField, validateRegisterForm } from '../config/registerValidator';
+import { validateForm,registerValidationRules } from '../config/Validators';
 
 export default function Register() {
   const { login } = useAuth();
@@ -37,17 +37,26 @@ export default function Register() {
   }, [selectedCode]);
 
   useEffect(() => {
-    setErrors(validateRegisterForm({ name, domain, email, selectedCode, phone, password }, touchedFields));
+    setErrors(validateForm({ name, domain, email, selectedCode, phone, password }, touchedFields,registerValidationRules));
   }, [name, domain, email, selectedCode, phone, password, touchedFields]);
 
   const handleBlur = (fieldName: string) => {
     setTouchedFields({ ...touchedFields, [fieldName]: true });
   };
-
+////////// validacion de array de codigos 
+  const isCode = (item: any): item is code => {return item && typeof item.id === 'number' && typeof item.name === 'string';};
+  
   const handleCodePhone = async () => {
     const data = await phoneCodeIndex();
-    setPhoneCode(data);
+    
+    if (Array.isArray(data) && data.every(isCode)) {
+      setPhoneCode(data);
+    } else {
+      console.error('Los datos no son del tipo esperado: Code[]');
+    }
   };
+  /////////
+  
 
   const handleRegister = async () => {
     const userData = {
@@ -59,7 +68,7 @@ export default function Register() {
       password,
     };
     setTouchedFields({ name: true, domain: true, phone: true, selectedCode: true, email: true, password: true });
-    const formErrors = validateRegisterForm({ name, domain, email, selectedCode, phone, password }, touchedFields);
+    const formErrors = validateForm({ name, domain, email, selectedCode, phone, password }, touchedFields, registerValidationRules);
     if (Object.keys(formErrors).length === 0) {
       // Realizar el registro
       console.log('Registro exitoso:', userData);
