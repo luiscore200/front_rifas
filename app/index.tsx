@@ -9,17 +9,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../services/authContext2';
 import { MaterialIcons } from '@expo/vector-icons';
 import { loginValidationRules, validateForm } from '../config/Validators';
+import ToastModal from '../components/toastModal';
+
+
+
 
 
 
 export default function index() {
-
+  interface Errors {email?: string;password?: string;}
   const {login}=useAuth();
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Errors>({});
   const [touchedFields, setTouchedFields] = useState({email: false, password: false });
+  const [hasError, setHasError] = useState(false);
+  const [responseMessage, setResponseMessage] = useState<string | null>(null);
+  const [toast,setToast]=useState(false);
 
   
   useEffect(() => {
@@ -39,15 +46,18 @@ export default function index() {
 
     if (Object.keys(formErrors).length === 0) {
       try {
-        const data = await loginApi(email, password);
-        console.log(data);
-      const a=  await login(data);
-      console.log(a);
-       
+        const response = await loginApi(email, password);
+        
+      const a=  await login(response);
+      
+      setResponseMessage(response.mensaje || response.error);
+      setHasError(!!response.error);
+      setToast(!toast);
   
       } catch (error:any) {
         console.log(error.message);
         alert(error.message);
+        
   
       }
     
@@ -64,6 +74,16 @@ export default function index() {
     
    
   };
+
+  
+  function handleToast(){
+    setToast(!toast);
+    if(!hasError){
+      setTimeout(() => {
+        router.replace('user/rifa/dashboard');
+      }, 1000); // Espera de 5 segundos (5000 milisegundos)
+    }
+  }
 
 
   
@@ -139,6 +159,16 @@ export default function index() {
           </View>
         </View>
       </View>
+      {ToastModal && (
+        <ToastModal
+        message={responseMessage == null ? '' : responseMessage}
+        time={2000}
+        visible={toast}
+        onClose={handleToast}  
+        />
+  )
+
+  }
     </LinearGradient>
   );
 }

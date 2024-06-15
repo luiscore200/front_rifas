@@ -1,42 +1,116 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Switch } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { phoneCode } from '../../config/Interfaces';
+import { Picker } from '@react-native-picker/picker';
 
 import Updated from '../../components/responseModal';
-import { userCreate as create } from '../../services/api';
+import { userCreate as create, phoneCodeIndex } from '../../services/api';
+import { registerValidationRules, validateForm } from '../../config/Validators';
 
 const userCreate: React.FC = () => {
+  interface Errors {email?: string;password?: string; name?:string,selectedCode?:string, phone?:string, domain?:string}
   const [name, setName] = useState('');
   const [domain, setDomain] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneCode, setPhoneCode] = useState<phoneCode[]>([]);
+  const [selectedCode,setSelectedCode]= useState('');
+  const [phone,setPhone]=useState('');
   const [country, setCountry] = useState('');
   const [password, setPassword] = useState('password');
   const [isActive, setIsActive] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [hasError,setHasError]=useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
-  const [hasError, setHasError] = useState(false);
+  
+  const [errors, setErrors] = useState<Errors>({});
+  const [touchedFields, setTouchedFields] = useState({ name: false, domain: false, phone: false, selectedCode: false, email: false, password: false });
+
+
+
+/// actualiza los code
+
+  useEffect(() => {
+    handleCodePhone();
+  }, []);
+// actualiza pais cuando code cambia
+  useEffect(() => {
+    if (selectedCode) {
+      const selectedCountry = phoneCode.find(item => item.code === selectedCode);
+      setCountry(selectedCountry?.name || "");
+      updatePhone(phone);
+    }
+  }, [selectedCode]);
+// actualiza los errores en el inventario
+  useEffect(() => {
+    setErrors(validateForm({ name, domain, email, selectedCode, phone, password }, touchedFields,registerValidationRules));
+  }, [name, domain, email, selectedCode, phone, password, touchedFields]);
+
+///// atrapar y verificar codes
+  const isCode = (item: any): item is phoneCode => {return item && typeof item.id === 'number' && typeof item.name === 'string';};
+  
+  const handleCodePhone = async () => {
+    const data = await phoneCodeIndex();
+    
+    if (Array.isArray(data) && data.every(isCode)) {
+      setPhoneCode(data);
+    } else {
+      console.error('Los datos no son del tipo esperado: Code[]');
+    }
+  };
+
+//atrapar touchedsfields
+  const handleBlur = (fieldName: string) => {
+    setTouchedFields({ ...touchedFields, [fieldName]: true });
+  };
+
+  //atrapar touchedfields de phone input group
+  const handleBlurPhoneAndCode = () => {
+    setTouchedFields(prevState => ({
+      ...prevState,
+      phone: true,
+      selectedCode: true
+    }));
+  };
+
+  const updatePhone = (phone: string) => {
+    setPhone(phone);
+  };
 
   const handleSave = async () => {
-    const newUser = { name,domain, email, country, password, status: isActive ? 'Active' : 'Inactive' };
+    const newUser = { name,domain,phone, email, country, password, status: isActive ? 'Active' : 'Inactive' };
     console.log(newUser);
-    try {
-      const response:any = await create(newUser);
-      setResponseMessage(response.mensaje || response.error);
-      setHasError(!!response.error);
-      setModalVisible(true);
-    } catch (error) {
-      setResponseMessage('An error occurred');
-      setHasError(true);
-      setModalVisible(true);
-    } 
+
+    setTouchedFields({ name: true, domain: true, phone: true, selectedCode: true, email: true, password: true });
+    const formErrors = validateForm({ name, domain, email, selectedCode, phone, password }, touchedFields, registerValidationRules);
+    if (Object.keys(formErrors).length === 0) {
+      // Realizar el registro
+      console.log('Registro exitoso:', newUser);
+      try {
+        const response:any = await create(newUser);
+        setResponseMessage(response.mensaje || response.error);
+       setHasError(!!response.error);
+        setModalVisible(true);
+      } catch (error) {
+        setResponseMessage('An error occurred');
+        setHasError(true);
+        setModalVisible(true);
+      } 
+
+    } else {
+      console.log('Formulario inválido:', formErrors);
+    }
+
+  
   };
+
 
   const handleCloseModal = () => {
     setModalVisible(false);
     if (!hasError) {
-      router.back();
+      router.replace('admin/dashboard')
     }
   };
 
@@ -48,7 +122,7 @@ const userCreate: React.FC = () => {
       <View style={styles.header}></View>
       <ScrollView style={styles.main}>
         <View>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.replace('admin/dashboard')}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             <Text style={styles.backButtonText}>Volver</Text>
           </TouchableOpacity>
@@ -61,7 +135,9 @@ const userCreate: React.FC = () => {
               style={styles.input}
               value={name}
               onChangeText={setName}
-            />
+              onBlur={() => handleBlur('name')}
+              />
+              {touchedFields.name && errors.name && <Text style={{ color: 'red' }}>{errors.name}</Text>}
           </View>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Dominio</Text>
@@ -69,8 +145,9 @@ const userCreate: React.FC = () => {
               style={styles.input}
               value={domain}
               onChangeText={setDomain}
-             
-            />
+              onBlur={() => handleBlur('domain')}
+              />
+              {touchedFields.domain && errors.domain && <Text style={{ color: 'red' }}>{errors.domain}</Text>}
           </View>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Correo</Text>
@@ -79,24 +156,60 @@ const userCreate: React.FC = () => {
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
-            />
+              onBlur={() => handleBlur('email')}
+              />
+              {touchedFields.email && errors.email && <Text style={{ color: 'red' }}>{errors.email}</Text>}
           </View>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Pais</Text>
-            <TextInput
-              style={styles.input}
-              value={country}
-              onChangeText={setCountry}
-            />
-          </View>
+
+          <View style={{ marginBottom: 32 }}>
+                  <Text style={styles.label}>Telefono</Text>
+                  <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flex: 2 }}>
+                      <View style={styles.pickerContainer}>
+                        <Picker
+                          selectedValue={selectedCode}
+                          onValueChange={setSelectedCode}
+                          onBlur={() => handleBlurPhoneAndCode()}
+                          style={styles.picker}
+                        >
+                          {phoneCode.map((item, index) => (
+                            <Picker.Item key={index} label={`${item.code} ${item.name}`} value={item.code} />
+                          ))}
+                        </Picker>
+                      </View>
+                    </View>
+                    <View style={{ flex: 2 }}>
+                      <Text style={[styles.selectedCodeText, selectedCode === "" && styles.placeholderText]}>
+                        {selectedCode === "" ? "(000)" : `(${selectedCode})`}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 6 }}>
+                      <TextInput
+                        style={styles.phoneInput}
+                        keyboardType="numeric"
+                        placeholder="3216540987"
+                        placeholderTextColor={"#cccc"}
+                        onChangeText={updatePhone}
+                        onBlur={() => handleBlurPhoneAndCode()}
+                      />
+                    </View>
+                  </View>
+                  {touchedFields.phone && errors.phone && <Text style={{ color: 'red' }}>{errors.phone}</Text>}
+                  {touchedFields.selectedCode && errors.selectedCode && <Text style={{ color: 'red' }}>{errors.selectedCode}</Text>}
+                </View>
+
+
+        
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Contraseña</Text>
             <TextInput
               style={styles.input}
               value={password}
               onChangeText={setPassword}
+              onBlur={() => handleBlur('password')}
               
             />
+                   {touchedFields.password && errors.password && <Text style={{ color: 'red' }}>{errors.password}</Text>}
           </View>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Estado</Text>
@@ -201,6 +314,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
+  },
+  pickerContainer: {
+    borderColor: "#ccc",
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 6,
+    justifyContent: 'center',
+    borderBottomRightRadius: 0,
+    borderTopRightRadius: 0,
+  },
+  picker: {
+    height: 40,
+    width: '100%',
+    paddingHorizontal: 10,
+    borderColor: '#fff',
+    borderWidth: 1,
+    borderRadius: 6,
+  },
+  placeholderText: {
+    color: '#ccc',
+  },
+  selectedCodeText: {
+    height: 40,
+    width: '100%',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    borderColor: '#ccc',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  phoneInput: {
+    height: 40,
+    width: '100%',
+    paddingLeft: 10,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 6,
+    borderBottomLeftRadius: 0,
+    borderTopLeftRadius: 0,
+    borderLeftWidth: 0,
   },
   buttonText: { color: '#FFFFFF', fontWeight: 'bold', textAlign: 'center' },
 });

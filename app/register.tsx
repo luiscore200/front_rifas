@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, Alert, TouchableOpacity, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TextInput,TouchableOpacity, ScrollView, KeyboardAvoidingView,Platform } from 'react-native';
 import { router } from 'expo-router';
-import { login as loginApi, phoneCodeIndex } from '../services/api';
+import {  phoneCodeIndex, register } from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../services/authContext2';
 import { phoneCode as code } from '../config/Interfaces';
@@ -10,8 +10,12 @@ import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { validateForm,registerValidationRules } from '../config/Validators';
 
+import ToastModal from '../components/toastModal';
+
+
+
 export default function Register() {
-  const { login } = useAuth();
+  interface Errors {email?: string;password?: string; name?:string,selectedCode?:string, phone?:string, domain?:string}
   const [phoneCode, setPhoneCode] = useState<code[]>([]);
   const [selectedCode, setSelectedCode] = useState<string>("");
   const [name, setName] = useState<string>("");
@@ -21,12 +25,17 @@ export default function Register() {
   const [country, setCountry] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Errors>({});
   const [touchedFields, setTouchedFields] = useState({ name: false, domain: false, phone: false, selectedCode: false, email: false, password: false });
+  const [hasError, setHasError] = useState(false);
+  const [responseMessage, setResponseMessage] = useState<string | null>(null);
+  const [toast,setToast]=useState(false);
+
 
   useEffect(() => {
     handleCodePhone();
   }, []);
+
 
   useEffect(() => {
     if (selectedCode) {
@@ -41,6 +50,7 @@ export default function Register() {
   }, [name, domain, email, selectedCode, phone, password, touchedFields]);
 
   const handleBlur = (fieldName: string) => {
+  
     setTouchedFields({ ...touchedFields, [fieldName]: true });
   };
 ////////// validacion de array de codigos 
@@ -59,23 +69,49 @@ export default function Register() {
   
 
   const handleRegister = async () => {
-    const userData = {
-      name,
-      domain,
-      phone: `${selectedCode} ${phone}`,
-      email,
-      country,
-      password,
-    };
+ //   showToast("aaaa","short");
+  
     setTouchedFields({ name: true, domain: true, phone: true, selectedCode: true, email: true, password: true });
-    const formErrors = validateForm({ name, domain, email, selectedCode, phone, password }, touchedFields, registerValidationRules);
+    const formErrors = validateForm({ name, domain, email, selectedCode, phone, password }, { name: true, domain: true, phone: true, selectedCode: true, email: true, password: true }, registerValidationRules);
+    setErrors(formErrors);
+
     if (Object.keys(formErrors).length === 0) {
-      // Realizar el registro
-      console.log('Registro exitoso:', userData);
+      const userData = {
+        name,
+        domain,
+        phone,
+        email,
+        country,
+        password,
+      };
+
+      
+      const response = await register(userData);
+      setResponseMessage(response.mensaje || response.error);
+      setHasError(!!response.error);
+      setToast(!toast);
+      
+     // responseToast(response.mensaje, response.error);
     } else {
       console.log('Formulario inválido:', formErrors);
     }
   };
+
+
+  function handleToast(){
+    setToast(!toast);
+    if(!hasError){
+      setTimeout(() => {
+        router.replace('user/rifa/dashboard');
+      }, 1000); // Espera de 5 segundos (5000 milisegundos)
+    }
+  }
+
+  
+
+  
+
+
 
   const updatePhone = (phone: string) => {
     setPhone(phone);
@@ -218,6 +254,17 @@ export default function Register() {
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
+     
+  {ToastModal && (
+        <ToastModal
+        message={responseMessage == null ? '' : responseMessage}
+        time={2000}
+        visible={toast}
+        onClose={handleToast}  
+        />
+  )
+
+  }
     </LinearGradient>
   );
 }
