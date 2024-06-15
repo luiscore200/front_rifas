@@ -1,63 +1,70 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Pressable, Platform } from 'react-native';
-import { Delete2Icon, StarIcon } from '../../../../assets/icons/userIcons';
-import  DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { premio } from '../../../../config/Interfaces';
-
-
-
-
-
+import { Delete2Icon, StarIcon } from '../../../../assets/icons/userIcons';
+import { createPremioValidationRules, validateForm } from '../../../../config/Validators';
 
 interface CardPrizeComponentProps {
-    obj:premio;
-    first:boolean;
-    onUpdate: (obj:premio) => void;
-    onDelete: (id:number) => void;
-  
+  obj: premio;
+  first: boolean;
+  touched: any;
+  error: any;
+  onUpdate: (field:string,value:any) => void;
+  onDelete: (id: number) => void;
+}
+
+interface Error {
+  descripcion?: string;
+  loteria?: string;
+  fecha?: string;
+}
+
+const CardPrizeComponent: React.FC<CardPrizeComponentProps> = ({ obj, first, touched, error, onDelete, onUpdate }) => {
+
+
+  const [show,setShow]=useState(false);
+  const [date,setDate]=useState(new Date());
+
+  useEffect(()=>(
+   safeDate(obj.fecha)
+  ),[obj]);
+
+  const safeDate = (fechaString:string) => {
+    if(fechaString=="") return;
+    const [day, month, year] = fechaString.split('/'); // Divide la cadena en día, mes y año
+    const fechaDate = new Date(`${year}-${month}-${day}`); // Formato ISO 8601: yyyy-mm-dd
+    setDate(fechaDate);
+    
   }
-  
 
-const CardPrizeComponent : React.FC<CardPrizeComponentProps> = ({ obj,first, onDelete, onUpdate }) => {
-  const [description, setDescription] = useState(obj.descripcion);
-  const [loteria, setLoteria] = useState(obj.loteria);
-  const [date, setDate] = useState(new Date());
-  const [show, setShow] = useState(false);
-  
-
-  
   const handleDelete = () => {
     onDelete(obj.id);
   };
 
-  const togglePick = ()=> {setShow(!show)};
+  const togglePick = () => {
+
+    setShow(!show);
+  };
 
   const onChange = (event: any, selectedDate?: Date) => {
     if (event.type === 'set' && selectedDate) {
       setShow(Platform.OS === 'ios');
-      setDate(selectedDate);
-      onUpdate({ id: obj.id, descripcion: description,loteria:loteria, fecha: selectedDate.toLocaleDateString() });
+      
+      console.log(selectedDate.toLocaleDateString())
+      onUpdate("fecha",selectedDate.toLocaleDateString());
+     
     } else {
       setShow(false);
     }
   };
 
-  const handleDescriptionChange = (text:string) => {
-    setDescription(text);
-    console.log(description);
 
-    onUpdate({id:obj.id,descripcion:text,loteria:loteria,fecha:date.toLocaleDateString()});
+  const handleUpdateField = (field: string, value: any) => {
+    onUpdate(field,value);
+    
   };
-  
-  
-  const handleLoteriaChange = (text:string) => {
-    setLoteria(text);
-    console.log(description);
 
-    onUpdate({id:obj.id,descripcion:description,loteria:text,fecha:date.toLocaleDateString()});
-  };
-  
-  
 
   return (
     <View style={styles.card}>
@@ -68,12 +75,13 @@ const CardPrizeComponent : React.FC<CardPrizeComponentProps> = ({ obj,first, onD
           placeholder="Primer Premio"
         
           placeholderTextColor={'#ccc'}
-        
-          value={description}
-          onChangeText={handleDescriptionChange}
+          onBlur={()=>handleUpdateField("descripcion",obj.descripcion)}  
+          value={obj.descripcion}
+          onChangeText={(text)=>handleUpdateField("descripcion",text)}
           
           
         />
+            {touched.descripcion && error.descripcion && <Text style={{ color: 'red' }}>{error.descripcion}</Text>}
       </View>
       <View style={styles.fieldContainer}>
         <Text style={styles.label}>Loteria</Text>
@@ -81,11 +89,13 @@ const CardPrizeComponent : React.FC<CardPrizeComponentProps> = ({ obj,first, onD
           style={styles.input}
           placeholder="SINUANO NOCHE"
           placeholderTextColor={'#ccc'}
-          value={loteria}
-          onChangeText={handleLoteriaChange}
+          value={obj.loteria}
+          onBlur={()=>handleUpdateField("loteria",obj.loteria)}
+          onChangeText={(text)=>handleUpdateField("loteria",text)}
           
           
         />
+            {touched.loteria && error.loteria && <Text style={{ color: 'red' }}>{error.loteria}</Text>}
       </View>
       
       <View style={styles.fieldContainer}>
@@ -113,11 +123,12 @@ const CardPrizeComponent : React.FC<CardPrizeComponentProps> = ({ obj,first, onD
              placeholder="06/03/2024"
              placeholderTextColor={'#ccc'}
              editable={false}
-             value={date.toLocaleDateString()}
+             value={obj.fecha}
+             onBlur={()=>handleUpdateField("fecha",obj.fecha)}
          
              //onChangeText={handleDateChange}
            /></Pressable>
-
+            
        {first && (   <View style={styles.starButton}>
           <StarIcon style={styles.starIcon}/>
           </View>)
@@ -128,6 +139,8 @@ const CardPrizeComponent : React.FC<CardPrizeComponentProps> = ({ obj,first, onD
             <Delete2Icon style={styles.deleteIcon} />
           </TouchableOpacity>
         </View>
+        {touched.fecha && error.fecha && <Text style={{ color: 'red' }}>{error.fecha}</Text>}
+
       </View>
     </View>
   );

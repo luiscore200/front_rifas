@@ -1,117 +1,118 @@
-import React, { useState,useCallback } from 'react';
+import React, { useState,useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,Platform, ToastAndroid, Switch } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+
 import { Picker } from '@react-native-picker/picker';
 import { rifa } from '../../../../config/Interfaces';
 
 
 
+
+
 interface CardRifaComponentProps{
     rifa:rifa;
-    onUpdate: (obj:rifa) => void;
+    error:error;
+    touched:any;
+   
+    
+    onUpdate: (field:string,value:any) => void;
+}
+interface error{
+  tipo?:string;
+  titulo?:string;
+  numeros?:number;
+  pais?:string;
+  precio?:string;
 }
 
-
-const CardRifaComponent : React.FC<CardRifaComponentProps> = ({ rifa, onUpdate }) => {
-    const [titulo,setTitulo]=useState(rifa.titulo);
-    const [tipo,setTipo]=useState(rifa.tipo);
-    const [pais,setPais]=useState(rifa.pais);
-    const [numeros,setNumeros]=useState<number>(rifa.numeros);
-    const arrayNumeros = [10,100,1000,10000];
+const CardRifaComponent : React.FC<CardRifaComponentProps> = ({ rifa,touched,error,  onUpdate }) => {
+  
+    const arrayNumeros = ['10','100','1000','10000'];
     const arrayTipos = [{label:"Premio unico",value:"premio_unico"},{label:"Premios multiples",value:"oportunidades"},{label:"Premios anticipados",value:"anticipados"}];
+   
 
+  
+  
+    const handleFieldChange = (field:any, value:any) => {
+      
+      onUpdate(field,value);
+      
+     
+    };
     
-    function handleUpdateTitulo(text:string){
-      setTitulo(text);
-      const rifa:rifa = { titulo:text,pais:pais,numeros:numeros,tipo:tipo };
-      onUpdate(rifa);
-    }
-    function handleUpdatePais(text:string){
-        setPais(text);
-        const rifa:rifa = { titulo:titulo,pais:text,numeros:numeros,tipo:tipo };
-        onUpdate(rifa);
-    }
-    function handleUpdateNumeros(text:number){
-        setNumeros(text);
-        const rifa:rifa = { titulo:titulo,pais:pais,numeros:text,tipo:tipo };
-        onUpdate(rifa);
-    }
-    function handleUpdateTipo(text:string){
-        setTipo(text);
-        const rifa:rifa = { titulo:titulo,pais:pais,numeros:numeros,tipo:text };
-         onUpdate(rifa);
-        
-    }
-
-
+  
     
 return(
- <View>
-       <View style={styles.inputGroup}>
+  <View>
+  <View style={styles.inputGroup}>
     <Text style={styles.label}>Titulo</Text>
     <TextInput
       style={styles.input}
-      value={titulo}
-      onChangeText={handleUpdateTitulo}
+      value={rifa.titulo}
+      onChangeText={(text) => handleFieldChange("titulo", text)}
+      onBlur={() => handleFieldChange("titulo", rifa.titulo)}
     />
+    {touched.titulo && error.titulo && <Text style={{ color: 'red' }}>{error.titulo}</Text>} 
+
   </View>
 
-   
   <View style={styles.inputGroup}>
-    <Text style={styles.label}>Pais</Text>
+    <Text style={styles.label}>Precio</Text>
     <TextInput
-      editable={false}
-      style={{color:'#a1a1a1', height: 40, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 8,}}
-      value={pais}
-      
-    //  onChangeText={setName}
+       style={styles.input}  
+     // style={{ color: '#a1a1a1', height: 40, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 8 }}
+        keyboardType="numeric"
+      value={rifa.precio.toString()}
+      onChangeText={(text) => handleFieldChange("precio", Number(text))}
+      onBlur={() => handleFieldChange("precio", rifa.precio)}
     />
-  </View>
+    {touched.precio && error.precio && <Text style={{ color: 'red' }}>{error.precio}</Text>}
+</View>
+
   <View style={styles.inputGroup}>
     <Text style={styles.label}>Numeros</Text>
-    <View style={{borderColor:"#ccc",borderWidth:1,borderRadius:8,justifyContent:'center'}}>
-    <Picker
-      selectedValue={numeros}
-      onValueChange={(itemValue) => handleUpdateNumeros(Number(itemValue))}
-      style={{
-        height: 40,
-        paddingHorizontal: 10,
-        borderColor: '#fff', borderWidth: 1, borderRadius: 8,
-      }}
-    >
-   
-
-    {
-        arrayNumeros.map( array =>  <Picker.Item  key={array} label={array.toString()} value={array} />)
-      }  
-     
-  
-    </Picker>
+    <View style={{ borderColor: "#ccc", borderWidth: 1, borderRadius: 8, justifyContent: 'center' }}>
+      <Picker
+        selectedValue={rifa.numeros}
+        onBlur={() => handleFieldChange("numeros", rifa.numeros)}
+        onValueChange={(itemValue) => handleFieldChange("numeros", itemValue)}
+       
+        style={{
+          height: 40,
+          paddingHorizontal: 10,
+          borderColor: '#fff',
+          borderWidth: 1,
+          borderRadius: 8,
+        }}
+      >
+        {arrayNumeros.map(array => <Picker.Item key={array} label={array.toString()} value={array} />)}
+      </Picker>
     </View>
-  </View>
+    {touched.numeros && error.numeros && <Text style={{ color: 'red' }}>{error.numeros}</Text>}
+</View>
 
   <View style={styles.inputGroup}>
     <Text style={styles.label}>Tipo de rifa</Text>
-    <View style={{borderColor:"#ccc",borderWidth:1,borderRadius:8,justifyContent:'center'}}>
-    <Picker
-      selectedValue={tipo}
-      onValueChange={(itemValue) =>handleUpdateTipo(itemValue)}
-      style={{
-        height: 40,
-        paddingHorizontal: 10,
-        borderColor: '#fff', borderWidth: 1, borderRadius: 8,
-      }}
-    >
- 
-      {
-        arrayTipos.map( array =>  <Picker.Item  key={array.value} label={array.label} value={array.value} />)
-      }
-    </Picker>
-  </View>
-  </View>
- </View>
+    <View style={{ borderColor: "#ccc", borderWidth: 1, borderRadius: 8, justifyContent: 'center' }}>
+      <Picker
+        selectedValue={rifa.tipo}
+        onBlur={() => handleFieldChange("tipo", rifa.tipo)}
+        onValueChange={(itemValue) => handleFieldChange("tipo", itemValue)}
+        style={{
+          height: 40,
+          paddingHorizontal: 10,
+          borderColor: '#fff',
+          borderWidth: 1,
+          borderRadius: 8,
+        }}
+      >
+        {arrayTipos.map(array => <Picker.Item key={array.value} label={array.label} value={array.value} />)}
+      </Picker>
+    </View>
+   {touched.tipo && error.tipo && <Text style={{ color: 'red' }}>{error.tipo}</Text>}
+</View>
+</View>
+
 );
 };
 

@@ -2,10 +2,19 @@ import { Slot, Stack, router, useSegments } from 'expo-router';
 import {useAuth,AuthContextProvider} from '../services/authContext2'
 import { useEffect,useState } from 'react';
 import routes from '../config/routesConfig';
+import { Appearance } from 'react-native';
+
 
 const MainLayout = () => {
   const { auth, user } = useAuth();
   const segments = useSegments();
+
+ 
+    useEffect(() => {
+      // Forzar el modo claro
+//      Appearance.setColorScheme('light');
+    }, []);
+  
 
   useEffect(() => {
     if (typeof auth === 'undefined') return;
@@ -25,7 +34,7 @@ const MainLayout = () => {
         // Usuario autenticado intenta acceder a una ruta no autorizada
         if (user?.role === 'admin') {
           console.log("Eres administrador pero intentas acceder a rutas no autorizadas.");
-        } else if (user?.role === 'user') {
+        } else if (user?.role === 'user') { 
           console.log("Eres usuario pero intentas acceder a rutas no autorizadas.");
        }
         //  router.replace(user?.role === 'admin' ? 'user/home' : 'user/home');
@@ -35,7 +44,8 @@ const MainLayout = () => {
       if (!isInPublicRoutes) {
         // Usuario no autenticado intenta acceder a una ruta protegida
         console.log("No estás autenticado y estás intentando acceder a una ruta protegida.");
-   //     router.replace('user/rifa/createRifa/');
+ //       router.replace('user/rifa/dashboard');
+       //router.replace('/register');
       }
     }
   }, [auth, segments, user]);
@@ -48,6 +58,7 @@ const RootLayout = () => {
   return (
     <AuthContextProvider>
       <MainLayout />
+    
     </AuthContextProvider>
   );
 };

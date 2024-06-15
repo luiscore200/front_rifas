@@ -1,18 +1,18 @@
     import React, { useEffect, useRef, useState } from 'react';
     import { Animated, Modal, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-    import { User } from '../../../config/Interfaces';
-    import { EditIcon, DeleteIcon } from '../../../assets/icons/userIcons'; // Ajusta la ruta según tu estructura de archivos
+    import { User } from '../config/Interfaces';
+    import { EditIcon, DeleteIcon } from '../assets/icons/userIcons'; // Ajusta la ruta según tu estructura de archivos
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 
     interface OptionsModalProps {
-    user: User;
+    obj: any;
     visible: boolean;
     onClose: () => void;
-    onEdit: (user: User) => void;
-    onDelete: (user: User) => void;
+    onEdit: (user: any) => void;
+    onDelete: (user: any) => void;
     }
 
-    const OptionsModal: React.FC<OptionsModalProps> = ({ user, visible, onClose, onEdit, onDelete }) => {
+    const OptionsModal: React.FC<OptionsModalProps> = ({ obj, visible, onClose, onEdit, onDelete }) => {
     const [showModal, setShowModal] = useState(visible);
     const opacity = useRef(new Animated.Value(0)).current;
 
@@ -35,12 +35,12 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 
     const handleEdit = () => {
         onClose();
-        onEdit(user);
+        onEdit(obj);
     };
 
     const handleDelete = () => {
         onClose();
-        onDelete(user);
+        onDelete(obj);
     };
 
     return (

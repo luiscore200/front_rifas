@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Card from '../../components/admin/dashboard/userCard';
-import {User} from '../../config/Interfaces';
-import Options from '../../components/optionsModal';
+import Card from '../../../components/user/rifa/rifaCard';
+import {rifa,premio} from '../../../config/Interfaces';
+
+
 import { router } from 'expo-router';
-import { userIndex ,userDelete} from '../../services/api';
-import Delete from '../../components/deleteModal';
-import Deleted from '../../components/responseModal';
+import {rifaDelete, indexRifa} from '../../../services/api';
+
+import Deleted from '../../../components/responseModal';
+
+import Delete from '../../../components/deleteModal';
+import Options from '../../../components/optionsModal';
+
 
 
 
@@ -16,9 +21,9 @@ import Deleted from '../../components/responseModal';
 export default function App() {
 
 
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [rifa, selectedRifa] = useState<rifa | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
- const [users2, setUsers] = useState<User[]>([]);
+ const [rifas, setRifas] = useState<rifa[]>([]);
  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
  const [responseModalVisible, setResponseModalVisible] = useState(false);
  const [responseMessage, setResponseMessage] = useState<string|null>(null);
@@ -26,37 +31,44 @@ export default function App() {
 
  const [reload, setReload] = useState(false); 
 
- const isUser = (item: any): item is User => {
+ const isRifa = (item: any): item is rifa => {
   return (
     item &&
-    typeof item.name === 'string' &&
-    typeof item.domain === 'string' &&
-    typeof item.phone === 'string' &&
-    typeof item.email === 'string' &&
-    typeof item.country === 'string' &&
-    typeof item.status === 'string' &&
-    (item.id === undefined || typeof item.id === 'number') &&
-    (item.role === undefined || typeof item.role === 'string') &&
-    (item.password === undefined || typeof item.password === 'string')
-    // add other property checks as needed
+    typeof item.id === 'number' &&
+    typeof item.titulo === 'string' &&
+    typeof item.pais === 'string' &&
+    (item.imagen === undefined || typeof item.imagen === 'string') &&
+    typeof item.precio === 'number' &&
+    typeof item.tipo === 'string' &&
+    typeof item.numeros === 'string' &&
+    (item.premios === undefined || (
+      Array.isArray(item.premios) &&
+      item.premios.every((premio: any) => (
+        typeof premio.id === 'number' &&
+        typeof premio.descripcion === 'string' &&
+        typeof premio.loteria === 'string' &&
+        typeof premio.fecha === 'string'
+      ))
+    ))
   );
 };
 
 
 const handleUsers = async()=>{
-  const users2 = await userIndex();
-  console.log(users2);
-  if(Array.isArray(users2) && users2.every(isUser)){
-    setUsers(users2);
+  const rifas2 = await indexRifa();
+  console.log(rifas2);
+  if(Array.isArray(rifas2) && rifas2.every(isRifa)){
+    setRifas(rifas2);
   }else {
-    console.error('Data is not of type User[]');
+ 
+    console.error('Data is not of type Rifa[]');
   }
   
 }
 
 const handleNew = () =>{
   router.navigate({
-    pathname: "/admin/userCreate",
+    pathname: "/user/rifa/createRifa",
   
   });
 }
@@ -66,42 +78,41 @@ useEffect(() => {
 }, [reload]);
 
 
-    const handleOptions = (user:User) => {
+    const handleOptions = (rifa:rifa) => {
       //alert(user);
-      console.log(user);
-      setSelectedUser(user);
+      console.log(rifa);
+      selectedRifa(rifa);
       setModalVisible(true);
 
     };
 
-    const handleEdit = (user: User) => {
-      setSelectedUser(user);
+    const handleEdit = (rifa: rifa) => {
+      selectedRifa(rifa);
       setModalVisible(false);
-      console.log("edit: "+user.email);
-      const user2 = JSON.stringify(user);
-      console.log("user2: "+user2);
-      router.navigate({
-        pathname: "/admin/editUser",
-        params:{user:user2},
-      });
+      console.log("edit: "+rifa.id);
+      const rifa2 = JSON.stringify(rifa);
+      console.log("rifa2: "+ rifa2);
+  router.navigate({pathname: "/user/rifa/updateRifa",params:{rifa1:rifa2},});
     };
 
-    const handleDelete = (user: User) => {
+    const handleDelete = (rifa: rifa) => {
+      console.log(rifa);
+      selectedRifa(rifa);
       setModalVisible(false);
       setShowDeleteConfirmation(true);
-      setSelectedUser(user);
-      console.log("eliminando: "+user.email);
+     
+      console.log("eliminando: "+rifa.id);
     };
 
     const handleCancelDelete = () => {
-      setSelectedUser(null);
+      selectedRifa(null);
       setShowDeleteConfirmation(false);
     };
 
     const handleConfirmDelete = async () => {
-      if (selectedUser?.id) { // Aquí está la modificación
+      if (rifa?.id) { // Aquí está la modificación
         try{
-        const aa = await userDelete(selectedUser.id);
+        const aa = await rifaDelete(rifa.id);
         console.log(aa);
         // Lógica para eliminar el usuario
         setResponseMessage(aa.mensaje || aa.error);
@@ -147,25 +158,27 @@ useEffect(() => {
         </View>
         <View style={styles.cardContainer}>
          
-          { !!users2.length &&  users2.map(user => (
-            <TouchableOpacity key={user.id} onPress={() => handleOptions(user)}>
+          { !!rifas.length &&  rifas.map((rifa,index) => (
+            <TouchableOpacity key={index} onPress={() => console.log("aaa")}>
              <Card
-             key={user.id}
-             user={user}
+             key={index}
+             rifa={rifa}
+             onOptions={(rifa)=>handleOptions(rifa)}
         
            /></TouchableOpacity>
           ))}
         </View>
       </ScrollView>
-     {selectedUser && (
+      {rifa && (
         <Options
-          obj={selectedUser}
+          obj={rifa}
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
       )}
+  
            <Delete
         visible={showDeleteConfirmation}
         onClose={()=> setShowDeleteConfirmation(false)}
