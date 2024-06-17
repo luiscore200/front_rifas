@@ -8,6 +8,8 @@ import { router } from 'expo-router';
 import { userIndex ,userDelete} from '../../services/api';
 import Delete from '../../components/deleteModal';
 import Deleted from '../../components/responseModal';
+import ToastModal from '../../components/toastModal';
+
 
 
 
@@ -23,6 +25,8 @@ export default function App() {
  const [responseModalVisible, setResponseModalVisible] = useState(false);
  const [responseMessage, setResponseMessage] = useState<string|null>(null);
  const [hasError, setHasError] = useState(false);
+ const [responseIndexMessage, setResponseIndexMessage] = useState<string|null>(null);
+ const [toast,setToast]=useState(false);
 
  const [reload, setReload] = useState(false); 
 
@@ -44,13 +48,25 @@ export default function App() {
 
 
 const handleUsers = async()=>{
+
+  try{
   const users2 = await userIndex();
+  if(users2.error){ 
+    setResponseIndexMessage(users2.error);
+    setToast(true);
+  }
   console.log(users2);
   if(Array.isArray(users2) && users2.every(isUser)){
     setUsers(users2);
   }else {
-    console.error('Data is not of type User[]');
+    console.log('Data is not of type User[]');
   }
+}catch(e:any){
+  setResponseIndexMessage(e.message);
+  setToast(true);
+  console.error(e);
+
+}
   
 }
 
@@ -107,8 +123,11 @@ useEffect(() => {
         setResponseMessage(aa.mensaje || aa.error);
         setHasError(!!aa.error);
         setResponseModalVisible(true);
+        if (!aa.error) {
+          setReload(!reload);   
+        }
         }catch(error:any){
-          setResponseMessage('An error occurred');
+          setResponseMessage(error.message);
           setHasError(true);
           setResponseModalVisible(true);
         }
@@ -119,9 +138,7 @@ useEffect(() => {
 
     const handleCloseModal = () => {
       setResponseModalVisible(false);
-      if (!hasError) {
-        setReload(!reload);   
-      }
+   
     };
 
   return (
@@ -173,13 +190,35 @@ useEffect(() => {
         onCancel={handleCancelDelete}
       />
 
-{responseModalVisible && (
+
+{/*responseModalVisible && (
         <Deleted
           message={responseMessage==null? '': responseMessage }
           visible={modalVisible}
           onClose={handleCloseModal}
         />
-      )}
+      )*/}
+         {(
+        <ToastModal
+        message={responseMessage == null ? '' : responseMessage}
+        time={3000}
+        blockTime={1000}
+        visible={responseModalVisible}
+        onClose={handleCloseModal}  
+        />
+  )}
+              {(
+        <ToastModal
+        message={responseIndexMessage == null ? '' : responseIndexMessage}
+        blockTime={2000}
+        time={3000}
+        visible={toast}
+        onClose={()=>setToast(false)}  
+        />
+  )
+
+  }
+
 
 
     </LinearGradient>

@@ -12,6 +12,8 @@ import Deleted from '../../../components/responseModal';
 
 import Delete from '../../../components/deleteModal';
 import Options from '../../../components/optionsModal';
+import ToastModal from '../../../components/toastModal';
+
 
 
 
@@ -27,7 +29,10 @@ export default function App() {
  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
  const [responseModalVisible, setResponseModalVisible] = useState(false);
  const [responseMessage, setResponseMessage] = useState<string|null>(null);
+ const [responseIndexMessage, setResponseIndexMessage] = useState<string|null>(null);
+
  const [hasError, setHasError] = useState(false);
+ const [toast,setToast]=useState(false);
 
  const [reload, setReload] = useState(false); 
 
@@ -54,17 +59,29 @@ export default function App() {
 };
 
 
-const handleUsers = async()=>{
-  const rifas2 = await indexRifa();
-  console.log(rifas2);
-  if(Array.isArray(rifas2) && rifas2.every(isRifa)){
-    setRifas(rifas2);
-  }else {
- 
-    console.error('Data is not of type Rifa[]');
-  }
+const handleRifas = async()=>{
+  try{
+    const rifas2 = await indexRifa();
+    if(!!rifas2.error){
+      setResponseIndexMessage(rifas2.error);
+      setToast(true);
+    }
+   
+    if(Array.isArray(rifas2) && rifas2.every(isRifa)){
+      setRifas(rifas2);
+    }else {
+   
+      console.log('Data is not of type Rifa[]');
+    }
+  }catch(e:any){
+    setResponseIndexMessage(e.message);
   
+    setToast(true);
+  }
+
 }
+
+
 
 const handleNew = () =>{
   router.navigate({
@@ -74,7 +91,7 @@ const handleNew = () =>{
 }
 
 useEffect(() => {
-  handleUsers();
+  handleRifas();
 }, [reload]);
 
 
@@ -118,8 +135,11 @@ useEffect(() => {
         setResponseMessage(aa.mensaje || aa.error);
         setHasError(!!aa.error);
         setResponseModalVisible(true);
+        if (!aa.error) {
+          setReload(!reload);   
+        }
         }catch(error:any){
-          setResponseMessage('An error occurred');
+          setResponseMessage(error.message);
           setHasError(true);
           setResponseModalVisible(true);
         }
@@ -130,9 +150,7 @@ useEffect(() => {
 
     const handleCloseModal = () => {
       setResponseModalVisible(false);
-      if (!hasError) {
-        setReload(!reload);   
-      }
+    
     };
 
   return (
@@ -186,13 +204,33 @@ useEffect(() => {
         onCancel={handleCancelDelete}
       />
 
-{responseModalVisible && (
+{/*responseModalVisible && (
         <Deleted
           message={responseMessage==null? '': responseMessage }
           visible={modalVisible}
           onClose={handleCloseModal}
         />
-      )}
+      )*/}
+         {(
+        <ToastModal
+        message={responseMessage == null ? '' : responseMessage}
+        blockTime={1000}
+        time={3000}
+        visible={responseModalVisible}
+        onClose={handleCloseModal}  
+        />
+  )}
+
+
+        {(
+        <ToastModal
+        message={responseIndexMessage == null ? '' : responseIndexMessage}
+        blockTime={2000}
+        time={2000}
+        visible={toast}
+        onClose={()=>setToast(false)}  
+        />
+  )}
 
 
     </LinearGradient>

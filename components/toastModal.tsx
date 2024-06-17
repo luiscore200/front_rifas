@@ -1,25 +1,39 @@
-import React, { useEffect } from 'react';
-import { Modal, View, Text, StyleSheet, useColorScheme } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Modal, View, Text, StyleSheet, useColorScheme, TouchableWithoutFeedback } from 'react-native';
 
 interface ToastModalProps {
   message: string;
   visible: boolean;
   time: number;
+  blockTime: number;  // Nuevo parámetro para el tiempo de bloqueo
   onClose: () => void;
 }
 
-const ToastModal: React.FC<ToastModalProps> = ({ message, visible, time, onClose }) => {
+const ToastModal: React.FC<ToastModalProps> = ({ message, visible, time, blockTime, onClose }) => {
   const colorScheme = useColorScheme();
+  const [blockInteractions, setBlockInteractions] = useState(true);
 
   useEffect(() => {
     if (visible) {
-      const timer = setTimeout(() => {
+      // Bloquear interacciones inicialmente
+      setBlockInteractions(true);
+
+      // Desbloquear interacciones después del tiempo especificado en blockTime
+      const unblockTimer = setTimeout(() => {
+        setBlockInteractions(false);
+      }, blockTime);
+
+      // Cerrar el modal después del tiempo especificado en time
+      const closeTimer = setTimeout(() => {
         onClose();
       }, time);
 
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(unblockTimer);
+        clearTimeout(closeTimer);
+      };
     }
-  }, [visible, time, onClose]);
+  }, [visible, time, blockTime, onClose]);
 
   return (
     <Modal
@@ -27,12 +41,24 @@ const ToastModal: React.FC<ToastModalProps> = ({ message, visible, time, onClose
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      presentationStyle="overFullScreen"
+      hardwareAccelerated
     >
-      <View style={styles.modalBackground}>
-        <View style={[styles.modalContainer, colorScheme === 'light' && styles.modalContainerDark, colorScheme === 'dark' && styles.modalContainerLight]}>
-          <Text style={[styles.message, colorScheme === 'light' && styles.messageDark, colorScheme === 'dark' && styles.messageLight]}>{message}</Text>
+      {blockInteractions ? (
+        <View style={styles.modalBackground}>
+          <View style={[styles.modalContainer, colorScheme === 'light' ? styles.modalContainerDark : styles.modalContainerLight]}>
+            <Text style={[styles.message, colorScheme === 'light' ? styles.messageDark : styles.messageLight]}>{message}</Text>
+          </View>
         </View>
-      </View>
+      ) : (
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.modalBackground}>
+            <View style={[styles.modalContainer, colorScheme === 'light' ? styles.modalContainerDark : styles.modalContainerLight]}>
+              <Text style={[styles.message, colorScheme === 'light' ? styles.messageDark : styles.messageLight]}>{message}</Text>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      )}
     </Modal>
   );
 };
@@ -42,10 +68,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0)', // Fondo semi-transparente
+    backgroundColor: 'transparent', // Fondo transparente para permitir interacción
   },
   modalContainer: {
-    backgroundColor: '#f0f0f0', // Gris claro suave
     borderRadius: 20,
     padding: 12,
     paddingHorizontal: 20,
@@ -54,20 +79,19 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalContainerDark: {
-    backgroundColor: '#333', // Gris oscuro suave
+    backgroundColor: '#333', // Gris oscuro suave para light mode
   },
   modalContainerLight: {
-    backgroundColor: 'white', // Blanco
+    backgroundColor: '#f0f0f0', // Gris claro suave para dark mode
   },
   message: {
     fontSize: 16,
-    color: 'black', // Texto negro por defecto
   },
   messageDark: {
-    color: 'white', // Texto blanco en light mode
+    color: 'white', // Texto blanco para fondo oscuro
   },
   messageLight: {
-    color: 'black', // Texto negro en dark mode
+    color: 'black', // Texto negro para fondo claro
   },
 });
 

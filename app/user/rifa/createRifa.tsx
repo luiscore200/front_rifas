@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform, ToastAndroid, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ToastAndroid } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
+
 import { rifa } from '../../../config/Interfaces';
-import Updated from '../../../components/responseModal';
+
 import { rifaCreate } from '../../../services/api';
 import CardPrizeComponent from '../../../components/user/rifa/crear/cardPrizeComponent';
 import CardRifaComponent from '../../../components/user/rifa/crear/cardRifaComponent';
 import { createPremioValidationRules, createRifaValidationRules, validateForm } from '../../../config/Validators';
 import { router } from 'expo-router';
-import ResponseModal from '../../../components/responseModal';
+
+import { useAuth } from '../../../services/authContext2';
+import ToastModal from '../../../components/toastModal';
+
+
 
 
 
@@ -23,9 +27,13 @@ interface premio {
 
 
 const userCreate: React.FC = () => {
+
+  const {user}=useAuth();
+ 
   const [cardForm, setCardForm] = useState(false);
   const [premios, setPremios] = useState<premio[]>([{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
-  const [rifa, setRifa] = useState<rifa>({ titulo: "", pais: "Colombia",precio:0, numeros: '100', tipo: "premio_unico" });
+  const [rifa, setRifa] = useState<rifa>({ titulo: "", pais: user?.country||"Colombia",precio:0, numeros: '100', tipo: "premio_unico" });
+ 
   const [errorRifa, setErrorRifa] = useState({});
   const [touchedFieldRifa, setTouchedFieldRifa] = useState({ titulo: false, numeros: false, tipo: false, precio:false });
   const [touchedFieldPremios, setTouchedFieldPremios] = useState([{ descripcion: false, loteria: false, fecha: false }]);
@@ -35,6 +43,13 @@ const userCreate: React.FC = () => {
   const [hasError,setHasError]=useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
   
+  useEffect(()=>{
+     
+     setRifa({...rifa,pais:user?.country});
+  },[user]);
+
+ 
+
 
   // Reset premios, touched fields y error fields cuando cambia el tipo de rifa
   useEffect(() => {
@@ -94,8 +109,8 @@ const userCreate: React.FC = () => {
         setResponseMessage(response.mensaje || response.error);
        setHasError(!!response.error);
         setModalVisible(true);
-      } catch (error) {
-        setResponseMessage('An error occurred');
+      } catch (error:any) {
+        setResponseMessage(error.message);
         setHasError(true);
         setModalVisible(true);
       } 
@@ -128,7 +143,10 @@ const userCreate: React.FC = () => {
   const handleCloseModal = () => {
     setModalVisible(false);
     if (!hasError) {
-      router.replace('user/rifa/dashboard');
+   //   setTimeout(() => {
+        router.replace('user/rifa/dashboard');
+     // }, 1000); // Espera de 5 segundos (5000 milisegundos)
+    
     }
   }
 
@@ -279,13 +297,16 @@ const userCreate: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      {modalVisible && (
-        <Updated
-          message={responseMessage == null ? '' : responseMessage}
-          visible={modalVisible}
-          onClose={handleCloseModal}
+   
+          {(
+        <ToastModal
+        message={responseMessage == null ? '' : responseMessage}
+        time={hasError? 3000:1500 }
+        blockTime={1000}
+        visible={modalVisible}
+        onClose={handleCloseModal}  
         />
-      )}
+  )}
     </LinearGradient>
   );
 };

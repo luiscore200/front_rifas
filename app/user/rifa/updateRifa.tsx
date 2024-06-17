@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform, ToastAndroid, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ToastAndroid } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
+
 import { rifa } from '../../../config/Interfaces';
-import Updated from '../../../components/responseModal';
 import { rifaUpdate} from '../../../services/api';
 import CardPrizeComponent from '../../../components/user/rifa/crear/cardPrizeComponent';
 import CardRifaComponent from '../../../components/user/rifa/crear/cardRifaComponent';
 import { createPremioValidationRules, createRifaValidationRules, validateForm } from '../../../config/Validators';
 import { router, useLocalSearchParams } from 'expo-router';
+import ToastModal from '../../../components/toastModal';
+
 
 
 
@@ -98,8 +99,8 @@ const userCreate: React.FC = () => {
         setResponseMessage(response.mensaje || response.error);
        setHasError(!!response.error);
         setModalVisible(true);
-      } catch (error) {
-        setResponseMessage('An error occurred');
+      } catch (error:any) {
+        setResponseMessage(error.message);
         setHasError(true);
         setModalVisible(true);
       } 
@@ -275,13 +276,16 @@ console.log("formulario invalido");
           </TouchableOpacity>
         </View>
       </ScrollView>
-           {modalVisible && (
-        <Updated
-          message={responseMessage == null ? '' : responseMessage}
-          visible={modalVisible}
-          onClose={handleCloseModal}
+         
+           {(
+        <ToastModal
+        message={responseMessage == null ? '' : responseMessage}
+        time={hasError? 3000:1500 }
+        blockTime={1000}
+        visible={modalVisible}
+        onClose={handleCloseModal}  
         />
-      )}
+  )}
     </LinearGradient>
   );
 };

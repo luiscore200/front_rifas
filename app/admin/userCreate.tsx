@@ -6,9 +6,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { phoneCode } from '../../config/Interfaces';
 import { Picker } from '@react-native-picker/picker';
 
+
 import Updated from '../../components/responseModal';
 import { userCreate as create, phoneCodeIndex } from '../../services/api';
 import { registerValidationRules, validateForm } from '../../config/Validators';
+import ToastModal from '../../components/toastModal';
 
 const userCreate: React.FC = () => {
   interface Errors {email?: string;password?: string; name?:string,selectedCode?:string, phone?:string, domain?:string}
@@ -27,7 +29,8 @@ const userCreate: React.FC = () => {
   
   const [errors, setErrors] = useState<Errors>({});
   const [touchedFields, setTouchedFields] = useState({ name: false, domain: false, phone: false, selectedCode: false, email: false, password: false });
-
+  const [responseIndexMessage,setResponseIndexMessage]=useState<string | null>(null);
+  const [indexToast,setIndexToast]=useState(false);
 
 
 /// actualiza los code
@@ -52,12 +55,22 @@ const userCreate: React.FC = () => {
   const isCode = (item: any): item is phoneCode => {return item && typeof item.id === 'number' && typeof item.name === 'string';};
   
   const handleCodePhone = async () => {
-    const data = await phoneCodeIndex();
-    
-    if (Array.isArray(data) && data.every(isCode)) {
-      setPhoneCode(data);
-    } else {
-      console.error('Los datos no son del tipo esperado: Code[]');
+    try{
+      const data = await phoneCodeIndex();
+      if(data.error){
+        setResponseIndexMessage(data.error);
+        setIndexToast(true);
+        }
+      
+      if (Array.isArray(data) && data.every(isCode)) {
+        setPhoneCode(data);
+      } else {
+        console.error('Los datos no son del tipo esperado: Code[]');
+      }
+    }catch(e:any){
+      console.log(e);
+      setResponseIndexMessage(e.message);
+      setIndexToast(true);
     }
   };
 
@@ -80,32 +93,35 @@ const userCreate: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const newUser = { name,domain,phone, email, country, password, status: isActive ? 'Active' : 'Inactive' };
+    const newUser = { name, domain, phone, email, country, password, status: isActive ? 'Active' : 'Inactive' };
     console.log(newUser);
 
     setTouchedFields({ name: true, domain: true, phone: true, selectedCode: true, email: true, password: true });
-    const formErrors = validateForm({ name, domain, email, selectedCode, phone, password }, touchedFields, registerValidationRules);
+
+    const formErrors = validateForm({ name, domain, email, selectedCode, phone, password }, { name: true, domain: true, phone: true, selectedCode: true, email: true, password: true }, registerValidationRules);
+    
+    setErrors(formErrors);
+
     if (Object.keys(formErrors).length === 0) {
-      // Realizar el registro
+
       console.log('Registro exitoso:', newUser);
       try {
         const response:any = await create(newUser);
         setResponseMessage(response.mensaje || response.error);
-       setHasError(!!response.error);
+        setHasError(!!response.error);
         setModalVisible(true);
-      } catch (error) {
-        setResponseMessage('An error occurred');
+      } catch (error:any) {
+        setResponseMessage(error.message);
         setHasError(true);
         setModalVisible(true);
       } 
-
     } else {
       console.log('Formulario inválido:', formErrors);
+      setResponseMessage('Por favor corrija el formulario');
+      setHasError(true);
+      setModalVisible(true);
     }
-
-  
   };
-
 
   const handleCloseModal = () => {
     setModalVisible(false);
@@ -119,7 +135,9 @@ const userCreate: React.FC = () => {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.container}>
-      <View style={styles.header}></View>
+      <View style={styles.header}>
+        
+      </View>
       <ScrollView style={styles.main}>
         <View>
           <TouchableOpacity style={styles.backButton} onPress={() => router.replace('admin/dashboard')}>
@@ -232,13 +250,33 @@ const userCreate: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-      {modalVisible && (
+      {/*modalVisible && (
         <Updated
           message={responseMessage == null ? '' : responseMessage}
           visible={modalVisible}
           onClose={handleCloseModal}
         />
-      )}
+      )*/}
+         {(
+        <ToastModal
+        message={responseMessage == null ? '' : responseMessage}
+        time={hasError? 3000:1500 }
+        blockTime={1000}
+        visible={modalVisible}
+        onClose={handleCloseModal}  
+        />
+  )}
+   { (
+        <ToastModal
+        message={responseIndexMessage == null ? '' : responseIndexMessage}
+        blockTime={1000}
+        time={3000}
+        visible={indexToast}
+        onClose={()=>setIndexToast(false)}  
+        />
+  )
+
+  }
     </LinearGradient>
   );
 };

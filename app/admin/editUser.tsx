@@ -8,6 +8,7 @@ import Updated from '../../components/responseModal';
 import { phoneCode } from '../../config/Interfaces';
 import { userEditValidationRules, validateForm } from '../../config/Validators';
 import { Picker } from '@react-native-picker/picker';
+import ToastModal from '../../components/toastModal';
 
 
 
@@ -43,6 +44,8 @@ interface Errors {email?: string;password?: string; name?:string,selectedCode?:s
   const [errors, setErrors] = useState<Errors>({});
   const [touchedFields, setTouchedFields] = useState({ name: false, domain: false, phone: false, selectedCode: false,email: false});
   const [phoneCode, setPhoneCode] = useState<phoneCode[]>([]);
+  const [responseIndexMessage,setResponseIndexMessage]=useState<string | null>(null);
+  const [indexToast,setIndexToast]=useState(false);
 
 
 
@@ -76,15 +79,22 @@ useEffect(() => {
 const isCode = (item: any): item is phoneCode => {return item && typeof item.id === 'number' && typeof item.name === 'string';};
 
 const handleCodePhone = async () => {
-  const data = await phoneCodeIndex();
-  
-  if (Array.isArray(data) && data.every(isCode)) {
-    setPhoneCode(data);
-     const codee= getCode(data);
+  try{
+    const data = await phoneCodeIndex();
+    if(data.error){
+      setResponseIndexMessage(data.error);
+      setIndexToast(true);
+      }
     
-    !!codee ?setSelectedCode(codee):'';
-  } else {
-    console.error('Los datos no son del tipo esperado: Code[]');
+    if (Array.isArray(data) && data.every(isCode)) {
+      setPhoneCode(data);
+    } else {
+      console.log('Los datos no son del tipo esperado: Code[]');
+    }
+  }catch(e:any){
+    console.log(e);
+    setResponseIndexMessage(e.message);
+    setIndexToast(true);
   }
 };
 
@@ -132,8 +142,8 @@ const handleSave = async () => {
       setResponseMessage(aa.mensaje || aa.error);
       setHasError(!!aa.error);
       setModalVisible(true);
-    } catch (error) {
-      setResponseMessage('An error occurred');
+    } catch (error:any) {
+      setResponseMessage(error.message);
       setHasError(true);
       setModalVisible(true);
     }
@@ -259,13 +269,33 @@ const handleSave = async () => {
           </View>
         </View>
       </ScrollView>
-      {modalVisible && (
+      {/* modalVisible && (
         <Updated
           message={responseMessage == null ? '' : responseMessage}
           visible={modalVisible}
           onClose={handleCloseModal}
         />
-      )}
+      )  */}
+             {(
+        <ToastModal
+        message={responseMessage == null ? '' : responseMessage}
+        time={hasError? 3000:1500 }
+        blockTime={1000}
+        visible={modalVisible}
+        onClose={handleCloseModal}  
+        />
+  )}
+     { (
+        <ToastModal
+        message={responseIndexMessage == null ? '' : responseIndexMessage}
+        blockTime={1000}
+        time={3000}
+        visible={indexToast}
+        onClose={()=>setIndexToast(false)}  
+        />
+  )
+
+  }
     </LinearGradient>
   );
 };

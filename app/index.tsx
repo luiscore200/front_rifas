@@ -56,7 +56,8 @@ export default function index() {
   
       } catch (error:any) {
         console.log(error.message);
-        alert(error.message);
+        setResponseMessage(error.message);
+        setToast(true);
         
   
       }
@@ -159,10 +160,11 @@ export default function index() {
           </View>
         </View>
       </View>
-      {ToastModal && (
+      { (
         <ToastModal
         message={responseMessage == null ? '' : responseMessage}
         time={2000}
+        blockTime={2000}
         visible={toast}
         onClose={handleToast}  
         />

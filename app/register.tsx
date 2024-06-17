@@ -30,6 +30,8 @@ export default function Register() {
   const [hasError, setHasError] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
   const [toast,setToast]=useState(false);
+  const [responseIndexMessage,setResponseIndexMessage]=useState<string | null>(null);
+  const [indexToast,setIndexToast]=useState(false);
 
 
   useEffect(() => {
@@ -57,13 +59,23 @@ export default function Register() {
   const isCode = (item: any): item is code => {return item && typeof item.id === 'number' && typeof item.name === 'string';};
   
   const handleCodePhone = async () => {
+   try{
     const data = await phoneCodeIndex();
+    if(data.error){
+      setResponseIndexMessage(data.error);
+      setIndexToast(true);
+       }
     
     if (Array.isArray(data) && data.every(isCode)) {
       setPhoneCode(data);
     } else {
-      console.error('Los datos no son del tipo esperado: Code[]');
+      console.log('Los datos no son del tipo esperado: Code[]');
     }
+   }catch(e:any){
+    console.log(e);
+    setResponseIndexMessage(e.message);
+    setIndexToast(true);
+   }
   };
   /////////
   
@@ -85,11 +97,17 @@ export default function Register() {
         password,
       };
 
-      
-      const response = await register(userData);
-      setResponseMessage(response.mensaje || response.error);
-      setHasError(!!response.error);
-      setToast(!toast);
+  try{
+        
+    const response = await register(userData);
+    setResponseMessage(response.mensaje || response.error);
+    setHasError(!!response.error);
+    setToast(!toast);
+  }catch(e:any){
+    setResponseMessage(e.message);
+    setHasError(true);
+    setToast(true);
+  }
       
      // responseToast(response.mensaje, response.error);
     } else {
@@ -255,12 +273,24 @@ export default function Register() {
         </KeyboardAvoidingView>
       </View>
      
-  {ToastModal && (
+  { (
         <ToastModal
         message={responseMessage == null ? '' : responseMessage}
+        blockTime={2000}
         time={2000}
         visible={toast}
         onClose={handleToast}  
+        />
+  )
+
+  }
+   { (
+        <ToastModal
+        message={responseIndexMessage == null ? '' : responseIndexMessage}
+        blockTime={1000}
+        time={3000}
+        visible={indexToast}
+        onClose={()=>setIndexToast(false)}  
         />
   )
 
