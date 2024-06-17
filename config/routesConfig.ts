@@ -6,11 +6,13 @@ const routes = {
     ],
     admin: [
       { path: 'admin/dashboard' },
-      { path: 'admin/settings' },
+      { path: 'admin/editUser' },
+      { path: 'admin/userCreate' },
     ],
     user: [
-      { path: 'user/dashboard'},
-      { path: 'user/settings' },
+      { path: 'user/rifa/dashboard'},
+      { path: 'user/rifa/createRifa' },
+      { path: 'user/rifa/updateRifa' },
     ],
   };
   

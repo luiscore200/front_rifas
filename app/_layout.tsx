@@ -37,15 +37,15 @@ const MainLayout = () => {
         } else if (user?.role === 'user') { 
           console.log("Eres usuario pero intentas acceder a rutas no autorizadas.");
        }
-        //  router.replace(user?.role === 'admin' ? 'user/home' : 'user/home');
-        // router.replace(user?.role === 'admin' ? 'admin/dashboard' : 'user/dashboard');
+        
+    //     router.replace(user?.role === 'admin' ? 'admin/dashboard' : 'user/rifa/dashboard');
       }
     } else {
       if (!isInPublicRoutes) {
         // Usuario no autenticado intenta acceder a una ruta protegida
         console.log("No estás autenticado y estás intentando acceder a una ruta protegida.");
- //       router.replace('user/rifa/dashboard');
-       //router.replace('/register');
+        router.replace('user/rifa/dashboard');
+      // router.replace('/register');
       }
     }
   }, [auth, segments, user]);

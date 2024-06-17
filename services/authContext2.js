@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect,useState } from "react";
-import { saveLocalStorage,isAuthenticated,logout as logoutAuth,getUser } from "./auth";
+import { saveLocalStorage,isAuthenticated,logout as logoutAuth,getUser, getToken } from "./auth";
 
 
 export const AuthContext = createContext();
 
 export const AuthContextProvider =  ({children}) => {
     const [user, setUser]=useState(null);
+    const [token,setToken]=useState(null);
     const [auth,setAuth]=useState(undefined);
     
 
@@ -16,6 +17,7 @@ export const AuthContextProvider =  ({children}) => {
            // setAuth(false);
           Auth(); 
           User();
+          Token();
         })
     },[])
 
@@ -25,6 +27,7 @@ export const AuthContextProvider =  ({children}) => {
          const r = await saveLocalStorage(resp);
          Auth();
          User();
+         Token();
          return r;
              
         } catch (error) {
@@ -37,6 +40,7 @@ export const AuthContextProvider =  ({children}) => {
             await logoutAuth();
             Auth();
             User();
+            Token();
         } catch (error) {
             console.error("Error during logout", error);
         }
@@ -63,9 +67,20 @@ export const AuthContextProvider =  ({children}) => {
         }
     }
 
+      
+    const Token = async () =>{
+        try {
+            const token = await getToken();
+            setToken(token)
+        } catch (error) {
+            console.error("Error checking authentication", error);
+            setToken(undefined);
+        }
+    }
+
 
     return(
-        <AuthContext.Provider value={{user,auth,login,logout}} >
+        <AuthContext.Provider value={{user,token,auth,login,logout}} >
             {children}
         </AuthContext.Provider>
     )
