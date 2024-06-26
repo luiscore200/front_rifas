@@ -13,17 +13,11 @@ import { router } from 'expo-router';
 
 import { useAuth } from '../../../services/authContext2';
 import ToastModal from '../../../components/toastModal';
+import { premio } from '../../../config/Interfaces';
 
 
 
 
-
-interface premio {
-  id: number;
-  descripcion: string;
-  loteria: string;
-  fecha: string;
-}
 
 
 const userCreate: React.FC = () => {
@@ -31,7 +25,7 @@ const userCreate: React.FC = () => {
   const {user}=useAuth();
  
   const [cardForm, setCardForm] = useState(false);
-  const [premios, setPremios] = useState<premio[]>([{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
+  const [premios, setPremios] = useState<premio[]>([{ id: 0, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
   const [rifa, setRifa] = useState<rifa>({ titulo: "", pais: user?.country||"Colombia",precio:0, numeros: '100', tipo: "premio_unico" });
  
   const [errorRifa, setErrorRifa] = useState({});
@@ -53,7 +47,7 @@ const userCreate: React.FC = () => {
 
   // Reset premios, touched fields y error fields cuando cambia el tipo de rifa
   useEffect(() => {
-    setPremios([{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
+    setPremios([{ id: 0, descripcion: "", loteria: "", ganador:"",fecha: "" }]);
     setTouchedFieldPremios([{ descripcion: false, loteria: false, fecha: false }]);
     setErrorPremios([{}]);
   }, [rifa.tipo]);
@@ -214,7 +208,7 @@ const userCreate: React.FC = () => {
       if (rifa.tipo === "premio_unico" && premios.length >= 1) {
         showToast("Rifa de premio único solo acepta una entrada", "short");
       } else {
-        setPremios([...premios, { id: premios.length, descripcion: "", loteria: "", fecha: "" }]);
+        setPremios([...premios, { id: premios.length, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
         setTouchedFieldPremios([...touchedFieldPremios, { descripcion: false, loteria: false, fecha: false }]);
         setErrorPremios([...errorPremios, {}]);
         if (rifa.tipo === "anticipados") {
@@ -293,7 +287,7 @@ const userCreate: React.FC = () => {
 
         <View style={styles.inputGroup}>
           <TouchableOpacity style={styles.saveButton} onPress={() => { handleSave() }}>
-            <Text style={styles.buttonText}>Save</Text>
+            <Text style={styles.buttonText}>Guardar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -358,6 +352,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#CCCCCC",
     borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   title: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: 'black', textAlign: 'center' },
   inputGroup: { marginBottom: 16 },
@@ -378,6 +377,11 @@ const styles = StyleSheet.create({
     marginHorizontal:10,
     borderRadius: 10,
     marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cancelButton: {
     backgroundColor: '#EF4444',
@@ -397,6 +401,12 @@ const styles = StyleSheet.create({
     borderRadius:10,
     flexDirection:'row',
     alignItems:'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+
     
   }
 });

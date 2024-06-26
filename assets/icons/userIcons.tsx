@@ -1,43 +1,24 @@
 import React from 'react';
-import { Svg, Path, Line,Polygon } from 'react-native-svg';
+import { Svg, Path, Line,Polygon, Circle, Polyline } from 'react-native-svg';
 
-
-export const EditIcon = (props:any) => (
+export const EditIcon = (props: any) => (
   <Svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="24"
-  height="24"
-  viewBox="0 0 24 24"
-  {...props}
->
-  <Path
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
     fill="none"
     stroke={props.stroke || "currentColor"}
+    strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    strokeWidth="2"
-    d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"
-  />
-  <Line
-    fill="none"
-    stroke={props.stroke || "currentColor"}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="2"
-    x1="18" y1="9"
-    x2="12" y2="15"
-  />
-  <Line
-    fill="none"
-    stroke={props.stroke || "currentColor"}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="2"
-    x1="12" y1="9"
-    x2="18" y2="15"
-  />
-</Svg>
+    {...props}
+  >
+    <Path d="M12 20h9" />
+    <Path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19H4v-3L16.5 3.5z" />
+  </Svg>
 );
+
 export const DeleteIcon = (props:any) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
@@ -97,3 +78,132 @@ export const StarIcon = (props:any)=>(
 );
 
 
+
+export const ShareIcon = (props: any) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.stroke || "currentColor"}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <Circle cx="18" cy="5" r="3" />
+    <Circle cx="6" cy="12" r="3" />
+    <Circle cx="18" cy="19" r="3" />
+    <Path d="M8.59 13.51L15.42 17.49" />
+    <Path d="M15.41 6.51L8.59 10.49" />
+  </Svg>
+);
+
+export const WinnerIcon = (props: any) => (
+  <Svg {...props} xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24"
+  viewBox="0 0 24 24" 
+  fill="none" 
+  stroke="currentColor" 
+  strokeWidth="2" 
+  strokeLinecap="round" 
+  strokeLinejoin="round"
+  {...props}>
+
+  <Path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+  <Path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+  <Path d="M4 22h16" />
+  <Path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+  <Path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+  <Path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+</Svg>
+
+);
+
+export const CheckIcon = (props:any) => (
+  <Svg {...props} xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none" 
+  stroke="currentColor" 
+  strokeWidth="2" 
+  strokeLinecap="round" 
+  strokeLinejoin="round"
+  {...props}>
+      <Path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <Circle cx="9" cy="7" r="4" />
+      <Polyline points="16 11 18 13 22 9" />
+    </Svg>
+);
+
+export const MenuIcon1 = (props:any)=>(
+  <Svg {...props} xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none" 
+  stroke="currentColor" 
+  strokeWidth="2" 
+  strokeLinecap="round" 
+  strokeLinejoin="round"
+  {...props}>
+  <Circle cx="12" cy="2" r="1" />
+  <Circle cx="12" cy="10" r="1" />
+  <Circle cx="12" cy="18" r="1" />
+</Svg>
+);
+
+export const PlusIcon = (props:any)=>(
+  <Svg {...props} xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none" 
+  stroke="currentColor" 
+  strokeWidth="2" 
+  strokeLinecap="round" 
+  strokeLinejoin="round"
+  {...props}>
+  <Line x1="12" y1="4" x2="12" y2="21" />
+  <Line x1="4" y1="12" x2="21" y2="12" />
+</Svg>
+);
+
+export const CheckMarkIcon = (props:any)=> (
+  <Svg
+  {...props}
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="2"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+  {...props}
+>
+  <Path d="M6 12l4 4L18 6" />
+</Svg>
+);
+
+export const CrossMarkIcon = (props:any)=> (
+  <Svg
+  {...props}
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="2"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+  {...props}
+>
+<Path d="M7 17L17 7M7 7L17 17" />
+</Svg>
+);

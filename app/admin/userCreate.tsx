@@ -23,6 +23,7 @@ const userCreate: React.FC = () => {
   const [country, setCountry] = useState('');
   const [password, setPassword] = useState('password');
   const [isActive, setIsActive] = useState(true);
+  const [payed,setPayed]=useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [hasError,setHasError]=useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
@@ -93,7 +94,7 @@ const userCreate: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const newUser = { name, domain, phone, email, country, password, status: isActive ? 'Active' : 'Inactive' };
+    const newUser = { name, domain, phone, email, country, password, status: isActive ? 'Active' : 'Inactive',payed };
     console.log(newUser);
 
     setTouchedFields({ name: true, domain: true, phone: true, selectedCode: true, email: true, password: true });
@@ -243,6 +244,22 @@ const userCreate: React.FC = () => {
               </Text>
             </View>
           </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Suscrito</Text>
+            <View style={styles.statusContainer}>
+              <Switch
+                value={payed}
+                onValueChange={setPayed}
+                trackColor={{ false: "#fee2e2", true: "#dcfce7" }}
+                thumbColor={payed ? "#34D399" : "#EF4444"}
+              />
+              <Text style={[styles.statusText, { color: payed ? '#10B981' : '#EF4444' }]}>
+                {payed ? 'Suscripted' : 'unSupcripted'}
+              </Text>
+            </View>
+          </View>
+
           <View style={styles.inputGroup}>
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.buttonText}>Guardar</Text>

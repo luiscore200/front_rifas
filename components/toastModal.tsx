@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, StyleSheet, useColorScheme, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 
 interface ToastModalProps {
   message: string;
@@ -35,40 +35,29 @@ const ToastModal: React.FC<ToastModalProps> = ({ message, visible, time, blockTi
     }
   }, [visible, time, blockTime, onClose]);
 
+  if (!visible) return null;
+
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-      presentationStyle="overFullScreen"
-      hardwareAccelerated
-    >
-      {blockInteractions ? (
-        <View style={styles.modalBackground}>
-          <View style={[styles.modalContainer, colorScheme === 'light' ? styles.modalContainerDark : styles.modalContainerLight]}>
-            <Text style={[styles.message, colorScheme === 'light' ? styles.messageDark : styles.messageLight]}>{message}</Text>
-          </View>
+    <View style={[styles.container, { pointerEvents: blockInteractions ? 'auto' : 'none' }]}>
+      <View style={styles.modalBackground}>
+        <View style={[styles.modalContainer, colorScheme === 'light' ? styles.modalContainerDark : styles.modalContainerLight]}>
+          <Text style={[styles.message, colorScheme === 'light' ? styles.messageDark : styles.messageLight]}>{message}</Text>
         </View>
-      ) : (
-        <TouchableWithoutFeedback onPress={onClose}>
-          <View style={styles.modalBackground}>
-            <View style={[styles.modalContainer, colorScheme === 'light' ? styles.modalContainerDark : styles.modalContainerLight]}>
-              <Text style={[styles.message, colorScheme === 'light' ? styles.messageDark : styles.messageLight]}>{message}</Text>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      )}
-    </Modal>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 999,
+  },
   modalBackground: {
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    backgroundColor: 'transparent', // Fondo transparente para permitir interacción
+    backgroundColor: 'transparent',
   },
   modalContainer: {
     borderRadius: 20,
@@ -79,19 +68,19 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalContainerDark: {
-    backgroundColor: '#333', // Gris oscuro suave para light mode
+    backgroundColor: '#333',
   },
   modalContainerLight: {
-    backgroundColor: '#f0f0f0', // Gris claro suave para dark mode
+    backgroundColor: '#f0f0f0',
   },
   message: {
     fontSize: 16,
   },
   messageDark: {
-    color: 'white', // Texto blanco para fondo oscuro
+    color: 'white',
   },
   messageLight: {
-    color: 'black', // Texto negro para fondo claro
+    color: 'black',
   },
 });
 

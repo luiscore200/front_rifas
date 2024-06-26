@@ -163,8 +163,8 @@ export default function index() {
       { (
         <ToastModal
         message={responseMessage == null ? '' : responseMessage}
-        time={2000}
-        blockTime={2000}
+        time={1000}
+        blockTime={1000}
         visible={toast}
         onClose={handleToast}  
         />

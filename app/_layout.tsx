@@ -44,7 +44,7 @@ const MainLayout = () => {
       if (!isInPublicRoutes) {
         // Usuario no autenticado intenta acceder a una ruta protegida
         console.log("No estás autenticado y estás intentando acceder a una ruta protegida.");
-        router.replace('user/rifa/dashboard');
+        //router.replace('user/rifa/dashboard');
       // router.replace('/register');
       }
     }

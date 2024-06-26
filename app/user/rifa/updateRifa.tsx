@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ToastAn
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
-import { rifa } from '../../../config/Interfaces';
+import { rifa,premio } from '../../../config/Interfaces';
 import { rifaUpdate} from '../../../services/api';
 import CardPrizeComponent from '../../../components/user/rifa/crear/cardPrizeComponent';
 import CardRifaComponent from '../../../components/user/rifa/crear/cardRifaComponent';
@@ -14,12 +14,7 @@ import ToastModal from '../../../components/toastModal';
 
 
 
-interface premio {
-  id: number;
-  descripcion: string;
-  loteria: string;
-  fecha: string;
-}
+
 
 
 const userCreate: React.FC = () => {
@@ -43,7 +38,7 @@ const userCreate: React.FC = () => {
 
   // Reset premios, touched fields y error fields cuando cambia el tipo de rifa
   useEffect(() => {
-    setPremios([{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
+    setPremios([{ id: 0, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
     setTouchedFieldPremios([{ descripcion: false, loteria: false, fecha: false }]);
     setErrorPremios([{}]);
   }, [rifa.tipo]);
@@ -193,7 +188,7 @@ console.log("formulario invalido");
       if (rifa.tipo === "premio_unico" && premios.length >= 1) {
         showToast("Rifa de premio único solo acepta una entrada", "short");
       } else {
-        setPremios([...premios, { id: premios.length, descripcion: "", loteria: "", fecha: "" }]);
+        setPremios([...premios, { id: premios.length, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
         setTouchedFieldPremios([...touchedFieldPremios, { descripcion: false, loteria: false, fecha: false }]);
         setErrorPremios([...errorPremios, {}]);
         if (rifa.tipo === "anticipados") {
@@ -272,7 +267,7 @@ console.log("formulario invalido");
 
         <View style={styles.inputGroup}>
           <TouchableOpacity style={styles.saveButton} onPress={() => { handleSave() }}>
-            <Text style={styles.buttonText}>Save</Text>
+            <Text style={styles.buttonText}>Guardar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -337,6 +332,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#CCCCCC",
     borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   title: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: 'black', textAlign: 'center' },
   inputGroup: { marginBottom: 16 },
@@ -357,6 +357,12 @@ const styles = StyleSheet.create({
     marginHorizontal:10,
     borderRadius: 10,
     marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+    
   },
   cancelButton: {
     backgroundColor: '#EF4444',
@@ -376,6 +382,11 @@ const styles = StyleSheet.create({
     borderRadius:10,
     flexDirection:'row',
     alignItems:'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
     
   }
 });

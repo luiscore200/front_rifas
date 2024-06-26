@@ -8,6 +8,7 @@ export interface User {
     status?: string;
     role?:string;
     password?:string;
+    payed?:boolean;
     // ... other user properties
   }
 
@@ -22,6 +23,7 @@ export interface premio{
   descripcion:string;
   loteria:string;
   fecha:string;
+  ganador:string;
 }
 
 export interface rifa {
@@ -32,5 +34,6 @@ export interface rifa {
   precio:number;
   tipo: string;
   numeros: string;
+  asignaciones?:string;
   premios?:premio[];
 }

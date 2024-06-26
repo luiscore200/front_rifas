@@ -36,6 +36,7 @@ interface Errors {email?: string;password?: string; name?:string,selectedCode?:s
   const [country, setCountry] = useState(user1.country);
   const [status, setStatus] = useState(user1.status);
   const [isActive, setIsActive] = useState(user1.status === 'Active');
+  const [payed,setPayed]=useState(user.payed);
   const [modalVisible, setModalVisible] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string|null>(null);
   const [hasError, setHasError] = useState(false);
@@ -129,7 +130,7 @@ const getCode = (data:phoneCode[]) => {
 
 
 const handleSave = async () => {
-  const updatedUser = { ...user1, name, domain, email, phone, country,selectedCode, status: isActive ? 'Active' : 'Inactive' };
+  const updatedUser = { ...user1, name, domain, email, phone, country,selectedCode, status: isActive ? 'Active' : 'Inactive',payed };
 //  console.log(updatedUser);
   setTouchedFields({ name: true, domain: true, phone: true, selectedCode: true, email: true });
   const formErrors = validateForm({ name, domain, email, selectedCode, phone }, touchedFields, userEditValidationRules);
@@ -262,6 +263,22 @@ const handleSave = async () => {
               </Text>
             </View>
           </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Suscrito</Text>
+            <View style={styles.statusContainer}>
+              <Switch
+                value={payed}
+                onValueChange={setPayed}
+                trackColor={{ false: "#fee2e2", true: "#dcfce7" }}
+                thumbColor={payed ? "#34D399" : "#EF4444"}
+              />
+              <Text style={[styles.statusText, { color: payed ? '#10B981' : '#EF4444' }]}>
+                {payed ? 'Suscripted' : 'unSupcripted'}
+              </Text>
+            </View>
+          </View>
+
           <View style={styles.inputGroup}>
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.buttonText}>Guardar</Text>

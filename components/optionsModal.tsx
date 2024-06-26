@@ -1,7 +1,7 @@
     import React, { useEffect, useRef, useState } from 'react';
     import { Animated, Modal, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
     import { User } from '../config/Interfaces';
-    import { EditIcon, DeleteIcon } from '../assets/icons/userIcons'; // Ajusta la ruta según tu estructura de archivos
+    import { EditIcon, Delete2Icon } from '../assets/icons/userIcons'; // Ajusta la ruta según tu estructura de archivos
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 
     interface OptionsModalProps {
@@ -58,7 +58,7 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
                 <Text style={styles.optionText}>Edit</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.option} onPress={handleDelete}>
-                <DeleteIcon style={[styles.optionIcon,{color:'#ef4444'}]} />
+                <Delete2Icon style={[styles.optionIcon,{color:'#ef4444'}]} />
                 <Text style={[styles.optionText,{color:'#ef4444'}]}>Delete</Text>
                 </TouchableOpacity>
             </Animated.View>

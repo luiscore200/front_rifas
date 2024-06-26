@@ -15,6 +15,7 @@ import ToastModal from '../components/toastModal';
 
 
 export default function Register() {
+  const {login}=useAuth();
   interface Errors {email?: string;password?: string; name?:string,selectedCode?:string, phone?:string, domain?:string}
   const [phoneCode, setPhoneCode] = useState<code[]>([]);
   const [selectedCode, setSelectedCode] = useState<string>("");
@@ -100,6 +101,7 @@ export default function Register() {
   try{
         
     const response = await register(userData);
+    const a=  await login(response);
     setResponseMessage(response.mensaje || response.error);
     setHasError(!!response.error);
     setToast(!toast);
@@ -276,7 +278,7 @@ export default function Register() {
   { (
         <ToastModal
         message={responseMessage == null ? '' : responseMessage}
-        blockTime={2000}
+        blockTime={500}
         time={2000}
         visible={toast}
         onClose={handleToast}  
@@ -288,7 +290,7 @@ export default function Register() {
         <ToastModal
         message={responseIndexMessage == null ? '' : responseIndexMessage}
         blockTime={1000}
-        time={3000}
+        time={2000}
         visible={indexToast}
         onClose={()=>setIndexToast(false)}  
         />
