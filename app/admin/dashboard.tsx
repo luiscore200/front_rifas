@@ -9,6 +9,8 @@ import { userIndex ,userDelete} from '../../services/api';
 import Delete from '../../components/ConfirmModal';
 import Deleted from '../../components/responseModal';
 import ToastModal from '../../components/toastModal';
+import GradientLayout from '../layout';
+
 
 
 
@@ -16,6 +18,13 @@ import ToastModal from '../../components/toastModal';
 
 
 export default function App() {
+
+  const navigationItems = [
+    { label: 'Home', action: () => console.log("hola"),status:1 },
+    { label: 'Profile', action: () => router.push('/profile'),status:0 },
+    { label: 'Settings', action: () => router.push('/settings'),status:0 },
+    { label: 'Logout', action: () => console.log('Logout'),status:1 },
+  ];
 
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -163,13 +172,8 @@ useEffect(() => {
   }
 
   return (
-    <LinearGradient  colors={['#6366F1', '#BA5CDE']} // Gradiente de lado a lado con el color más oscuro al inicio
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 0 }}
-    style={styles.container}>
-      <View style={styles.header}>
-       
-      </View>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={false} >
+    
 
 
       
@@ -249,7 +253,7 @@ useEffect(() => {
 
 
 
-    </LinearGradient>
+  </GradientLayout>
   );
 }
 

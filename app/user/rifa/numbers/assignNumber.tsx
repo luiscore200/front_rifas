@@ -14,13 +14,20 @@ export default function Assign() {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const { rifa }: any = useLocalSearchParams<{ rifa: string }>();
   const [rifa2, setRifa2] = useState<rifa>();
+  const [premios,setPremios]= useState<number[]>([])
   const [modal,setModal]=useState(false);
   const [responseMessage,setResponseMessage]=useState();
   const [hasError,setHasError]=useState(false);
 
   useEffect(() => { handleAsignaciones() }, [id]);
   useEffect(() => { setRifa2(JSON.parse(rifa)) }, [rifa]);
-  useEffect(() => { console.log(rifa2) }, [rifa2]);
+  useEffect(() => { 
+    const premios2 = rifa2?.tipo=="anticipados"? rifa2.premios?.map(obj => ({ ...obj })).reverse(): rifa2?.premios;
+    const premiosNumber:number[]= [];
+    premios2?.map(obj=>(premiosNumber.push(Number(obj.ganador))));
+    setPremios(premiosNumber);
+
+  }, [rifa2]);
   useEffect(() => { console.log(asignaciones) }, [asignaciones]);
 
   async function handleAsignaciones() {
@@ -74,6 +81,7 @@ export default function Assign() {
             maxHeight={Dimensions.get('window').height * 0.6} // Ajusta el valor para usar un 70% de la altura de la pantalla
             onConfirmSelection={handleConfirmSelection}
             price={rifa2 != undefined ? rifa2?.precio : 0}
+            premios={premios}
             cuadricula={7}
           />
         </View>

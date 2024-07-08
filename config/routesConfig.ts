@@ -13,6 +13,7 @@ const routes = {
       { path: 'user/rifa/dashboard'},
       { path: 'user/rifa/createRifa' },
       { path: 'user/rifa/updateRifa' },
+      { path: 'user/userSettings' },
     ],
   };
   

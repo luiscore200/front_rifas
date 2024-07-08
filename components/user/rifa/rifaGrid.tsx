@@ -1,11 +1,12 @@
 import React, { useState, FC } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Button } from 'react-native';
+import { StarIcon, StarIcon2 } from '../../../assets/icons/userIcons';
 
 interface AssignedNumber {
   id: number;
   id_raffle: number;
   number: number;
-  status: 'disponible' | 'pagado' | 'separado' | 'ganador';
+  status: 'disponible' | 'pagado' | 'separado' ;
   id_purchaser: number | null;
 }
 
@@ -15,10 +16,11 @@ interface RifaGridProps {
   assignedNumbers: AssignedNumber[];
   maxHeight: number;
   price: number;
+  premios:number[];
   onConfirmSelection: (selectedNumbers: number[]) => void;
 }
 
-const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers, price, maxHeight, onConfirmSelection }) => {
+const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,premios, price, maxHeight, onConfirmSelection }) => {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
 
   const toggleNumberSelection = (number: number): void => {
@@ -27,7 +29,7 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,
     );
   };
 
-  const getStatus = (number: number): 'disponible' | 'pagado' | 'separado' | 'ganador' => {
+  const getStatus = (number: number): 'disponible' | 'pagado' | 'separado'  => {
     const assigned = assignedNumbers.find(assigned => assigned.number === number);
     return assigned ? assigned.status : 'disponible';
   };
@@ -36,6 +38,12 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,
     const isSelected = selectedNumbers.includes(number);
     const status = getStatus(number);
     const isBlocked = number > totalNumbers;
+    let isWinner = false;
+    let Npremio= 0;
+
+    if(premios.length>0){
+      premios.forEach((element,index) => {if(element===number){isWinner=true; Npremio=index+1;}});
+    }
 
     let cellStyle = styles.cell;
     let textStyle = styles.cellText;
@@ -44,25 +52,50 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,
       cellStyle = styles.blockedCell;
       textStyle = styles.blockedCellText;
     } else if (status === 'pagado') {
-      cellStyle = styles.assignedCell;
-      textStyle = styles.assignedCellText;
+      if(isWinner){
+        cellStyle = styles.assignedWinnerCell;
+        textStyle = styles.assignedCellText;
+      }else{
+        cellStyle = styles.assignedCell;
+        textStyle = styles.assignedCellText;
+      }
+     
     } else if (status === 'separado') {
-      cellStyle = styles.reservedCell;
+      if(isWinner){
+        cellStyle = styles.reservedWinnerCell;
       textStyle = styles.reservedCellText;
+      }else{
+        cellStyle = styles.reservedCell;
+      textStyle = styles.reservedCellText;
+      }
     } else if (isSelected) {
       cellStyle = styles.selectedCell;
       textStyle = styles.selectedCellText;
+    } else if (isWinner){
+       cellStyle = styles.cellWinner;
+       textStyle = styles.cellText;
+
     }
+  
 
     return (
+    
       <TouchableOpacity
         key={number}
         style={cellStyle}
         onPress={() => toggleNumberSelection(number)}
-        disabled={isBlocked || status !== 'disponible'}
+        disabled={isBlocked || isWinner|| status !== 'disponible'}
       >
+        {!!isWinner &&(
+         <View style={{position:'absolute',top:-9,left:12,zIndex:999}}>
+           <StarIcon2 number={Npremio} border={"#ca8a04"} style={{width:"28",height:"28",color:"#eab308"}}/>
+         </View>
+        )
+          
+        }
         <Text style={textStyle}>{number}</Text>
       </TouchableOpacity>
+     
     );
   };
 
@@ -175,6 +208,18 @@ const styles = StyleSheet.create({
     margin: 2,
     borderRadius: 5,
   },
+  cellWinner: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#fff7ed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 2,
+    borderWidth:2,
+    borderColor:'#facc15',
+    borderRadius: 5,
+  },
+  
   cellText: {
     color: '#000',
   },
@@ -187,6 +232,17 @@ const styles = StyleSheet.create({
     margin: 2,
     borderRadius: 5,
   },
+  assignedWinnerCell: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#fda4af',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 2,
+    borderWidth:2,
+    borderColor:"#ca8a04",
+    borderRadius: 5,
+  },
   assignedCellText: {
     color: '#fff',
   },
@@ -197,6 +253,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     margin: 2,
+    borderRadius: 5,
+  },
+  reservedWinnerCell: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#fde047',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 2,
+    borderWidth:2,
+    borderColor:"#ca8a04",
     borderRadius: 5,
   },
   reservedCellText: {

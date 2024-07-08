@@ -255,10 +255,18 @@ const compradorValidationRules: any = {
       message: 'Por favor, ingresa el teléfono.',
     },
     {
-      condition: (value: string) => value.length >= 8,
-      message: 'El teléfono debe tener al menos 8 caracteres.',
+      condition: (value: string) => /^\+\d+ \d+$/.test(value),
+      message: 'El teléfono debe estar en el formato "+xxx xxxxxxxxx".',
+    },
+    {
+      condition: (value: string) => {
+        const parts = value.split(' ');
+        return parts.length === 2 && parts[1].length >= 8;
+      },
+      message: 'El teléfono debe tener al menos 8 caracteres después del código del país.',
     },
   ],
+  
   email: [
     {
       condition: (value: string) => value.length > 0,

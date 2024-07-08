@@ -453,14 +453,16 @@ export const rifaUpdate = async (obj:rifa) => {
   }
 
   
-  export const updateWinner = async(id:number,premios:premio[])=>{
+  export const updateWinner = async(id:number,premios:premio[],index:number)=>{
+    const body={index,premios};
     try{
+      
       const response = await fetchWithTimeout(`${API_URL}/rifa/confirmWinner/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(premios),
+        body: JSON.stringify(body),
       });
       if (response.ok) {
         const assigns = await response.json();
@@ -472,6 +474,112 @@ export const rifaUpdate = async (obj:rifa) => {
       throw error;
     } 
   }
+
+
+
+  export const sendQr = async()=>{
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/user/config/sendQr`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
+
+
+  export const verifySession = async()=>{
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/user/config/verifyQr`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
+
+  export const importConfig = async()=>{
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/user/config/export`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
+
+  export const verifyEmail = async(email:string,password:string)=>{
+    const body={email,password};
+    try{
+      
+      const response = await fetchWithTimeout(`${API_URL}/user/config/verifyEmail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
+
+  export const saveConfig = async(obj:any)=>{
+   
+    try{
+      
+      const response = await fetchWithTimeout(`${API_URL}/user/config/saveConfig`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(obj),
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
+
+
 
 
 

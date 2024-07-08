@@ -120,10 +120,11 @@ export default function Assign() {
     setPremios(newPremios);
 
     try{
-      const response=await updateWinner(id,newPremios);
-      setResponseMessage(response.mensaje||response.error);
-      setModal(true);
-      await handleRifa();
+      const response=await updateWinner(id,newPremios,index);
+     // setResponseMessage(response.mensaje||response.error);
+     // setModal(true);
+     console.log(response);
+     // await handleRifa();
     }catch(e:any){
       setResponseMessage(e.message);
       setModal(true);

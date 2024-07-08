@@ -9,8 +9,16 @@ import Delete from '../../../components/ConfirmModal';
 import Options from '../../../components/optionsModal';
 import ToastModal from '../../../components/toastModal';
 import MenuCard from '../../../components/user/rifa/optionsRifaModal';
+import GradientLayout from '../../layout';
 
 export default function App() {
+
+  const navigationItems = [
+    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
+   // { label: 'Logout', action: () =>console.log("holaaaa"),status:1 },
+  ];
+
 
   const [rifa, selectedRifa] = useState<rifa | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
@@ -239,14 +247,8 @@ useEffect(() => {
    
 
   return (
-    <TouchableWithoutFeedback onPress={()=>setCard(false)}>
-    <LinearGradient  colors={['#6366F1', '#BA5CDE']} // Gradiente de lado a lado con el color más oscuro al inicio
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 0 }}
-    style={styles.container}>
-      <View style={styles.header}>
-       
-      </View>
+ 
+   <GradientLayout  navigationItems={navigationItems} hasDrawer={true} Touched={()=>setCard(false)}>
 
 
       
@@ -339,8 +341,8 @@ useEffect(() => {
   )}
 
 
-    </LinearGradient>
-    </TouchableWithoutFeedback>
+</GradientLayout>
+   
   );
 }
 

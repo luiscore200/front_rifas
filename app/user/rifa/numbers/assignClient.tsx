@@ -141,7 +141,7 @@ const a= await  main();
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Teléfono</Text>
-                        <TextInput style={styles.input} value={comprador.phone} placeholderTextColor={"#cccc"} onBlur={() => change('phone', comprador.phone)} onChangeText={(text) => change('phone', text)} placeholder="Ingrese el teléfono" keyboardType="phone-pad" />
+                        <TextInput style={styles.input} value={comprador.phone} placeholderTextColor={"#cccc"} onBlur={() => change('phone', comprador.phone)} onChangeText={(text) => change('phone', text)} placeholder="Ingrese el teléfono +57 3210987654" keyboardType="phone-pad" />
                         {touched.phone && error.phone && <Text style={{ color: 'red' }}>{error.phone}</Text>}
                     </View>
 
