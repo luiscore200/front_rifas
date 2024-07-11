@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback } from 'react-native';
-import { User } from '../../../config/Interfaces';
+import { CheckMarkIcon,CrossMarkIcon } from '../../../../assets/icons/userIcons';
 
-interface UserCardProps {
-  user: User;
+
+interface SeparatedCardProps {
+  info:any;
+  onCancel(info:any):void;
+  onConfirm(info:any):void
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user }) => {
+const SeparatedCard: React.FC<SeparatedCardProps> = ({ info,onCancel,onConfirm }) => {
   const [modalVisible, setModalVisible] = useState(false);
   
-  const getTextStatusColor = (status: any) => (status == "Active" ? '#166534' : '#991b1b');
-  const getBGStatusColor = (status: any) => (status == "Active" ? '#dcfce7' : '#fee2e2');
+ // const getTextStatusColor = (status: any) => (status == "separado" ? '#166534' : '#991b1b');
+ // const getBGStatusColor = (status: any) => (status == "separado" ? '#dcfce7' : '#fee2e2');
 
   
 
@@ -18,18 +21,30 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
     <View style={styles.cardContainer}>
       <View style={styles.card}>
         <View style={styles.cardContent}>
-          <View style={[styles.userIcon, { backgroundColor: getTextStatusColor(user.status) }]}>
-            <Text style={styles.userIconText}>{user.name.charAt(0)}</Text>
+          <View style={[styles.userIcon, { backgroundColor: "#fb923c" }]}>
+            <Text style={styles.userIconText}>{info.number}</Text>
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userEmail}>{user.email}</Text>
+            <Text style={styles.userName}>{info.purchaser_name}</Text>
+            <Text style={styles.userEmail}>{info.purchaser_email}</Text>
+            <Text style={styles.userEmail}>{info.purchaser_phone}</Text>
           </View>
-          <View style={[styles.statusButton, { backgroundColor: getBGStatusColor(user.status) }]}>
-            <Text style={[styles.statusText, { color: getTextStatusColor(user.status) }]}>{user.status}</Text>
+          <View style={{flexDirection:'row'}}>
+            <TouchableOpacity onPress={()=>onConfirm(info)}
+            style={{backgroundColor:"#4ade80",padding:5,marginRight:5,borderRadius:20,shadowColor:'#000',shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.6,shadowRadius: 4,elevation: 5,}}>
+                <CheckMarkIcon style={{color:"#166534"}} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={()=>onCancel(info)}
+            style={{backgroundColor:"#f87171",padding:5,marginLeft:5,borderRadius:20,shadowColor:'#000',shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.6,shadowRadius: 4,elevation: 5,}}>
+              <CrossMarkIcon  style={{color:"#991b1b"}} />
+            </TouchableOpacity>
+
           </View>
-         {// <TouchableOpacity style={styles.menuButton} ><Text style={styles.menuButtonText}>⋮</Text></TouchableOpacity>
-}</View>
+          <TouchableOpacity style={styles.menuButton} >
+             {//<Text style={styles.menuButtonText}>⋮</Text>
+             }          
+          </TouchableOpacity>
+        </View>
       </View>
      
     </View>
@@ -45,7 +60,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 12,
-    padding: 16,
+    paddingVertical:16,
+    paddingRight:5,
+    paddingLeft:16,
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -61,10 +78,10 @@ const styles = StyleSheet.create({
   userIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 20,
   },
   userIconText: {
     color: '#fff',
@@ -80,6 +97,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   userEmail: {
+    paddingBottom:5,
     fontSize: 12,
     color: '#888',
   },
@@ -121,4 +139,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserCard;
+export default SeparatedCard;

@@ -228,6 +228,58 @@ const createRifaValidationRules: any = {
 };
 
 
+const compradorValidationRules: any = {
+  name: [
+    {
+      condition: (value: string) => value.length > 0,
+      message: 'Por favor, ingresa el nombre.',
+    },
+  ],
+  document: [
+    {
+      condition: (value: string) => value.length > 0,
+      message: 'Por favor, ingresa el documento.',
+    },
+    {
+      condition: (value: string) => value.length >= 6,
+      message: 'El documento debe tener al menos 6 caracteres.',
+    },
+    {
+      condition: (value: string) => /^\d+$/.test(value),
+      message: 'El documento debe contener solo números.',
+    },
+  ],
+  phone: [
+    {
+      condition: (value: string) => value.length > 0,
+      message: 'Por favor, ingresa el teléfono.',
+    },
+    {
+      condition: (value: string) => /^\+\d+ \d+$/.test(value),
+      message: 'El teléfono debe estar en el formato "+xxx xxxxxxxxx".',
+    },
+    {
+      condition: (value: string) => {
+        const parts = value.split(' ');
+        return parts.length === 2 && parts[1].length >= 8;
+      },
+      message: 'El teléfono debe tener al menos 8 caracteres después del código del país.',
+    },
+  ],
+  
+  email: [
+    {
+      condition: (value: string) => value.length > 0,
+      message: 'Por favor, ingresa el correo electrónico.',
+    },
+    {
+      condition: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+      message: 'El formato del correo electrónico no es válido.',
+    },
+  ],
+};
+
+
 
   
 
@@ -254,5 +306,5 @@ const createRifaValidationRules: any = {
     return newErrors;
   };
   
-  export { validateField, validateForm , registerValidationRules, loginValidationRules,userEditValidationRules,createRifaValidationRules, createPremioValidationRules  };
+  export { validateField, validateForm , registerValidationRules, loginValidationRules,userEditValidationRules,createRifaValidationRules, createPremioValidationRules ,compradorValidationRules };
   

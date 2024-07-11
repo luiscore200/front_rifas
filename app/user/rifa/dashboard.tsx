@@ -1,40 +1,62 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Card from '../../../components/user/rifa/rifaCard';
-import {rifa,premio} from '../../../config/Interfaces';
-
-
+import {rifa} from '../../../config/Interfaces';
 import { router } from 'expo-router';
 import {rifaDelete, indexRifa} from '../../../services/api';
-
-import Deleted from '../../../components/responseModal';
-
-import Delete from '../../../components/deleteModal';
+import Delete from '../../../components/ConfirmModal';
 import Options from '../../../components/optionsModal';
 import ToastModal from '../../../components/toastModal';
-
-
-
-
-
-
+import MenuCard from '../../../components/user/rifa/optionsRifaModal';
+import GradientLayout from '../../layout';
+import { useAuth } from '../../../services/authContext2';
 
 export default function App() {
+
+  
+  const {auth,logout}=useAuth();
+  const navigationItems = [
+    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
+    { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
+  ];
 
 
   const [rifa, selectedRifa] = useState<rifa | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
  const [rifas, setRifas] = useState<rifa[]>([]);
+ const [rifas2, setRifas2] = useState<rifa[]>([]);
  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
  const [responseModalVisible, setResponseModalVisible] = useState(false);
  const [responseMessage, setResponseMessage] = useState<string|null>(null);
  const [responseIndexMessage, setResponseIndexMessage] = useState<string|null>(null);
-
+ const [cardPosition, setCardPosition] = useState({x:0,y:0});
+ const [card, setCard] = useState(false);
  const [hasError, setHasError] = useState(false);
  const [toast,setToast]=useState(false);
+ const [index,setIndex]=useState<number>();
+ const [buscar,setBuscar]=useState<string>("");
 
- const [reload, setReload] = useState(false); 
+ const [reload, setReload] = useState(false);
+ 
+
+ function handleMenu(obj:any,rifa:any,indexx:number){
+  const { height: windowHeight } = Dimensions.get('window');
+  const { pageX, pageY } = obj.nativeEvent;
+
+
+  //console.log(obj);
+  if(index!==indexx){
+    setIndex(indexx);
+  setCardPosition({x:pageX,y:pageY});
+  selectedRifa(rifa);
+  setCard(true)
+  }else{
+    setCard(!card);
+  }
+
+ }
 
  const isRifa = (item: any): item is rifa => {
   return (
@@ -52,6 +74,7 @@ export default function App() {
         typeof premio.id === 'number' &&
         typeof premio.descripcion === 'string' &&
         typeof premio.loteria === 'string' &&
+        typeof premio.ganador === 'string' &&
         typeof premio.fecha === 'string'
       ))
     ))
@@ -62,6 +85,7 @@ export default function App() {
 const handleRifas = async()=>{
   try{
     const rifas2 = await indexRifa();
+    console.log(rifas);
     if(!!rifas2.error){
       setResponseIndexMessage(rifas2.error);
       setToast(true);
@@ -69,6 +93,7 @@ const handleRifas = async()=>{
    
     if(Array.isArray(rifas2) && rifas2.every(isRifa)){
       setRifas(rifas2);
+      setRifas2(rifas2);
     }else {
    
       console.log('Data is not of type Rifa[]');
@@ -95,11 +120,32 @@ useEffect(() => {
 }, [reload]);
 
 
-    const handleOptions = (rifa:rifa) => {
+    const handleOptions = (rifa:rifa,opcion:string) => {
       //alert(user);
       console.log(rifa);
       selectedRifa(rifa);
-      setModalVisible(true);
+   //   setModalVisible(true);
+      console.log(opcion);
+
+      if(opcion==="asignar"){
+        handleTouch(rifa);
+      }
+      if(opcion==="compartir"){
+       
+      }
+      if(opcion==="editar"){
+          handleEdit(rifa);
+      }
+      if(opcion==="ganador"){
+
+          handleWinner(rifa);
+      }
+      if(opcion==="confirmar"){
+        handleConfirm(rifa);
+      }
+      if(opcion==="eliminar"){
+        handleDelete(rifa);
+      }
 
     };
 
@@ -112,6 +158,26 @@ useEffect(() => {
   router.navigate({pathname: "/user/rifa/updateRifa",params:{rifa1:rifa2},});
     };
 
+    const handleWinner = (rifa: rifa) => {
+      selectedRifa(rifa);
+      setModalVisible(false);
+      console.log("edit: "+rifa.id);
+      const rifa2 = JSON.stringify(rifa);
+      console.log("rifa2: "+ rifa2);
+  router.navigate({pathname: "/user/rifa/numbers/assignWinner",params:{id:rifa.id,rifa:rifa2},});
+    };
+
+    const handleConfirm = (rifa: rifa) => {
+      selectedRifa(rifa);
+      setModalVisible(false);
+      console.log("confirm: "+rifa.id);
+      const rifa2 = JSON.stringify(rifa);
+      console.log("rifa2: "+ rifa2);
+  router.navigate({pathname: "/user/rifa/numbers/dashboard",params:{id:rifa.id,rifa:rifa2},});
+    };
+
+    
+
     const handleDelete = (rifa: rifa) => {
       console.log(rifa);
       selectedRifa(rifa);
@@ -122,7 +188,7 @@ useEffect(() => {
     };
 
     const handleCancelDelete = () => {
-      selectedRifa(null);
+      
       setShowDeleteConfirmation(false);
     };
 
@@ -153,22 +219,49 @@ useEffect(() => {
     
     };
 
-  return (
-    <LinearGradient  colors={['#6366F1', '#BA5CDE']} // Gradiente de lado a lado con el color más oscuro al inicio
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 0 }}
-    style={styles.container}>
-      <View style={styles.header}>
+    const handleTouch = (rifa:rifa)=> {
+      //console.log("dsadad",rifa); 
+      router.navigate({
+        pathname:'/user/rifa/numbers/assignNumber',
        
-      </View>
+        params:{id:rifa.id,rifa:JSON.stringify(rifa)},
+      })
+
+    }
+
+    function find(value:string) {
+      setBuscar(value);
+   
+    const filtroLowerCase = value.toLowerCase();
+  
+    const filteredArray = rifas2.filter(obj => {
+        const emailLowerCase = obj.titulo.toLowerCase();
+        const nameLowerCase = obj.pais.toLowerCase();
+        const numberString = obj.tipo.toString();
+
+        return emailLowerCase.includes(filtroLowerCase)|| nameLowerCase.includes(filtroLowerCase) || numberString.includes(filtroLowerCase);
+    });
+
+    // Actualiza el array separated2 con los resultados filtrados
+   
+    setRifas(filteredArray);
+  
+  }
+   
+
+  return (
+ 
+   <GradientLayout  navigationItems={navigationItems} hasDrawer={true} Touched={()=>setCard(false)}>
 
 
       
-      <ScrollView style={styles.main}>
+      <ScrollView style={styles.main} onScrollBeginDrag={()=>setCard(false)}>
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar..."
+            value={buscar}
+            onChangeText={find}
           />
           <TouchableOpacity style={styles.addButton}  onPress={handleNew}>
             <Text style={styles.addButtonText}>Crear</Text>
@@ -176,15 +269,20 @@ useEffect(() => {
         </View>
         <View style={styles.cardContainer}>
          
-          { !!rifas.length &&  rifas.map((rifa,index) => (
-            <TouchableOpacity key={index} onPress={() => console.log("aaa")}>
+          { rifas.length>0 &&  rifas.map((rifa,index) => (
+            <View key={index}>
              <Card
              key={index}
              rifa={rifa}
-             onOptions={(rifa)=>handleOptions(rifa)}
+             onTouch={(obj,rifa)=>handleMenu(obj,rifa,index)}
+            
+             onToggle={()=>setCard(false)}
         
-           /></TouchableOpacity>
+           /></View>
           ))}
+          {rifas.length===0 && (
+               <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado rifas . . .</Text></View>
+          )}
         </View>
       </ScrollView>
       {rifa && (
@@ -198,6 +296,8 @@ useEffect(() => {
       )}
   
            <Delete
+        mode="delete"
+        message={"¿Estas seguro de querer eliminar esta rifa?"}   
         visible={showDeleteConfirmation}
         onClose={()=> setShowDeleteConfirmation(false)}
         onConfirm={handleConfirmDelete}
@@ -214,8 +314,8 @@ useEffect(() => {
          {(
         <ToastModal
         message={responseMessage == null ? '' : responseMessage}
-        blockTime={1000}
-        time={3000}
+        blockTime={500}
+        time={2000}
         visible={responseModalVisible}
         onClose={handleCloseModal}  
         />
@@ -232,8 +332,20 @@ useEffect(() => {
         />
   )}
 
+  {!!rifa &&(
+    
+    <MenuCard
+    isvisible={card}
+    event={cardPosition}
+    rifa={rifa}
+    onOptions={(rifa,opcion)=>handleOptions(rifa,opcion)}
+    onClose={()=>{setCard(false)}}
+    />
+  )}
 
-    </LinearGradient>
+
+</GradientLayout>
+   
   );
 }
 

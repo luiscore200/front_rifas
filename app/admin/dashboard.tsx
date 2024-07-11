@@ -6,9 +6,12 @@ import {User} from '../../config/Interfaces';
 import Options from '../../components/optionsModal';
 import { router } from 'expo-router';
 import { userIndex ,userDelete} from '../../services/api';
-import Delete from '../../components/deleteModal';
+import Delete from '../../components/ConfirmModal';
 import Deleted from '../../components/responseModal';
 import ToastModal from '../../components/toastModal';
+import GradientLayout from '../layout';
+import { useAuth } from '../../services/authContext2';
+
 
 
 
@@ -17,17 +20,28 @@ import ToastModal from '../../components/toastModal';
 
 export default function App() {
 
+  
+  const {user,auth,logout}=useAuth();
+
+
+
+  const navigationItems = [
+    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Configuracion', action: () =>router.push('/admin/adminConfig'),status:1 },
+    { label: 'Logout', action: async() => logout(),status:auth===true?1:0},
+  ];
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
  const [users2, setUsers] = useState<User[]>([]);
+ const [users3, setUsers3] = useState<User[]>([]);
  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
  const [responseModalVisible, setResponseModalVisible] = useState(false);
  const [responseMessage, setResponseMessage] = useState<string|null>(null);
  const [hasError, setHasError] = useState(false);
  const [responseIndexMessage, setResponseIndexMessage] = useState<string|null>(null);
  const [toast,setToast]=useState(false);
-
+ const [buscar,setBuscar]=useState<string>("");
  const [reload, setReload] = useState(false); 
 
  const isUser = (item: any): item is User => {
@@ -39,6 +53,7 @@ export default function App() {
     typeof item.email === 'string' &&
     typeof item.country === 'string' &&
     typeof item.status === 'string' &&
+    typeof item.payed === 'boolean' &&
     (item.id === undefined || typeof item.id === 'number') &&
     (item.role === undefined || typeof item.role === 'string') &&
     (item.password === undefined || typeof item.password === 'string')
@@ -58,6 +73,7 @@ const handleUsers = async()=>{
   console.log(users2);
   if(Array.isArray(users2) && users2.every(isUser)){
     setUsers(users2);
+    setUsers3(users2);
   }else {
     console.log('Data is not of type User[]');
   }
@@ -140,15 +156,28 @@ useEffect(() => {
       setResponseModalVisible(false);
    
     };
+    function find(value:string) {
+      setBuscar(value);
+   
+    const filtroLowerCase = value.toLowerCase();
+  
+    const filteredArray = users3.filter(obj => {
+        const emailLowerCase = obj.email.toLowerCase();
+        const nameLowerCase = obj.name.toLowerCase();
+        const statusLowerCase = obj.status?.toString();
+
+        return emailLowerCase.includes(filtroLowerCase)|| nameLowerCase.includes(filtroLowerCase) || statusLowerCase?.includes(filtroLowerCase);
+    });
+
+    // Actualiza el array separated2 con los resultados filtrados
+   
+    setUsers(filteredArray);
+  
+  }
 
   return (
-    <LinearGradient  colors={['#6366F1', '#BA5CDE']} // Gradiente de lado a lado con el color más oscuro al inicio
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 0 }}
-    style={styles.container}>
-      <View style={styles.header}>
-       
-      </View>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
+    
 
 
       
@@ -157,6 +186,8 @@ useEffect(() => {
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar..."
+            value={buscar}
+            onChangeText={find}
           />
           <TouchableOpacity style={styles.addButton}  onPress={handleNew}>
             <Text style={styles.addButtonText}>Crear</Text>
@@ -164,7 +195,7 @@ useEffect(() => {
         </View>
         <View style={styles.cardContainer}>
          
-          { !!users2.length &&  users2.map(user => (
+          { users2.length>0 &&  users2.map(user => (
             <TouchableOpacity key={user.id} onPress={() => handleOptions(user)}>
              <Card
              key={user.id}
@@ -172,6 +203,9 @@ useEffect(() => {
         
            /></TouchableOpacity>
           ))}
+           {users2.length===0 && (
+               <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado usuarios . . .</Text></View>
+          )}
         </View>
       </ScrollView>
      {selectedUser && (
@@ -184,6 +218,8 @@ useEffect(() => {
         />
       )}
            <Delete
+          mode='delete'
+         message={"¿Estas seguro de querer eliminar este usuario?"}
         visible={showDeleteConfirmation}
         onClose={()=> setShowDeleteConfirmation(false)}
         onConfirm={handleConfirmDelete}
@@ -221,7 +257,7 @@ useEffect(() => {
 
 
 
-    </LinearGradient>
+  </GradientLayout>
   );
 }
 

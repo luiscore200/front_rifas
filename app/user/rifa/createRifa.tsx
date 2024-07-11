@@ -13,25 +13,26 @@ import { router } from 'expo-router';
 
 import { useAuth } from '../../../services/authContext2';
 import ToastModal from '../../../components/toastModal';
+import { premio } from '../../../config/Interfaces';
+import GradientLayout from '../../layout';
 
 
 
 
-
-interface premio {
-  id: number;
-  descripcion: string;
-  loteria: string;
-  fecha: string;
-}
 
 
 const userCreate: React.FC = () => {
 
-  const {user}=useAuth();
- 
+  const {auth,user,logout}=useAuth();
+  const navigationItems = [
+    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
+    { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
+  ];
+
+  
   const [cardForm, setCardForm] = useState(false);
-  const [premios, setPremios] = useState<premio[]>([{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
+  const [premios, setPremios] = useState<premio[]>([{ id: 0, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
   const [rifa, setRifa] = useState<rifa>({ titulo: "", pais: user?.country||"Colombia",precio:0, numeros: '100', tipo: "premio_unico" });
  
   const [errorRifa, setErrorRifa] = useState({});
@@ -53,7 +54,7 @@ const userCreate: React.FC = () => {
 
   // Reset premios, touched fields y error fields cuando cambia el tipo de rifa
   useEffect(() => {
-    setPremios([{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
+    setPremios([{ id: 0, descripcion: "", loteria: "", ganador:"",fecha: "" }]);
     setTouchedFieldPremios([{ descripcion: false, loteria: false, fecha: false }]);
     setErrorPremios([{}]);
   }, [rifa.tipo]);
@@ -128,16 +129,6 @@ const userCreate: React.FC = () => {
   };
 
   
-  function showToast(mensaje: string, duracion: string) {
-    if (Platform.OS === "android") {
-      if (duracion === "short") {
-        ToastAndroid.show(mensaje, ToastAndroid.SHORT);
-      }
-      if (duracion === "long") {
-        ToastAndroid.show(mensaje, ToastAndroid.LONG);
-      }
-    }
-  }
 
     
   const handleCloseModal = () => {
@@ -212,17 +203,21 @@ const userCreate: React.FC = () => {
   const handleAddPrize = () => {
     if (premios.length < 4) {
       if (rifa.tipo === "premio_unico" && premios.length >= 1) {
-        showToast("Rifa de premio único solo acepta una entrada", "short");
+        
+        setResponseMessage("Rifa de premio único solo acepta una entrada");
+        setModalVisible(true);
       } else {
-        setPremios([...premios, { id: premios.length, descripcion: "", loteria: "", fecha: "" }]);
+        setPremios([...premios, { id: premios.length, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
         setTouchedFieldPremios([...touchedFieldPremios, { descripcion: false, loteria: false, fecha: false }]);
         setErrorPremios([...errorPremios, {}]);
         if (rifa.tipo === "anticipados") {
-          showToast("Recuerda rellenar los premios del último 'mayor' al primero en orden regresivo", "long");
+          setResponseMessage("Recuerda rellenar los premios del último 'mayor' al primero en orden regresivo");
+          setModalVisible(true);
         }
       }
     } else {
-      showToast("El máximo de entradas para cualquier tipo de rifas es 4", "short");
+      setResponseMessage("El máximo de entradas para cualquier tipo de rifas es 4");
+      setModalVisible(true);
     }
   };
 
@@ -230,16 +225,12 @@ const userCreate: React.FC = () => {
  
 
   return (
-    <LinearGradient colors={['#6366F1', '#BA5CDE']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.container}>
-      <View style={styles.header}></View>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
       <ScrollView style={styles.main}>
         <TouchableOpacity style={styles.formCard} onPress={() => setCardForm(!cardForm)}>
           <View style={{ marginRight: 20 }} >
-            <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Raffle Details</Text>
-            <Text style={{ fontSize: 16, color: '#666', }}>Fill out the details for your raffle.</Text>
+          <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Rifa</Text>
+          <Text style={{ fontSize: 16, color: '#666', }}>Añade las propiedades de tu evento.</Text>
           </View>
           <Ionicons name="chevron-forward-outline" style={{ position: 'absolute', right: 25 }} size={24} color="#CCCCC" />
         </TouchableOpacity>
@@ -255,8 +246,8 @@ const userCreate: React.FC = () => {
 
         <TouchableOpacity style={styles.formCard} onPress={() => setCardForm(!cardForm)}>
           <View style={{ marginRight: 20 }} >
-            <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Prizes</Text>
-            <Text style={{ fontSize: 16, color: '#666', }}> Add the prizes for your raffle.</Text>
+          <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Premios</Text>
+          <Text style={{ fontSize: 16, color: '#666', }}> Añade premios para tu evento.</Text>
           </View>
           <Ionicons name="chevron-forward-outline" size={24} style={{ position: 'absolute', right: 25 }} color="#CCCCC" />
         </TouchableOpacity>
@@ -293,7 +284,7 @@ const userCreate: React.FC = () => {
 
         <View style={styles.inputGroup}>
           <TouchableOpacity style={styles.saveButton} onPress={() => { handleSave() }}>
-            <Text style={styles.buttonText}>Save</Text>
+            <Text style={styles.buttonText}>Guardar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -307,7 +298,7 @@ const userCreate: React.FC = () => {
         onClose={handleCloseModal}  
         />
   )}
-    </LinearGradient>
+    </GradientLayout>
   );
 };
 
@@ -355,9 +346,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginVertical: 20,
     paddingVertical: 20,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 10,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    borderWidth:3,
+  
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+   elevation: 5,
   },
   title: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: 'black', textAlign: 'center' },
   inputGroup: { marginBottom: 16 },
@@ -378,6 +376,11 @@ const styles = StyleSheet.create({
     marginHorizontal:10,
     borderRadius: 10,
     marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cancelButton: {
     backgroundColor: '#EF4444',
@@ -388,15 +391,25 @@ const styles = StyleSheet.create({
   buttonText: { color: '#FFFFFF', fontWeight: 'bold', textAlign: 'center' },
   
   formCard: {
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    padding: 16,
+    borderWidth: 3,
+    
+  
     marginHorizontal: 10,
     marginVertical: 20,
     paddingVertical: 20,
     borderRadius:10,
     flexDirection:'row',
     alignItems:'center',
+    borderColor: '#ddd',
+   
+    padding: 16,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+
     
   }
 });
