@@ -114,7 +114,7 @@ const RifaCard: React.FC<RifaCardProps> = ({ rifa, onTouch,onToggle }) => {
             <TouchableOpacity style={{paddingLeft:10,paddingTop:5}} 
             onPress={(event) => onTouch(event,rifa)} 
               >
-              <MenuIcon1/>
+              <MenuIcon1 style={{color:'#CCCC'}}/>
             </TouchableOpacity>
             
             

@@ -10,6 +10,7 @@ import Delete from '../../components/ConfirmModal';
 import Deleted from '../../components/responseModal';
 import ToastModal from '../../components/toastModal';
 import GradientLayout from '../layout';
+import { useAuth } from '../../services/authContext2';
 
 
 
@@ -19,13 +20,16 @@ import GradientLayout from '../layout';
 
 export default function App() {
 
-  const navigationItems = [
-    { label: 'Home', action: () => console.log("hola"),status:1 },
-    { label: 'Profile', action: () => router.push('/profile'),status:0 },
-    { label: 'Settings', action: () => router.push('/settings'),status:0 },
-    { label: 'Logout', action: () => console.log('Logout'),status:1 },
-  ];
+  
+  const {user,auth,logout}=useAuth();
 
+
+
+  const navigationItems = [
+    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Configuracion', action: () =>router.push('/admin/adminConfig'),status:1 },
+    { label: 'Logout', action: async() => logout(),status:auth===true?1:0},
+  ];
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
@@ -172,7 +176,7 @@ useEffect(() => {
   }
 
   return (
-    <GradientLayout  navigationItems={navigationItems} hasDrawer={false} >
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
     
 
 

@@ -28,10 +28,8 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
           <View style={[styles.statusButton, { backgroundColor: getBGStatusColor(user.status) }]}>
             <Text style={[styles.statusText, { color: getTextStatusColor(user.status) }]}>{user.status}</Text>
           </View>
-          <TouchableOpacity style={styles.menuButton} >
-            <Text style={styles.menuButtonText}>⋮</Text>
-          </TouchableOpacity>
-        </View>
+         {// <TouchableOpacity style={styles.menuButton} ><Text style={styles.menuButtonText}>⋮</Text></TouchableOpacity>
+}</View>
       </View>
      
     </View>

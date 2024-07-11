@@ -401,6 +401,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
       });
       if (response.ok) {
@@ -420,6 +421,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
       });
       if (response.ok) {
@@ -439,6 +441,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
       });
       if (response.ok) {
@@ -461,6 +464,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
         body: JSON.stringify(body),
       });
@@ -483,6 +487,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
       });
       if (response.ok) {
@@ -503,6 +508,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
       });
       if (response.ok) {
@@ -522,6 +528,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
       });
       if (response.ok) {
@@ -543,6 +550,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
         body: JSON.stringify(body),
       });
@@ -565,6 +573,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
         },
         body: JSON.stringify(obj),
       });
@@ -579,6 +588,50 @@ export const rifaUpdate = async (obj:rifa) => {
     } 
   }
 
+  
+  export const saveAdminConfig = async(obj:any)=>{
+   
+    try{
+      
+      const response = await fetchWithTimeout(`${API_URL}/admin/config/saveConfig`, {
+        method: 'POST',
+       body: obj,
+       headers: {
+    'Content-Type': 'multipart/form-data',
+    'Authorization': `Bearer ${await getToken()}`, 
+  },
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
+
+  
+  export const importAdminConfig = async()=>{
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/admin/config/loadConfig`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
+        },
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
 
 
 

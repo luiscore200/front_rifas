@@ -10,13 +10,16 @@ import Options from '../../../components/optionsModal';
 import ToastModal from '../../../components/toastModal';
 import MenuCard from '../../../components/user/rifa/optionsRifaModal';
 import GradientLayout from '../../layout';
+import { useAuth } from '../../../services/authContext2';
 
 export default function App() {
 
+  
+  const {auth,logout}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => console.log("hola"),status:0 },
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
-   // { label: 'Logout', action: () =>console.log("holaaaa"),status:1 },
+    { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
 
 
@@ -252,7 +255,7 @@ useEffect(() => {
 
 
       
-      <ScrollView style={styles.main}>
+      <ScrollView style={styles.main} onScrollBeginDrag={()=>setCard(false)}>
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}

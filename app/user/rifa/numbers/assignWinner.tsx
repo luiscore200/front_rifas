@@ -8,9 +8,19 @@ import PremioCard from "../../../../components/user/rifa/ganador/premioCard";
 import NumberGridModal from "../../../../components/user/rifa/ganador/numbersModalGrid";
 import ConfirmationModal from "../../../../components/ConfirmModal";
 import { rifaFind, updateWinner } from "../../../../services/api";
+import { useAuth } from "../../../../services/authContext2";
+import GradientLayout from "../../../layout";
 
 
 export default function Assign() {
+
+  const {auth,logout}=useAuth();
+  const navigationItems = [
+    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
+    { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
+  ];
+
   const { id }: any = useLocalSearchParams<{ id: string }>();
   const { rifa }: any = useLocalSearchParams<{ rifa: string }>();
 
@@ -136,13 +146,7 @@ export default function Assign() {
 
  
   return (
-    <LinearGradient colors={['#6366F1', '#BA5CDE']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.container}>
-      <View style={styles.header}>
-        {/* Aquí puedes agregar contenido al header si es necesario */}
-      </View>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
       <ScrollView style={styles.main}>
        
         <View style={styles.cardContainer}>
@@ -179,7 +183,7 @@ export default function Assign() {
         {!!rifa2 && (
             <NumberGridModal
             visible={grid}
-            totalNumbers={Number(rifa2?.numeros)}
+            totalNumbers={10000}
             touchable={true}
             onSelectNumber={handleConfirm}
             onClose={()=>handleCancel()}
@@ -199,7 +203,7 @@ export default function Assign() {
           />
         )}
       
-    </LinearGradient>
+    </GradientLayout>
   );
 }
 

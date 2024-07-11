@@ -8,12 +8,23 @@ import { LinearGradient } from "expo-linear-gradient";
 import ToastModal from "../../../../components/toastModal";
 import SeparatedCard from "../../../../components/user/rifa/separated/separatedCard";
 import Delete from "../../../../components/ConfirmModal";
+import { useAuth } from "../../../../services/authContext2";
+import GradientLayout from "../../../layout";
 
 
 
 
 
 export default function Assign() {
+
+  const {auth,logout}=useAuth();
+  const navigationItems = [
+    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
+    { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
+  ];
+
+
   const { id }: any = useLocalSearchParams<{ id: string }>();
   const { rifa }: any = useLocalSearchParams<{ rifa: string }>();
   const [separated,setSeparated] = useState<any[]>([]);
@@ -135,14 +146,8 @@ export default function Assign() {
  
 
   return (
-    <LinearGradient colors={['#6366F1', '#BA5CDE']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.container}>
-      <View style={styles.header}>
-        {/* Aquí puedes agregar contenido al header si es necesario */}
-      </View>
-      <ScrollView style={styles.main}>
+<GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
+  <ScrollView style={styles.main}>
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
@@ -194,7 +199,7 @@ export default function Assign() {
           />
               )}
       
-    </LinearGradient>
+    </GradientLayout>
   );
 }
 

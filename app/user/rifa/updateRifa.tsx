@@ -10,6 +10,8 @@ import CardRifaComponent from '../../../components/user/rifa/crear/cardRifaCompo
 import { createPremioValidationRules, createRifaValidationRules, validateForm } from '../../../config/Validators';
 import { router, useLocalSearchParams } from 'expo-router';
 import ToastModal from '../../../components/toastModal';
+import { useAuth } from '../../../services/authContext2';
+import GradientLayout from '../../layout';
 
 
 
@@ -22,6 +24,13 @@ const userCreate: React.FC = () => {
     const {rifa1}:any = useLocalSearchParams<{rifa1:string}>();
     const rifa2= JSON.parse(rifa1);
    // console.log("inicio: ",rifa2);
+
+   const {auth,user,logout}=useAuth();
+   const navigationItems = [
+     { label: 'Inicio', action: () => console.log("hola"),status:0 },
+     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
+     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
+   ];
 
     const [cardForm, setCardForm] = useState(false);
     const [premios, setPremios] = useState<premio[]>(rifa2.premios || [{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
@@ -204,16 +213,12 @@ console.log("formulario invalido");
  
 
   return (
-    <LinearGradient colors={['#6366F1', '#BA5CDE']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.container}>
-      <View style={styles.header}></View>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
       <ScrollView style={styles.main}>
         <TouchableOpacity style={styles.formCard} onPress={() => setCardForm(!cardForm)}>
           <View style={{ marginRight: 20 }} >
-            <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Raffle Details</Text>
-            <Text style={{ fontSize: 16, color: '#666', }}>Fill out the details for your raffle.</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Rifa</Text>
+            <Text style={{ fontSize: 16, color: '#666', }}>Añade las propiedades de tu evento.</Text>
           </View>
           <Ionicons name="chevron-forward-outline" style={{ position: 'absolute', right: 25 }} size={24} color="#CCCCC" />
         </TouchableOpacity>
@@ -229,8 +234,8 @@ console.log("formulario invalido");
 
         <TouchableOpacity style={styles.formCard} onPress={() => setCardForm(!cardForm)}>
           <View style={{ marginRight: 20 }} >
-            <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Prizes</Text>
-            <Text style={{ fontSize: 16, color: '#666', }}> Add the prizes for your raffle.</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Premios</Text>
+            <Text style={{ fontSize: 16, color: '#666', }}> Añade premios para tu evento.</Text>
           </View>
           <Ionicons name="chevron-forward-outline" size={24} style={{ position: 'absolute', right: 25 }} color="#CCCCC" />
         </TouchableOpacity>
@@ -281,7 +286,7 @@ console.log("formulario invalido");
         onClose={handleCloseModal}  
         />
   )}
-    </LinearGradient>
+    </GradientLayout>
   );
 };
 
@@ -329,14 +334,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginVertical: 20,
     paddingVertical: 20,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 10,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    borderWidth:1,
+  
+    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowRadius: 8,
+   elevation: 5,
+
   },
   title: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: 'black', textAlign: 'center' },
   inputGroup: { marginBottom: 16 },
@@ -374,18 +382,21 @@ const styles = StyleSheet.create({
   
   formCard: {
     borderWidth: 1,
-    borderColor: "#CCCCCC",
-    padding: 16,
+ 
+    alignItems:'center',
     marginHorizontal: 10,
     marginVertical: 20,
     paddingVertical: 20,
-    borderRadius:10,
+ 
     flexDirection:'row',
-    alignItems:'center',
+    borderColor: '#ddd',
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 5,
     
   }

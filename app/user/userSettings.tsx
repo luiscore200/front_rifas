@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Switch, ScrollView } from 'react-native';
 
 import { router } from 'expo-router';
 import { sendQr, verifySession, importConfig, verifyEmail, saveConfig} from '../../services/api';
@@ -17,12 +17,12 @@ import { Linking } from 'react-native';
 
 export default function App() {
 
-  const {user}=useAuth();
+  const {user,auth,logout}=useAuth();
 
   const navigationItems = [
     { label: 'Inicio', action: () => router.push('/user/rifa/dashboard'),status:1 },
     { label: 'Configuracion', action: () => console.log("holaa"),status:0 },
-   // { label: 'Logout', action: () =>console.log("holaaaa"),status:1 },
+    { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
 
   const [name, setName] = useState('');
@@ -184,7 +184,7 @@ const handleEmailVerify= async()=>{
  
    <GradientLayout  navigationItems={navigationItems} hasDrawer={true}>
 
-<View  style={styles.main}>
+<ScrollView  style={styles.main}>
 <View style={styles.formContainer}>
 <Text style={{ fontWeight: 'bold', fontSize: 20,color:'#374151', marginBottom: 10 }}>Notificaciones</Text>
 <Text style={{ fontSize: 16, color: '#666',paddingBottom:15 }}>En esta parte podras configurar tu sistema de notificaciones.</Text>
@@ -282,7 +282,7 @@ const handleEmailVerify= async()=>{
             </TouchableOpacity>
           </View>
 </View>
-</View>
+</ScrollView>
 { (
   <ToastModal
   message={responseMessage}
@@ -354,13 +354,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginVertical: 20,
     paddingVertical: 20,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 10,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    
+    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 5,
 
   },

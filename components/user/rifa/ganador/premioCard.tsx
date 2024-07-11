@@ -79,7 +79,7 @@ const PremioCard: React.FC<PremioCardProps> = (obj) => {
 const styles = StyleSheet.create({
     card: {
         borderWidth: 1,
-        borderColor: "#ccc",
+        borderColor: "#ddd",
         borderRadius: 10,
         padding: 10,
         marginVertical: 8,
@@ -89,6 +89,8 @@ const styles = StyleSheet.create({
     cardPending: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
+        borderColor:"#ddd",
+        borderWidth:3,
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 5,

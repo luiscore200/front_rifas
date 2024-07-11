@@ -2,15 +2,15 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput,TouchableOpacity, ScrollView, KeyboardAvoidingView,Platform } from 'react-native';
 import { router } from 'expo-router';
-import {  phoneCodeIndex, register } from '../services/api';
+import {  phoneCodeIndex, register } from '../../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../services/authContext2';
-import { phoneCode as code } from '../config/Interfaces';
+import { useAuth } from '../../services/authContext2';
+import { phoneCode as code } from '../../config/Interfaces';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
-import { validateForm,registerValidationRules } from '../config/Validators';
+import { validateForm,registerValidationRules } from '../../config/Validators';
 
-import ToastModal from '../components/toastModal';
+import ToastModal from '../../components/toastModal';
 
 
 
@@ -267,7 +267,7 @@ export default function Register() {
               <TouchableOpacity style={styles.footerLink}>
                 <Text style={styles.footerText}></Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.footerLink} onPress={() => router.navigate("/")}>
+              <TouchableOpacity style={styles.footerLink} onPress={() => router.navigate("auth/login")}>
                 <Text style={styles.footerText}>¿Ya tienes una cuenta?</Text>
               </TouchableOpacity>
             </View>
