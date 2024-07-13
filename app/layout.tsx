@@ -1,25 +1,47 @@
 import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback } from 'react-native';
-import { MenuIcon2 } from '../assets/icons/userIcons';
+import { StyleSheet, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { MenuIcon2, NotificationBellIcon } from '../assets/icons/userIcons';
+
+import { router } from 'expo-router';
 
 
 interface GradientLayoutProps {
   children:any;
   navigationItems:any;
   hasDrawer?:boolean;
+  hasNotifications?:boolean;
+  notificatioitems?:any
   Touched?:()=> void;
 }
 
-const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems, hasDrawer = false,Touched }) => {
+const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems,hasNotifications=false,notificatioitems, hasDrawer = false,Touched }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
+  const [menu,setMenu]=useState(false);
 
   const touched = ()=> {
     if(Touched){Touched();}
-  }  
+  }
+
+  const closeAll=()=>{
+    if(isDrawerOpen){
+      toggleDrawer();
+    }
+    if(menu){
+      toggleMenu();
+    }
+    touched();
+  }
+
+  const toggleMenu=()=>{
+  setMenu(!menu);
+  if(Touched){touched()}
+  if(isDrawerOpen){toggleDrawer()}
+  }
 
   const toggleDrawer = () => {
+    if(menu){toggleMenu()}
     if (Touched) {
       Touched();
     }
@@ -42,9 +64,78 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
     outputRange: [-250, 0], // Width of the drawer
   });
 
+
+
+  const Notificaciones = (props:any) => {
+    const sistema = props.items.filter((obj:any) => obj.fuente === 'sistema');
+    const suscripcion = props.items.filter((obj:any) => obj.fuente === 'suscripcion');
+    const configuracion = props.items.filter((obj:any) => obj.fuente === 'configuracion');
+  
+    const renderNotificaciones = (title:string, notificaciones:any) => (
+      <View>
+        {notificaciones.length > 0 && (
+          <>
+            <View style={{ width: '100%', backgroundColor: '#f1f5f9', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 5, marginBottom: 5 }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 14, color: '#1f2937' }}>{title}</Text>
+            </View>
+            {notificaciones.map((obj:any, index:number) => (
+              <TouchableOpacity key={index}  
+              activeOpacity={obj.fuente==="suscripcion"||"configuracion"?0:1}
+              onPress={()=>obj.fuente==="suscripcion"?console.log("suscripcion"):obj.fuente==="configuracion"?router.navigate("user/userSettings"):undefined }   style={{
+                padding: 10,
+                borderBottomColor: '#e5e7eb',
+                borderBottomWidth: index === notificaciones.length - 1 ? 0 : 1
+              }}>
+                <Text style={{ color: '#6b7280', fontSize: 14, marginBottom: 4 }}>{obj.mensaje}</Text>
+                <Text style={{ color: '#9ca3af', fontSize: 12 }}>{obj.fuente}</Text>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+      </View>
+    );
+  
+    return (
+      <View style={{
+        padding: 10,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        position: 'absolute',
+        width: 300,
+        minHeight: 350,
+        maxHeight: 450,
+        top: 80,
+        right: 10,
+        zIndex: 2,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5
+      }}>
+        <Text style={{
+          fontWeight: 'bold',
+          fontSize: 16,
+          color: '#374151',
+          padding: 10,
+          borderBottomColor: '#e5e7eb',
+          borderBottomWidth: 1
+        }}>Notificaciones</Text>
+        <ScrollView style={{ marginVertical: 10 }}>
+          {renderNotificaciones('Suscripción', suscripcion)}
+          {renderNotificaciones('Configuración', configuracion)}
+          {renderNotificaciones('Sistema', sistema)}
+        </ScrollView>
+      </View>
+    );
+  }
+
+
   return (
 
-  <TouchableWithoutFeedback onPress={isDrawerOpen?toggleDrawer:touched}>
+  <TouchableWithoutFeedback onPress={closeAll}>
     <LinearGradient
       colors={['#6366F1', '#BA5CDE']}
       start={{ x: 0, y: 0 }}
@@ -52,11 +143,22 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
       style={styles.container}
     >
       <View style={styles.header}>
-        {hasDrawer && (
+     
+      {hasDrawer && (
           <TouchableOpacity onPress={toggleDrawer} style={styles.menuButtonContainer}>
             <MenuIcon2 style={styles.menuIcon} />
           </TouchableOpacity>
         )}
+    <View>   
+       {hasNotifications && (
+          <TouchableOpacity style={[styles.menuButtonContainer,{marginHorizontal:15}]} onPress={()=>toggleMenu()}>
+          <NotificationBellIcon number={notificatioitems ? notificatioitems.filter((obj:any) => obj.seen === false).length : 0}style={{color:'white'}} />
+       </TouchableOpacity>
+        )}
+
+       
+      </View>
+      
       </View>
 
       {hasDrawer && (
@@ -87,7 +189,9 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
           </View>
         </Animated.View>
       )}
-    
+ {menu && (
+          <Notificaciones  items={notificatioitems? notificatioitems:[]}/>
+        )}
       {children}
     </LinearGradient>
     </TouchableWithoutFeedback>
@@ -103,6 +207,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: 64,
+    justifyContent:'space-between',
     paddingHorizontal: 16,
     backgroundColor: 'transparent',
     borderBottomWidth: 1,

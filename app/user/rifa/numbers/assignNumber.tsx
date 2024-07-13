@@ -6,9 +6,19 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { rifa } from "../../../../config/Interfaces";
 import { LinearGradient } from "expo-linear-gradient";
 import ToastModal from "../../../../components/toastModal";
+import { useAuth } from "../../../../services/authContext2";
+import GradientLayout from "../../../layout";
 
 
 export default function Assign() {
+
+  const {auth,logout}=useAuth();
+  const navigationItems = [
+    { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
+    { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
+    { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
+  ];
+
   const { id }: any = useLocalSearchParams<{ id: string }>();
   const [asignaciones, setAsignaciones] = useState<any | null>(null);
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
@@ -65,26 +75,22 @@ export default function Assign() {
   };
 
   return (
-    <LinearGradient colors={['#6366F1', '#BA5CDE']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.container}>
-      <View style={styles.header}>
-        {/* Aquí puedes agregar contenido al header si es necesario */}
-      </View>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
+
+    
       <View style={styles.gridContainer}>
-        <View style={{ marginTop: 10 }}>
+        
           <Text style={{ fontWeight: 'bold', fontSize: 16, margin: 20 }}>Escoja sus números</Text>
           <RifaGrid
-            totalNumbers={rifa2 != undefined ? Number(rifa2.numeros) : 100}
+            totalNumbers={rifa2 != undefined? Number(rifa2?.numeros):100}
             assignedNumbers={!!asignaciones ? asignaciones : []}
-            maxHeight={Dimensions.get('window').height * 0.6} // Ajusta el valor para usar un 70% de la altura de la pantalla
+            maxHeight={400} // Ajusta el valor para usar un 70% de la altura de la pantalla
             onConfirmSelection={handleConfirmSelection}
             price={rifa2 != undefined ? rifa2?.precio : 0}
             premios={premios}
-            cuadricula={7}
+          
           />
-        </View>
+       
       </View>
       {(
              <ToastModal
@@ -95,7 +101,7 @@ export default function Assign() {
              onClose={handleCloseModal}  
              />
                 )}
-    </LinearGradient>
+    </GradientLayout>
   );
 }
 
