@@ -633,6 +633,27 @@ export const rifaUpdate = async (obj:rifa) => {
     } 
   }
 
+  export const generalConfig = async()=>{
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/generalConfig`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+         
+        },
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
+
+
 
 
 

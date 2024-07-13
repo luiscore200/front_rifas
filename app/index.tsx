@@ -3,15 +3,33 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Switch, ScrollView
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useRouter } from 'expo-router';
 import GradientLayout from './layout';
-import LottieView from 'lottie-react-native';
+import { generalConfig } from '../services/api';
+import { setStorageItemAsync } from '../services/storage';
+
+
 
 
 
 const home = ()=>{
 
-useEffect(()=>{setTimeout(() => {
-//   router.replace("auth/login");
-  }, 5000);
+
+  const handleConfig = async()=>{
+   try {
+    const response = await generalConfig();
+    if(!!response.mensaje){
+      await setStorageItemAsync('general_config', JSON.stringify(response.config));
+    }
+    console.log(response);
+   } catch (error) {
+    
+   }
+  }
+
+useEffect(()=>{
+  handleConfig();
+  setTimeout(() => {
+  router.replace("auth/login");
+  }, 3000);
   },[]);
 
 return(

@@ -7,6 +7,8 @@ import { rifa } from '../../../../config/Interfaces';
 import { compradorValidationRules, validateForm } from '../../../../config/Validators';
 import { cashInNequi, getNequiToken, validateClientAndAmount, createComprador,assignNumbers, main } from '../../../../services/api';
 import ToastModal from '../../../../components/toastModal';
+import { useAuth } from '../../../../services/authContext2';
+import GradientLayout from '../../../layout';
 
 
 interface error {
@@ -23,6 +25,15 @@ interface comprador {
 }
 
 export default function AssignClient() {
+
+
+    const {auth,user,logout}=useAuth();
+    const navigationItems = [
+     { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
+      { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
+      { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
+    ];
+
     const { id }: any = useLocalSearchParams<{ id: string }>();
     const { number }: any = useLocalSearchParams<{ number: string }>();
     const [Numbers, setNumbers] = useState<number[]>([]);
@@ -115,14 +126,7 @@ const a= await  main();
     }
 
     return (
-        <LinearGradient
-            colors={['#6366F1', '#BA5CDE']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.container}>
-            <View style={styles.header}>
-                {/* Aquí puedes agregar contenido al header si es necesario */}
-            </View>
+        <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
             <ScrollView style={styles.main}>
                 <View style={styles.formContainer}>
                     <Text style={styles.title}>Asignar Comprador</Text>
@@ -179,7 +183,7 @@ const a= await  main();
              onClose={handleCloseModal}  
              />
                 )}
-        </LinearGradient>
+        </GradientLayout>
     );
 }
 

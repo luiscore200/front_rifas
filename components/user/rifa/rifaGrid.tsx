@@ -1,6 +1,6 @@
-import React, { useState, FC } from 'react';
+import React, { useState, FC, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Button } from 'react-native';
-import { StarIcon, StarIcon2 } from '../../../assets/icons/userIcons';
+import { NextIcon, PrevIcon, StarIcon, StarIcon2 } from '../../../assets/icons/userIcons';
 
 interface AssignedNumber {
   id: number;
@@ -12,7 +12,7 @@ interface AssignedNumber {
 
 interface RifaGridProps {
   totalNumbers: number;
-  cuadricula:number;
+  
   assignedNumbers: AssignedNumber[];
   maxHeight: number;
   price: number;
@@ -20,10 +20,30 @@ interface RifaGridProps {
   onConfirmSelection: (selectedNumbers: number[]) => void;
 }
 
-const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,premios, price, maxHeight, onConfirmSelection }) => {
+const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, price, maxHeight, onConfirmSelection }) => {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
+  const  itemsPerPage= 100;
+  const cuadricula = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(totalNumbers / itemsPerPage);
+  const [list,setList]=useState(false);
+  const [lista,setLista]=useState<any[]>([]);
+
+   
+  useEffect(() => {
+    const listDistance= 1000;
+     const aa = [];
+     for (let i = 0; i < totalNumbers; i += listDistance) {
+       const page = Math.floor(i / itemsPerPage) + 1;
+       aa.push({text:`${i + 1} - ${i + listDistance}`,page});
+     }
+     setLista(aa);
+   }, [totalNumbers]);
+
 
   const toggleNumberSelection = (number: number): void => {
+    if(list){setList(false)}
     setSelectedNumbers(prevSelected =>
       prevSelected.includes(number) ? prevSelected.filter(num => num !== number) : [...prevSelected, number]
     );
@@ -116,14 +136,115 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,
     );
   };
 
+  
+
+  const RenderListPaginations = () => {
+    return (
+      <View style={{
+        padding: 10,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        position: 'absolute',
+        width: 200,
+        minHeight: 200,
+        maxHeight: 450,
+        top: 55,
+        right:90,
+        zIndex: 999,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        overflow: 'hidden'
+      }}>
+        <ScrollView contentContainerStyle={{ paddingVertical: 6 }}>
+          {lista.map((obj, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => {setList(false);setCurrentPage(obj.page);}}
+              style={{
+                paddingVertical: 5,
+                paddingHorizontal: 15,
+                backgroundColor: '#f0f0f0',
+                borderRadius: 5,
+                marginBottom: 10,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Text style={{ color: '#333', fontSize: 14,fontWeight:'400' }}>{obj.text}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+  
+   const renderPagination = () => (
+    <View style={{    flexDirection: 'row',justifyContent: 'space-between',alignItems: 'center',marginBottom: 10,}}>
+      <TouchableOpacity
+        disabled={currentPage === 1}
+        onPress={() => setCurrentPage(currentPage - 1)}
+        style={[{  paddingHorizontal:30, padding: 10,}, currentPage === 1 && {  opacity: 0.3,}]}
+      >
+        <PrevIcon style={{color:"#6b7280"}}/>
+      </TouchableOpacity>
+     <TouchableOpacity onPress={()=>setList(!list)}>
+      <Text style={{  fontSize: 16,}}>{`Página ${currentPage} de ${totalPages}`}</Text>
+     </TouchableOpacity>
+   
+      <TouchableOpacity
+        disabled={currentPage === totalPages}
+        onPress={() => setCurrentPage(currentPage + 1)}
+        style={[{  paddingHorizontal:30, padding: 10,}, currentPage === totalPages && {  opacity: 0.3,}]}
+      >
+         <NextIcon style={{color:'#6b7280'}}/>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const ColumnGrid = () => {
+    if (selectedNumbers.length === 0) {
+      return null; // Retorna null si no hay elementos
+    }
+  
+    const matrix = [];
+    let i = 0;
+  
+    while (i < selectedNumbers.length) {
+      const duo = selectedNumbers.slice(i, i + 2);
+      matrix.push(
+        <View key={i} style={{ flexDirection: 'column' }}>
+          {duo.map((number, index) => (
+            <TouchableOpacity activeOpacity={1} onPress={()=>setList(false)} key={index} style={styles.selectedNumber}>
+              <Text style={styles.selectedNumberText}>{number}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      );
+      i += 2;
+    }
+  
+    return (
+      <View style={{ flexDirection: 'row' }}>
+        {matrix}
+      </View>
+    );
+  };
   const renderGrid = () => {
+    const startNumber = (currentPage - 1) * itemsPerPage + 1;
+    const maxNumber= startNumber + itemsPerPage -1;
+    console.log(startNumber +" "+maxNumber);
     const grid = [];
-    let number = 1;
-    while (number <= totalNumbers) {
+    let number = startNumber;
+    while (number <= maxNumber) {
       const row = [];
-      for (let i = 0; i < 5 && number <= totalNumbers; i++) {
+      for (let i = 0; i < (Math.ceil(Math.sqrt(itemsPerPage))/5) && number <= maxNumber; i++) {
         row.push(renderMatrix(number));
-        number +=cuadricula*cuadricula;
+        number += cuadricula * cuadricula;
       }
       grid.push(
         <View key={number} style={styles.gridRow}>
@@ -135,13 +256,15 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,
   };
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity activeOpacity={1} onPress={()=>setList(false)} style={styles.container}>
+        {renderPagination()}
      <View style={{paddingTop:5,paddingHorizontal:20}}>
-     <ScrollView horizontal>
-        <ScrollView style={{ maxHeight:maxHeight,minHeight:maxHeight }}>
-          <View>
-            {renderGrid()}
-          </View>
+     <ScrollView horizontal  onTouchStart={()=>setList(false)}>
+        <ScrollView style={{ height:maxHeight}} onTouchStart={()=>setList(false)}>
+          <TouchableOpacity activeOpacity={1} onPress={()=>list?setList(false):undefined}>
+            {renderGrid()
+            }
+          </TouchableOpacity>
         </ScrollView>
       </ScrollView>
      </View>
@@ -164,18 +287,10 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,
         </View>
         
         <View style={styles.selectedNumbersRow}>
-          <Text style={[styles.selectedNumbersTitle, { flex: 3 }]}>Tus números</Text>
-          <ScrollView style={ { flex: 7 }}  horizontal>
-          <View style={[styles.selectedNumbers]}>
-          
-            {selectedNumbers.map(number => (
-              <View key={number} style={styles.selectedNumber}>
-                <Text style={styles.selectedNumberText}>{number}</Text>
-              </View>
-            ))}
-           
-          </View>
-          </ScrollView>
+          <Text style={[styles.selectedNumbersTitle, { flex: 1 }]}>Tus números</Text>
+             <ScrollView horizontal   style={{borderWidth:0,maxWidth:'60%'}}>
+            <ColumnGrid/>
+             </ScrollView>
         </View>
         <View style={styles.totalContainer}>
           <View>
@@ -187,7 +302,10 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers,cuadricula, assignedNumbers,
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+      {list && (<RenderListPaginations/>)
+
+      }
+    </TouchableOpacity>
   );
 };
 
@@ -195,6 +313,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   
+  },
+  container2: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  column: {
+    flexDirection: 'column',
+    margin: 5,
+  },
+  item: {
+    backgroundColor: '#ccc',
+    padding: 10,
+    margin: 5,
   },
   row: {
     flexDirection: 'row',
@@ -207,6 +338,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 2,
     borderRadius: 5,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 2
   },
   cellWinner: {
     width: 40,
@@ -218,6 +356,12 @@ const styles = StyleSheet.create({
     borderWidth:2,
     borderColor:'#facc15',
     borderRadius: 5,
+    
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 2
   },
   
   cellText: {
@@ -231,6 +375,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 2,
     borderRadius: 5,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 2
   },
   assignedWinnerCell: {
     width: 40,
@@ -242,6 +393,12 @@ const styles = StyleSheet.create({
     borderWidth:2,
     borderColor:"#ca8a04",
     borderRadius: 5,
+  
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 2
   },
   assignedCellText: {
     color: '#fff',
@@ -254,6 +411,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 2,
     borderRadius: 5,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 2
   },
   reservedWinnerCell: {
     width: 40,
@@ -265,6 +428,13 @@ const styles = StyleSheet.create({
     borderWidth:2,
     borderColor:"#ca8a04",
     borderRadius: 5,
+
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 2
   },
   reservedCellText: {
     color: '#fff',
@@ -277,6 +447,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 2,
     borderRadius: 5,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 2
   },
   selectedCellText: {
     color: '#fff',
@@ -301,19 +477,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   selectedNumbersContainer: {
-    position:'relative',
+    position:'absolute', 
     borderTopStartRadius:20,
     borderTopEndRadius:20,  
-    borderWidth:0,
+    borderWidth:1,
+    borderColor:'#9ca3af',
+    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width:0,height:-10 },
-  
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  
+    borderBottomWidth:0,
     
     padding:10,
+    bottom:0,
+    right:0,
+    left:0,
+    paddingVertical:20,
+   
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 2
   
   },
   legendContainer: {
@@ -336,6 +518,7 @@ const styles = StyleSheet.create({
     minHeight: 100,
     maxHeight:100,
     marginHorizontal:10,
+ 
     
   },
   selectedNumbersTitle: {
@@ -344,6 +527,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   selectedNumbers: {
+    borderWidth:1,
     flexDirection: 'column',
     flexWrap: 'wrap',
     marginVertical: 10,

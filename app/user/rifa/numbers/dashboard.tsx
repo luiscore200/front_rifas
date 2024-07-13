@@ -19,7 +19,7 @@ export default function Assign() {
 
   const {auth,logout}=useAuth();
   const navigationItems = [
-    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];

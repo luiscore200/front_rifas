@@ -1,5 +1,6 @@
 import React from 'react';
 import { Svg, Path, Line,Polygon, Circle, Polyline, Text } from 'react-native-svg';
+import { View, StyleSheet } from 'react-native';
 
 export const EditIcon = (props: any) => (
   <Svg
@@ -194,11 +195,22 @@ export const MenuIcon1 = (props:any)=>(
 );
 
 export const MenuIcon2 = (props: any) => (
-  <Svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+  <Svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <Line x1="3" y1="12" x2="21" y2="12" />
     <Line x1="3" y1="6" x2="21" y2="6" />
     <Line x1="3" y1="18" x2="21" y2="18" />
-  </Svg>
+  </Svg>  
 );
 
 
@@ -327,3 +339,102 @@ export const NextIcon = (props: any) => (
     />
   </Svg>
 );
+
+export const PrevIcon = (props: any) => (
+  <Svg 
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+  >
+    <Path 
+      d="M15 18l-6-6 6-6" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+    />
+  </Svg>
+);
+
+
+
+// Componente del icono de la campana
+const BellIcon = (props:any) => (
+  <Svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <Path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></Path>
+    <Path d="M13.73 21a2 2 0 0 1-3.46 0"></Path>
+  </Svg>
+);
+
+// Componente del contador de notificaciones
+const NotificationCounter = ({ number }:any) => (
+  <Svg
+ 
+   
+    width="20"
+    height="20"
+    viewBox="0 0 26 26"
+    fill="none"
+  >
+    <Circle
+      cx="12"
+      cy="12"
+      r="12"
+      fill="red"
+    />
+    <Text
+      x="12"
+      y="12"
+      fontSize="14"
+      fontWeight="700"
+      fill="white"
+      textAnchor="middle"
+      alignmentBaseline="middle"
+    >
+      {number}
+    </Text>
+  </Svg>
+);
+
+// Componente que superpone los SVGs
+export const NotificationBellIcon = ({ style, number }:any) => (
+  <View style={[styles.container, style]}>
+    <BellIcon />
+    {number !== undefined && number > 0 && (
+      <View style={styles.counterContainer}>
+        <NotificationCounter number={number} />
+      </View>
+    )}
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    width: 24,
+    height: 24,
+    position: 'relative',
+  },
+  counterContainer: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+  },
+});
+
+

@@ -9,6 +9,7 @@ import { phoneCode as code } from '../../config/Interfaces';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { validateForm,registerValidationRules } from '../../config/Validators';
+import { getStorageItemAsync } from '../../services/storage';
 
 import ToastModal from '../../components/toastModal';
 
@@ -17,6 +18,7 @@ import ToastModal from '../../components/toastModal';
 export default function Register() {
   const {login}=useAuth();
   interface Errors {email?: string;password?: string; name?:string,selectedCode?:string, phone?:string, domain?:string}
+  const [config,setConfig]=useState<any>(null);
   const [phoneCode, setPhoneCode] = useState<code[]>([]);
   const [selectedCode, setSelectedCode] = useState<string>("");
   const [name, setName] = useState<string>("");
@@ -34,10 +36,15 @@ export default function Register() {
   const [responseIndexMessage,setResponseIndexMessage]=useState<string | null>(null);
   const [indexToast,setIndexToast]=useState(false);
 
+  const handleConfig = async ()=>{
+    
+    const conf = await getStorageItemAsync("general_config");
+    console.log(conf);
+    setConfig(conf?JSON.parse(conf):null);
+  
+  }
+  useEffect(()=>{handleConfig();handleCodePhone();},[]);
 
-  useEffect(() => {
-    handleCodePhone();
-  }, []);
 
 
   useEffect(() => {
@@ -154,7 +161,7 @@ export default function Register() {
     >
       <View style={styles.innerContainer}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>megaWIN</Text>
+        <Text style={styles.logoText}>{config?config.app_name:"MegaWIN"}</Text>
           <Text style={styles.logoDescription}>App de rifas digitales</Text>
         </View>
         <KeyboardAvoidingView

@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
     marginBottom: 70,
     alignItems: 'center',
     elevation: 5,
+    maxWidth:'80%',
   },
   modalContainerDark: {
     backgroundColor: '#333',

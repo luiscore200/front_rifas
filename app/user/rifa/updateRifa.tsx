@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ToastAndroid } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { rifa,premio } from '../../../config/Interfaces';
@@ -12,6 +11,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import ToastModal from '../../../components/toastModal';
 import { useAuth } from '../../../services/authContext2';
 import GradientLayout from '../../layout';
+import { getStorageItemAsync } from '../../../services/storage';
+
 
 
 
@@ -27,11 +28,11 @@ const userCreate: React.FC = () => {
 
    const {auth,user,logout}=useAuth();
    const navigationItems = [
-     { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
      { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
      { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
    ];
-
+    const [config,setConfig]=useState<any>();
     const [cardForm, setCardForm] = useState(false);
     const [premios, setPremios] = useState<premio[]>(rifa2.premios || [{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
     const [rifa, setRifa] = useState<rifa>({id:rifa2.id||0, titulo: rifa2.titulo || "", pais: rifa2.pais || "Colombia", precio: rifa2.precio || 0, numeros: rifa2.numeros || 100, tipo: rifa2.tipo || "premio_unico" });
@@ -44,6 +45,13 @@ const userCreate: React.FC = () => {
     const [hasError, setHasError] = useState(false);
     const [responseMessage, setResponseMessage] = useState<string | null>(null);
   
+    const handleConfig = async ()=>{
+      const conf = await getStorageItemAsync("general_config");
+      console.log(conf);
+      setConfig(conf?JSON.parse(conf):null);
+    
+    }
+    useEffect(()=>{handleConfig()},[]);
 
   // Reset premios, touched fields y error fields cuando cambia el tipo de rifa
   useEffect(() => {
@@ -72,6 +80,24 @@ const userCreate: React.FC = () => {
   
 
   const handleSave = async() => {
+  //  console.log("aaa",rifa.numeros+" "+config.raffle_number);
+    if (!user) {
+      setHasError(true);
+      setResponseMessage("No existe ningún usuario autenticado para solicitar la actualización");
+      setModalVisible(true);
+      return;
+    }
+  
+    // Verificar si el usuario no ha pagado y si el número de entradas es mayor al máximo permitido
+    if (user.payed === 0 && config && Number(rifa.numeros) > Number(config.raffle_number)) {
+      setHasError(true);
+      setResponseMessage(`El número máximo de entradas para no suscritos es ${config.raffle_number}`);
+      setModalVisible(true);
+      return;
+    }
+    
+
+
 
     const updatedTouchedRifa = {titulo:true,precio:true,numeros:true,tipo:true};
     setTouchedFieldRifa(updatedTouchedRifa);
@@ -118,16 +144,6 @@ console.log("formulario invalido");
   };
 }
 
-  function showToast(mensaje: string, duracion: string) {
-    if (Platform.OS === "android") {
-      if (duracion === "short") {
-        ToastAndroid.show(mensaje, ToastAndroid.SHORT);
-      }
-      if (duracion === "long") {
-        ToastAndroid.show(mensaje, ToastAndroid.LONG);
-      }
-    }
-  }
 
   const handleUpdateRifa = (field:string,value:any) => {
     const updatedRifa= {...rifa,[field]:value};
@@ -195,17 +211,20 @@ console.log("formulario invalido");
   const handleAddPrize = () => {
     if (premios.length < 4) {
       if (rifa.tipo === "premio_unico" && premios.length >= 1) {
-        showToast("Rifa de premio único solo acepta una entrada", "short");
+        setResponseMessage("Rifa de premio único solo acepta una entrada");
+        setModalVisible(true);
       } else {
         setPremios([...premios, { id: premios.length, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
         setTouchedFieldPremios([...touchedFieldPremios, { descripcion: false, loteria: false, fecha: false }]);
         setErrorPremios([...errorPremios, {}]);
         if (rifa.tipo === "anticipados") {
-          showToast("Recuerda rellenar los premios del último 'mayor' al primero en orden regresivo", "long");
+          setResponseMessage("Recuerda rellenar los premios del último 'mayor' al primero en orden regresivo");
+          setModalVisible(true);
         }
       }
     } else {
-      showToast("El máximo de entradas para cualquier tipo de rifas es 4", "short");
+      setResponseMessage("El máximo de entradas para cualquier tipo de rifas es 4");
+      setModalVisible(true);
     }
   };
 

@@ -64,7 +64,7 @@ const MenuCard: React.FC<MenuCardProps> = ({ isvisible,event,rifa,onOptions,onCl
            
                   <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingVertical:5,paddingBottom:10,borderBottomWidth:1,borderColor:"#cccc"}} onPress={()=>closeModal("compartir")}>
                    <View style={{paddingRight:10}}>
-                    <ShareIcon style={{width:18,height:18}}/>
+                    <ShareIcon style={{width:18,height:18,color:"#1f2937"}}/>
                    </View>
                     <Text>Compartir</Text>
                   </TouchableOpacity>
@@ -90,7 +90,7 @@ const MenuCard: React.FC<MenuCardProps> = ({ isvisible,event,rifa,onOptions,onCl
                  <View  style={{borderTopWidth:1,borderColor:'#cccc',paddingVertical:10}}>
                  <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingVertical:5}} onPress={()=>closeModal("editar")}>
                    <View style={{paddingRight:10}}>
-                    <EditIcon style={{width:18,height:18}}/>
+                    <EditIcon style={{width:18,height:18, color:"#1f2937"}}/>
                    </View>
                     <Text>Editar</Text>
                   </TouchableOpacity>

@@ -10,14 +10,22 @@ import { useAuth } from '../../services/authContext2';
 import { MaterialIcons } from '@expo/vector-icons';
 import { loginValidationRules, validateForm } from '../../config/Validators';
 import ToastModal from '../../components/toastModal';
+import { getStorageItemAsync } from '../../services/storage';
+import BannerModal from '../../components/bannerModal';
 
 
 
+
+
+interface Errors {email?: string;password?: string;}
 
 
 
 export default function index() {
-  interface Errors {email?: string;password?: string;}
+ 
+
+  
+  const [config,setConfig]=useState<any>(null);
   const {login}=useAuth();
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
@@ -27,8 +35,25 @@ export default function index() {
   const [hasError, setHasError] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
   const [toast,setToast]=useState(false);
+  const [banner,setBanner]=useState<string>("");
+  const [bannerVisible,setBannerVisible]=useState(false);
 
-  
+const handleConfig = async ()=>{
+  const conf = await getStorageItemAsync("general_config");
+  console.log(conf);
+  setConfig(conf?JSON.parse(conf):null);
+
+}
+useEffect(()=>{handleConfig()},[]);
+useEffect(()=>{
+setTimeout(() => {
+  if(config){
+    setBanner(config.banner_1);
+    setBannerVisible(true);
+   }
+}, 1000);
+},[config]);
+    
   useEffect(() => {
     setErrors(validateForm({ email, password }, touchedFields,loginValidationRules));
   }, [ email, password, touchedFields]);
@@ -37,8 +62,6 @@ export default function index() {
     setTouchedFields({ ...touchedFields, [fieldName]: true });
   };
 
-
- 
   const handleLogin = async () => {
     setTouchedFields({  email: true, password: true });
     const formErrors = validateForm({  email, password }, touchedFields, loginValidationRules);
@@ -58,8 +81,7 @@ export default function index() {
         console.log(error.message);
         setResponseMessage(error.message);
         setToast(true);
-        
-  
+      
       }
     
       /*  router.navigate({
@@ -67,7 +89,7 @@ export default function index() {
             params: { token: data.access_token },
           });
         */ 
-  
+
     } else {
       console.log('Formulario inválido:', formErrors);
     }
@@ -75,7 +97,6 @@ export default function index() {
     
    
   };
-
   
   function handleToast(){
     setToast(!toast);
@@ -87,8 +108,6 @@ export default function index() {
   }
 
 
-  
-  
 
    
    return (
@@ -101,7 +120,7 @@ export default function index() {
       <View style={styles.innerContainer}>
         <View style={styles.logoContainer}>
           
-          <Text style={styles.logoText}>megaWIN</Text>
+          <Text style={styles.logoText}>{config?config.app_name:"MegaWIN"}</Text>
           <Text style={styles.logoDescription}>App de rifas digitales</Text>
         </View>
         <View style={styles.card}>
@@ -169,7 +188,10 @@ export default function index() {
         onClose={handleToast}  
         />
   )
-
+  }
+        {banner!=="" && (
+      <BannerModal visible={bannerVisible} imageUrl={banner} onClose={()=>setBannerVisible(false)}/>
+  )
   }
     </LinearGradient>
   );
@@ -178,6 +200,7 @@ export default function index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    
     justifyContent: 'center',
     alignItems: 'center',
   },

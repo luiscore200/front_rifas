@@ -46,7 +46,7 @@ const MainLayout = () => {
         console.log("No estás autenticado y estás intentando acceder a una ruta protegida.");
        // router.replace('user/rifa/dashboard');
        // router.replace('admin/adminConfig');
-      // router.replace('auth/login');
+       router.replace('auth/login');
       // router.replace('/register');
       }
     }

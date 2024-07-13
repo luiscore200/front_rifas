@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ToastAndroid } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { rifa } from '../../../config/Interfaces';
@@ -15,6 +14,7 @@ import { useAuth } from '../../../services/authContext2';
 import ToastModal from '../../../components/toastModal';
 import { premio } from '../../../config/Interfaces';
 import GradientLayout from '../../layout';
+import { getStorageItemAsync } from '../../../services/storage';
 
 
 
@@ -43,13 +43,22 @@ const userCreate: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [hasError,setHasError]=useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
+  const [config,setConfig]=useState<any>();
   
   useEffect(()=>{
      
      setRifa({...rifa,pais:user?.country});
   },[user]);
 
- 
+
+  useEffect(()=>{handleConfig()},[]);
+
+  const handleConfig = async ()=>{
+    const conf = await getStorageItemAsync("general_config");
+    console.log(conf);
+    setConfig(conf?JSON.parse(conf):null);
+  
+  }
 
 
   // Reset premios, touched fields y error fields cuando cambia el tipo de rifa
@@ -79,6 +88,21 @@ const userCreate: React.FC = () => {
   
 
   const handleSave = async() => {
+
+    if (!user) {
+      setHasError(true);
+      setResponseMessage("No existe ningún usuario autenticado para solicitar la actualización");
+      setModalVisible(true);
+      return;
+    }
+  
+    // Verificar si el usuario no ha pagado y si el número de entradas es mayor al máximo permitido
+    if (user.payed === 0 && config && Number(rifa.numeros) > Number(config.raffle_number)) {
+      setHasError(true);
+      setResponseMessage(`El número máximo de entradas para no suscritos es ${config.raffle_number}`);
+      setModalVisible(true);
+      return;
+    }
 
     const updatedTouchedRifa = {titulo:true,precio:true,numeros:true,tipo:true};
     setTouchedFieldRifa(updatedTouchedRifa);

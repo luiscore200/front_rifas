@@ -16,7 +16,7 @@ export default function Assign() {
 
   const {auth,logout}=useAuth();
   const navigationItems = [
-    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
@@ -38,7 +38,7 @@ export default function Assign() {
   useEffect(() => { setRifa2(JSON.parse(rifa)) }, [id]);
 
   useEffect(() => { 
-    console.log("actualuzadi", rifa2);
+    console.log("actualuzado", rifa2);
   }, [rifa2]);
   
   useEffect(() => { 
@@ -183,11 +183,11 @@ export default function Assign() {
         {!!rifa2 && (
             <NumberGridModal
             visible={grid}
-            totalNumbers={10000}
+            totalNumbers={rifa2.numeros?10000:100}
             touchable={true}
             onSelectNumber={handleConfirm}
             onClose={()=>handleCancel()}
-            maxHeight={600}
+            maxHeight={400}
             cuadricula={5}
           />
         )}
