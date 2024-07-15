@@ -57,7 +57,7 @@ export default function Assign() {
         if(!Array.isArray(response)){
           setSeparated([]);
           setSeparated2([]);
-          
+        
           setResponseMessage("algo ha ocurrido, no se ha podido cargar el listado");
           setHasError(true);
           setModal(true);

@@ -5,6 +5,8 @@ import { getToken } from "./auth";
 
 
 
+//const API_URL =  'https://node-test1-24qmuklu8-luiscore200s-projects.vercel.app';  // Reemplaza con la IP local de tu máquina de desarrollo
+
 const API_URL =  'http://192.168.1.83:3000';  // Reemplaza con la IP local de tu máquina de desarrollo
 const clientId = '6j7o172o1igbijpahv863124k4';
 const clientSecret = '3ut8ugb2k65elqh6mjnv91dmceb2ch0v8f7p7hgiiafd8b1fig0';
@@ -194,6 +196,7 @@ export const userDelete = async (id:number) => {
           'Content-Type': 'application/json',
         },
       });
+      console.log(response);
       if (response.ok) {
         const users2:phoneCode[] = await response.json();
       return users2;

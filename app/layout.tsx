@@ -152,7 +152,7 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
     <View>   
        {hasNotifications && (
           <TouchableOpacity style={[styles.menuButtonContainer,{marginHorizontal:15}]} onPress={()=>toggleMenu()}>
-          <NotificationBellIcon number={notificatioitems ? notificatioitems.filter((obj:any) => obj.seen === false).length : 0}style={{color:'white'}} />
+          <NotificationBellIcon number={notificatioitems ? notificatioitems.filter((obj:any) => obj.seen === false).length : 0} style={{color:'white'}} />
        </TouchableOpacity>
         )}
 

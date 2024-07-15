@@ -415,7 +415,7 @@ const NotificationCounter = ({ number }:any) => (
 // Componente que superpone los SVGs
 export const NotificationBellIcon = ({ style, number }:any) => (
   <View style={[styles.container, style]}>
-    <BellIcon />
+    <BellIcon style={style} />
     {number !== undefined && number > 0 && (
       <View style={styles.counterContainer}>
         <NotificationCounter number={number} />

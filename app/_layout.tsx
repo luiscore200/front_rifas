@@ -38,7 +38,7 @@ const MainLayout = () => {
           console.log("Eres usuario pero intentas acceder a rutas no autorizadas.");
        }
         
-         router.replace(user?.role === 'admin' ? 'admin/dashboard' : 'user/rifa/dashboard');
+         //router.replace(user?.role === 'admin' ? 'admin/dashboard' : 'user/rifa/dashboard');
       }
     } else {
       if (!isInPublicRoutes) {
@@ -46,7 +46,7 @@ const MainLayout = () => {
         console.log("No estás autenticado y estás intentando acceder a una ruta protegida.");
        // router.replace('user/rifa/dashboard');
        // router.replace('admin/adminConfig');
-       router.replace('auth/login');
+       //router.replace('auth/login');
       // router.replace('/register');
       }
     }

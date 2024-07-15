@@ -95,7 +95,7 @@ const handleRifas = async()=>{
       setRifas(rifas2);
       setRifas2(rifas2);
     }else {
-   
+      console.log(rifas2);
       console.log('Data is not of type Rifa[]');
     }
   }catch(e:any){
@@ -129,12 +129,14 @@ useEffect(() => {
 
       if(opcion==="asignar"){
         handleTouch(rifa);
+        
       }
       if(opcion==="compartir"){
        
       }
       if(opcion==="editar"){
           handleEdit(rifa);
+
       }
       if(opcion==="ganador"){
 
@@ -188,11 +190,12 @@ useEffect(() => {
     };
 
     const handleCancelDelete = () => {
-      
+   
       setShowDeleteConfirmation(false);
     };
 
     const handleConfirmDelete = async () => {
+      setCard(false);
       if (rifa?.id) { // Aquí está la modificación
         try{
         const aa = await rifaDelete(rifa.id);
