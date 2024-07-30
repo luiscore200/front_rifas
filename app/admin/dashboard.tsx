@@ -31,10 +31,7 @@ export default function App() {
     { label: 'Logout', action: async() => logout(),status:auth===true?1:0},
   ];
 
-  const notificaiones = [
-    {mensaje:"sistema de correos desactivado",fuente:"configuracion",seen:false},
-    {mensaje:"Tu cuenta no esta suscrita, conoce las mejoras que te ofrece un plan",fuente:"suscripcion",seen:false},
-  ];
+ 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
  const [users2, setUsers] = useState<User[]>([]);
@@ -180,7 +177,7 @@ useEffect(() => {
   }
 
   return (
-    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} notificatioitems={notificaiones} hasNotifications={true}>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true}  hasNotifications={true}>
     
 
     

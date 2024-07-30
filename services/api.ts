@@ -364,7 +364,7 @@ export const rifaUpdate = async (obj:rifa) => {
         body: JSON.stringify(comprador),
       });
       const data = await response.json();
-      console.log(data);
+     // console.log(data);
       if (!response.ok) {
         return data;
       }
@@ -373,6 +373,50 @@ export const rifaUpdate = async (obj:rifa) => {
       throw error;
     }
   };
+
+  export const indexComprador = async ()=>{
+    try {
+      const response = await fetchWithTimeout(`${API_URL}/comprador/index`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
+        }
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return data;
+      }
+      return data;
+      
+    } catch (error:any) {
+        throw error;
+    }
+  }
+
+  export const sendTokens = async(id:number,user:number[])=>{
+
+    try {
+      const response = await fetchWithTimeout(`${API_URL}/generate?id=${id}&user=${user}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
+        },
+      
+      });
+      const data = await response.json();
+      console.log(data);
+      if (!response.ok) {
+        return data;
+      }
+      return data;
+    } catch (error:any) {
+      throw error;
+    }
+  }
+
 
   export const assignNumbers = async (id_rifa:number,id_comprador:number,numbers:number[],method:string)=>{
 
@@ -657,7 +701,25 @@ export const rifaUpdate = async (obj:rifa) => {
   }
 
 
-
+export const getNotification = async ()=>{
+  try{
+    const response = await fetchWithTimeout(`${API_URL}/user/notification/index`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${await getToken()}`, 
+      },
+    });
+    if (response.ok) {
+      const assigns = await response.json();
+    return assigns;
+    }else{
+      return response.json();
+    }
+  }catch(error:any){
+    throw error;
+  } 
+}
 
 
 

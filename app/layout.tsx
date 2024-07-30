@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, ScrollView } from 'react-native';
 import { MenuIcon2, NotificationBellIcon } from '../assets/icons/userIcons';
 
+
 import { router } from 'expo-router';
+import { getNotification } from '../services/api';
+import { getStorageItemAsync, setStorageItemAsync } from '../services/storage';
 
 
 interface GradientLayoutProps {
@@ -11,15 +14,38 @@ interface GradientLayoutProps {
   navigationItems:any;
   hasDrawer?:boolean;
   hasNotifications?:boolean;
-  notificatioitems?:any
   Touched?:()=> void;
 }
 
-const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems,hasNotifications=false,notificatioitems, hasDrawer = false,Touched }) => {
+const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems,hasNotifications=true, hasDrawer = false,Touched }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
   const [menu,setMenu]=useState(false);
+  const [notificaciones,setNotificaciones]=useState<any>(async()=>{await getStorageItemAsync("notificaciones");});
 
+
+  useEffect(()=>{handleNotificaciones()},[])
+
+  const handleNotificaciones = async()=>{
+    try {
+      const response = await getNotification();
+     
+      if(!!response.notificaciones){ setNotificaciones(response.notificaciones);
+        console.log(response.notificaciones);
+        await setStorageItemAsync('notificaciones', JSON.stringify(response.notificaciones));
+      }else{
+        const not= await getStorageItemAsync("notificaciones");
+         setNotificaciones(not? not:[]);
+      }
+  
+      
+    } catch (error) {
+      const not= await getStorageItemAsync("notificaciones");
+      setNotificaciones(not? not:[]);
+    }
+   }
+
+   useEffect(()=>{console.log("notificaiones", notificaciones)},[notificaciones]);
   const touched = ()=> {
     if(Touched){Touched();}
   }
@@ -67,9 +93,9 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
 
 
   const Notificaciones = (props:any) => {
-    const sistema = props.items.filter((obj:any) => obj.fuente === 'sistema');
-    const suscripcion = props.items.filter((obj:any) => obj.fuente === 'suscripcion');
-    const configuracion = props.items.filter((obj:any) => obj.fuente === 'configuracion');
+    const sistema = props.items.filter((obj:any) => obj.type === 'sistema');
+    const suscripcion = props.items.filter((obj:any) => obj.type === 'suscripcion');
+    const configuracion = props.items.filter((obj:any) => obj.type === 'configuracion');
   
     const renderNotificaciones = (title:string, notificaciones:any) => (
       <View>
@@ -80,14 +106,14 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
             </View>
             {notificaciones.map((obj:any, index:number) => (
               <TouchableOpacity key={index}  
-              activeOpacity={obj.fuente==="suscripcion"||"configuracion"?0:1}
-              onPress={()=>obj.fuente==="suscripcion"?console.log("suscripcion"):obj.fuente==="configuracion"?router.navigate("user/userSettings"):undefined }   style={{
+              activeOpacity={obj.type==="suscripcion"||"configuracion"?0:1}
+              onPress={()=>obj.type==="suscripcion"?console.log("suscripcion"):obj.type==="configuracion"?router.navigate("user/userSettings"):undefined }   style={{
                 padding: 10,
                 borderBottomColor: '#e5e7eb',
                 borderBottomWidth: index === notificaciones.length - 1 ? 0 : 1
               }}>
-                <Text style={{ color: '#6b7280', fontSize: 14, marginBottom: 4 }}>{obj.mensaje}</Text>
-                <Text style={{ color: '#9ca3af', fontSize: 12 }}>{obj.fuente}</Text>
+                <Text style={{ color: '#6b7280', fontSize: 14, marginBottom: 4 }}>{obj.description}</Text>
+                <Text style={{ color: '#9ca3af', fontSize: 12 }}>{obj.type}</Text>
               </TouchableOpacity>
             ))}
           </>
@@ -152,7 +178,7 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
     <View>   
        {hasNotifications && (
           <TouchableOpacity style={[styles.menuButtonContainer,{marginHorizontal:15}]} onPress={()=>toggleMenu()}>
-          <NotificationBellIcon number={notificatioitems ? notificatioitems.filter((obj:any) => obj.seen === false).length : 0} style={{color:'white'}} />
+          <NotificationBellIcon number={notificaciones?notificaciones.length:0} style={{color:'white'}} />
        </TouchableOpacity>
         )}
 
@@ -190,7 +216,7 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
         </Animated.View>
       )}
  {menu && (
-          <Notificaciones  items={notificatioitems? notificatioitems:[]}/>
+          <Notificaciones  items={notificaciones? notificaciones:[]}/>
         )}
       {children}
     </LinearGradient>

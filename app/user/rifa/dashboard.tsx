@@ -4,13 +4,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Card from '../../../components/user/rifa/rifaCard';
 import {rifa} from '../../../config/Interfaces';
 import { router } from 'expo-router';
-import {rifaDelete, indexRifa} from '../../../services/api';
+import {rifaDelete, indexRifa, indexComprador, sendTokens, getNotification} from '../../../services/api';
 import Delete from '../../../components/ConfirmModal';
 import Options from '../../../components/optionsModal';
 import ToastModal from '../../../components/toastModal';
 import MenuCard from '../../../components/user/rifa/optionsRifaModal';
 import GradientLayout from '../../layout';
 import { useAuth } from '../../../services/authContext2';
+import CompartirModal from '../../../components/user/rifa/compartirRifaModal';
 
 export default function App() {
 
@@ -22,6 +23,7 @@ export default function App() {
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
 
+ 
 
   const [rifa, selectedRifa] = useState<rifa | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
@@ -35,8 +37,11 @@ export default function App() {
  const [card, setCard] = useState(false);
  const [hasError, setHasError] = useState(false);
  const [toast,setToast]=useState(false);
+ const [compartir,setCompartir]=useState(false);
  const [index,setIndex]=useState<number>();
  const [buscar,setBuscar]=useState<string>("");
+ const [compradores,setCompradores]=useState<any[]>();
+ const [notificaciones,setNotificaciones]=useState<any[]>();
 
  const [reload, setReload] = useState(false);
  
@@ -56,6 +61,27 @@ export default function App() {
     setCard(!card);
   }
 
+ }
+ const handleNotificaciones = async()=>{
+  try {
+    const response = await getNotification();
+    console.log(response.notificaciones);
+    if(!!response.mensaje){ setNotificaciones(response.notificaciones)};
+    
+  } catch (error) {
+    
+  }
+ }
+
+ const handleCompradores = async()=>{
+  try {
+    const response = await indexComprador();
+    console.log(response.compradores);
+    if(!!response.mensaje){ setCompradores(response.compradores)};
+    
+  } catch (error) {
+    
+  }
  }
 
  const isRifa = (item: any): item is rifa => {
@@ -117,6 +143,8 @@ const handleNew = () =>{
 
 useEffect(() => {
   handleRifas();
+  handleCompradores();
+//  handleNotificaciones();
 }, [reload]);
 
 
@@ -132,7 +160,7 @@ useEffect(() => {
         
       }
       if(opcion==="compartir"){
-       
+          setCompartir(true);
       }
       if(opcion==="editar"){
           handleEdit(rifa);
@@ -250,11 +278,18 @@ useEffect(() => {
     setRifas(filteredArray);
   
   }
+
+  const sendToken = async(value:number[])=>{
+      setCompartir(false);
+      if(!!rifa && rifa.id){
+        const response =await sendTokens(rifa.id,value);
+      }
+  }
    
 
   return (
  
-   <GradientLayout  navigationItems={navigationItems} hasDrawer={true} Touched={()=>setCard(false)}>
+   <GradientLayout  navigationItems={navigationItems}  hasDrawer={true}  hasNotifications={true} Touched={()=>{setCard(false);setCompartir(false)}}>
 
 
       
@@ -343,6 +378,15 @@ useEffect(() => {
     rifa={rifa}
     onOptions={(rifa,opcion)=>handleOptions(rifa,opcion)}
     onClose={()=>{setCard(false)}}
+    />
+  )}
+
+  {compartir &&(
+    <CompartirModal 
+      visible={compartir}
+      compradores={compradores?compradores:[]}
+      onShared={(numbers)=>{setCard(false);sendToken(numbers)}}
+      onClose={()=>{setCompartir(false);setCard(false)}}
     />
   )}
 
