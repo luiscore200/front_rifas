@@ -35,6 +35,16 @@ export const AuthContextProvider =  ({children}) => {
         }
     }
 
+    const check = async()=>{
+        try {
+            Token();
+            Auth();
+            User();
+        } catch (error) {
+            
+        }
+    }
+
     const logout = async ()=>{
         try {
             await logoutAuth();
@@ -80,7 +90,7 @@ export const AuthContextProvider =  ({children}) => {
 
 
     return(
-        <AuthContext.Provider value={{user,token,auth,login,logout}} >
+        <AuthContext.Provider value={{user,token,auth,check,login,logout}} >
             {children}
         </AuthContext.Provider>
     )

@@ -206,7 +206,7 @@ const createRifaValidationRules: any = {
       },
       {
           condition: (value: number) => value <= 10000,
-          message: 'La cantidad de números para la rifa no puede exceder 10000.',
+           message: 'La cantidad de números para la rifa no puede exceder 10000.',
       },
   ],
   precio: [
@@ -214,10 +214,7 @@ const createRifaValidationRules: any = {
         condition: (value: number) => value > 0,
         message: 'Por favor, ingresa el precio unitario de los cupos.',
     },
-    {
-        condition: (value: number) => value <= 10000,
-        message: 'Actualmente la cantidad maxima por cupo radica en 10000.',
-    },
+  //  {  condition: (value: number) => value <= 10000, message: 'Actualmente la cantidad maxima por cupo radica en 10000.', },
 ],
   tipo: [
       {

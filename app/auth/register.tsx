@@ -109,10 +109,14 @@ export default function Register() {
   try{
         
     const response = await register(userData);
-    const a=  await login(response);
+  
     setResponseMessage(response.mensaje || response.error);
     setHasError(!!response.error);
     setToast(!toast);
+    const a=  await login(response);
+
+    if(response.user.role==="user"){ router.replace('user/rifa/dashboard');}
+    
   }catch(e:any){
     setResponseMessage(e.message);
     setHasError(true);

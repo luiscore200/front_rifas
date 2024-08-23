@@ -15,14 +15,17 @@ interface GradientLayoutProps {
   hasDrawer?:boolean;
   hasNotifications?:boolean;
   Touched?:()=> void;
+  touchOut?:boolean;
+  touchedOut?:()=>void;
 }
 
-const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems,hasNotifications=true, hasDrawer = false,Touched }) => {
+const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems,hasNotifications=true,touchOut, hasDrawer = false,Touched,touchedOut }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
   const [menu,setMenu]=useState(false);
   const [notificaciones,setNotificaciones]=useState<any>(async()=>{await getStorageItemAsync("notificaciones");});
 
+  useEffect(()=>{if(touchOut===true){closeAll2()}},[touchOut]);
 
   useEffect(()=>{handleNotificaciones()},[])
 
@@ -35,7 +38,7 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
         await setStorageItemAsync('notificaciones', JSON.stringify(response.notificaciones));
       }else{
         const not= await getStorageItemAsync("notificaciones");
-         setNotificaciones(not? not:[]);
+         setNotificaciones(not? JSON.parse(not):[]);
       }
   
       
@@ -58,6 +61,22 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
       toggleMenu();
     }
     touched();
+  }
+
+  const closeAll2=()=>{
+    if(isDrawerOpen){
+      const toValue = isDrawerOpen ? 0 : 1;
+      Animated.timing(drawerAnimation, {
+        toValue,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      setIsDrawerOpen(!isDrawerOpen);
+    }
+    if(menu){
+      setMenu(!menu);
+    }
+   if(touchedOut){  touchedOut();}
   }
 
   const toggleMenu=()=>{
@@ -107,7 +126,7 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
             {notificaciones.map((obj:any, index:number) => (
               <TouchableOpacity key={index}  
               activeOpacity={obj.type==="suscripcion"||"configuracion"?0:1}
-              onPress={()=>obj.type==="suscripcion"?console.log("suscripcion"):obj.type==="configuracion"?router.navigate("user/userSettings"):undefined }   style={{
+              onPress={()=>obj.type==="suscripcion"?router.navigate("user/suscripcion"):obj.type==="configuracion"?router.navigate("user/userSettings"):undefined }   style={{
                 padding: 10,
                 borderBottomColor: '#e5e7eb',
                 borderBottomWidth: index === notificaciones.length - 1 ? 0 : 1

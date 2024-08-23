@@ -1,23 +1,27 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback } from 'react-native';
 import { User } from '../../../config/Interfaces';
+import { LinearGradient } from 'expo-linear-gradient';
+import { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
 
 interface UserCardProps {
-  user: User;
+  user: User|any;
+  prueba?:boolean;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user }) => {
+const UserCard: React.FC<UserCardProps> = ({ user,prueba= false }) => {
   const [modalVisible, setModalVisible] = useState(false);
   
   const getTextStatusColor = (status: any) => (status == "Active" ? '#166534' : '#991b1b');
   const getBGStatusColor = (status: any) => (status == "Active" ? '#dcfce7' : '#fee2e2');
-
+  const ShimmerPlacerholder = createShimmerPlaceholder(LinearGradient);
   
 
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
-        <View style={styles.cardContent}>
+      {!prueba && (
+          <View style={styles.cardContent}>
           <View style={[styles.userIcon, { backgroundColor: getTextStatusColor(user.status) }]}>
             <Text style={styles.userIconText}>{user.name.charAt(0)}</Text>
           </View>
@@ -30,6 +34,17 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
           </View>
          {// <TouchableOpacity style={styles.menuButton} ><Text style={styles.menuButtonText}>⋮</Text></TouchableOpacity>
 }</View>
+      )}
+           {prueba && (
+          <View style={[styles.cardContent,{marginRight:10}]}>
+           <ShimmerPlacerholder style={{ width:45,borderRadius:20,backgroundColor:"#cbd5e1",height:45,marginBottom:5 }} ></ShimmerPlacerholder>
+          <View style={[styles.userInfo,{marginLeft:15}]}>
+          <ShimmerPlacerholder style={{ width:110,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+          <ShimmerPlacerholder style={{ width:130,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+          </View>
+          <ShimmerPlacerholder style={{ width:70,borderRadius:15,backgroundColor:"#cbd5e1",height:27,marginBottom:5 }} ></ShimmerPlacerholder>
+ </View>
+      )}
       </View>
      
     </View>

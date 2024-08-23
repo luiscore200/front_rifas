@@ -15,6 +15,7 @@ export default function Assign() {
   const {auth,logout}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
@@ -28,6 +29,7 @@ export default function Assign() {
   const [modal,setModal]=useState(false);
   const [responseMessage,setResponseMessage]=useState();
   const [hasError,setHasError]=useState(false);
+  const [touchedOut,setTouchedOut]=useState<boolean>(false);
 
   useEffect(() => { handleAsignaciones() }, [id]);
   useEffect(() => { setRifa2(JSON.parse(rifa)) }, [rifa]);
@@ -65,6 +67,7 @@ export default function Assign() {
   }
 
   const handleConfirmSelection = (selected: number[]) => {
+    
     setSelectedNumbers(selected);
     // Aquí puedes manejar el envío de los números seleccionados al servidor o cualquier otra lógica
     console.log('Números seleccionados confirmados:', selected);
@@ -75,7 +78,7 @@ export default function Assign() {
   };
 
   return (
-    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} touchOut={touchedOut} touchedOut={()=>{setTouchedOut(false)}} >
 
     
       <View style={styles.gridContainer}>
@@ -88,6 +91,7 @@ export default function Assign() {
             onConfirmSelection={handleConfirmSelection}
             price={rifa2 != undefined ? rifa2?.precio : 0}
             premios={premios}
+            touched={()=>setTouchedOut(true)}
           
           />
        

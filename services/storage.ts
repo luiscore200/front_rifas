@@ -57,7 +57,10 @@ export async function getStorageItemAsync(key: string): Promise<string | null> {
 export async function clearStorageAsync() {
     if (Platform.OS === 'web') {
       try {
-        await AsyncStorage.clear();
+      //  await AsyncStorage.clear();
+      await AsyncStorage.removeItem("user");
+      await AsyncStorage.removeItem("access_token");
+      await AsyncStorage.removeItem("notificaciones");
       } catch (e) {
         console.error('Local storage is unavailable:', e);
       }

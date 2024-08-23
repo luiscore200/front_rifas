@@ -20,11 +20,12 @@ export default function Assign() {
   const {auth,logout}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
 
-
+ 
   const { id }: any = useLocalSearchParams<{ id: string }>();
   const { rifa }: any = useLocalSearchParams<{ rifa: string }>();
   const [separated,setSeparated] = useState<any[]>([]);
@@ -36,6 +37,8 @@ export default function Assign() {
   const [buscar,setBuscar]=useState<string>("");
   const [selected,setSelected]=useState<any>();
   const [confirm,setConfirm]=useState(false);
+  const [loading,setLoading]=useState<boolean>(true);
+  const array = [1,1,1,1,1];
  
 
   const [confirmModal,setConfirmModal]=useState(false);
@@ -58,19 +61,21 @@ export default function Assign() {
           setSeparated([]);
           setSeparated2([]);
         
-          setResponseMessage("algo ha ocurrido, no se ha podido cargar el listado");
+          setResponseMessage("Ha ocurrido un error");
           setHasError(true);
           setModal(true);
         }else{
+          
           setSeparated(response);
           setSeparated2(response);
+       //   setLoading(false);
           console.log(response);
         }
      
       }
       
     }catch(e:any){
-      setResponseMessage(e.message);
+      setResponseMessage("Ha ocurrido un error");
       setHasError(true);
       setModal(true);
     }
@@ -159,19 +164,35 @@ export default function Assign() {
           /> 
         </View>
         <View style={styles.cardContainer}>
-            { separated2.length>0 && (
+            {!loading && separated2.length>0 && (
                separated2.map((obj,index)=>(
+             <TouchableOpacity key={index} onPress={()=>undefined} activeOpacity={1}>
                 <SeparatedCard
                 key={index}
+                prueba={false}
                 info={obj}
                 onCancel={(info)=>OpenConfirm(info,false)}
                 onConfirm={(info)=> OpenConfirm(info,true)}
-                />
+                /></TouchableOpacity>
               ))
             )
+           }
+           {loading && (
+              array.map((obj,index)=>(
+                <TouchableOpacity key={index} onPress={()=>undefined} activeOpacity={1}>
+                <SeparatedCard
+                prueba={true}
+                key={index}
+                info={obj}
+                onCancel={(info)=>undefined}
+                onConfirm={(info)=> undefined}
+                /></TouchableOpacity>
+              ))
+
+           )
            }       
 
-               { separated2.length===0 && (
+          { !loading && separated2.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado asignaciones . . .</Text></View>
             )
            }                     

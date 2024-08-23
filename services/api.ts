@@ -6,8 +6,8 @@ import { getToken } from "./auth";
 
 
 //const API_URL =  'https://node-test1-24qmuklu8-luiscore200s-projects.vercel.app';  // Reemplaza con la IP local de tu máquina de desarrollo
-
-const API_URL =  'http://192.168.1.83:3000';  // Reemplaza con la IP local de tu máquina de desarrollo
+//const API_URL = 'http://127.0.0.1:3000';
+const API_URL =  'https://app.megawins.com.co';  // Reemplaza con la IP local de tu máquina de desarrollo
 const clientId = '6j7o172o1igbijpahv863124k4';
 const clientSecret = '3ut8ugb2k65elqh6mjnv91dmceb2ch0v8f7p7hgiiafd8b1fig0';
 const apiKey = '7PP43c0YC159GhcDrBdhvLYILOeGdxv5sUVt9oIh';
@@ -214,16 +214,17 @@ export const userDelete = async (id:number) => {
         const response = await fetchWithTimeout(`${API_URL}/rifa/store`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+        
             'Authorization': `Bearer ${await getToken()}`, 
           },
-          body: JSON.stringify(obj),
+          body: obj,
         });
-        const data = await response.json();
-        console.log(data);
+        
+       
         if (!response.ok) {
-          return data;
+          if(response.status===413){ return {error:"El archivo es demaciado grande para ser procesado..."}}
         }
+        const data = await response.json();
         return data;
       } catch (error:any) {
         throw error;
@@ -242,7 +243,7 @@ export const userDelete = async (id:number) => {
       });
       if (response.ok) {
         const rifa:rifa[] = await response.json();
-        console.log(rifa);
+      //  console.log(rifa);
       return rifa;
       }else{
         return response.json();
@@ -268,7 +269,7 @@ export const userDelete = async (id:number) => {
       });
       if (response.ok) {
         const rifa:rifa[] = await response.json();
-        console.log(rifa);
+       // console.log(rifa);
       return rifa;
       }else{
         return response.json();
@@ -294,7 +295,7 @@ export const userDelete = async (id:number) => {
       });
       if (response.ok) {
         const rifa = await response.json();
-        console.log(rifa);
+      //  console.log(rifa);
       return rifa;
       }else{
         return response.json();
@@ -304,22 +305,23 @@ export const userDelete = async (id:number) => {
     }
   }
   
-export const rifaUpdate = async (obj:rifa) => {
-    
+export const rifaUpdate = async (obj:any,id:any) => {
+    console.log(obj);
     try {
-      const response = await fetchWithTimeout(`${API_URL}/rifa/update/${obj.id}`, {
-        method: 'PUT',
+      const response = await fetchWithTimeout(`${API_URL}/rifa/update/${id}`, {
+        method: 'POST',
+        body: obj,
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await getToken()}`, 
-        },
-        body: JSON.stringify(obj),
+  //   'Content-Type': 'multipart/form-data',
+     'Authorization': `Bearer ${await getToken()}`, 
+   },
       });
-  
-      const data = await response.json();
+      console.log(response);
+    
       if (!response.ok) {
-        return data;
+        if(response.status===413){ return {error:"El archivo es demaciado grande para ser procesado..."}}
       }
+      const data = await response.json();
       return data; 
     } catch (error:any) {
       throw error;
@@ -407,7 +409,7 @@ export const rifaUpdate = async (obj:rifa) => {
       
       });
       const data = await response.json();
-      console.log(data);
+    //  console.log(data);
       if (!response.ok) {
         return data;
       }
@@ -644,7 +646,7 @@ export const rifaUpdate = async (obj:rifa) => {
         method: 'POST',
        body: obj,
        headers: {
-    'Content-Type': 'multipart/form-data',
+   // 'Content-Type': 'multipart/form-data',
     'Authorization': `Bearer ${await getToken()}`, 
   },
       });

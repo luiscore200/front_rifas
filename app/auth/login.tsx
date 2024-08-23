@@ -71,11 +71,22 @@ setTimeout(() => {
       try {
         const response = await loginApi(email, password);
         
-      const a=  await login(response);
+    
       
-      setResponseMessage(response.mensaje || response.error);
-      setHasError(!!response.error);
-      setToast(!toast);
+     if(response.mensaje){
+     
+      setResponseMessage(response.mensaje);
+      setHasError(false);
+      setToast(true);
+      const a=  await login(response);
+      if(response.user.role==="user"){router.replace('user/rifa/dashboard');}
+      if(response.user.role==="admin"){router.replace('admin/dashboard'); }
+     }else{
+      setResponseMessage(response.error);
+      setHasError(true);
+      setToast(true);
+     
+     }
   
       } catch (error:any) {
         console.log(error.message);

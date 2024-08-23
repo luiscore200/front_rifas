@@ -118,10 +118,10 @@ return(
           
 
   </View>
-  {obj.logo &&(
+  {obj.logo!=="" &&(
     <View style={{marginTop:20,flexDirection:'row',alignItems:'center'}}>
        <Image source={{ uri: obj.logo }} style={[styles.image]}></Image>
-       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("logo",null)}>
+       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("logo","")}>
         <Delete2Icon style={{color:'red'}} />
 
        </TouchableOpacity>
@@ -143,10 +143,10 @@ return(
           
 
   </View>
-  {obj.icono &&(
+  {obj.icono!=="" &&(
     <View style={{marginTop:20,flexDirection:'row',alignItems:'center'}}>
        <Image source={{ uri: obj.icono }} style={[styles.image]}></Image>
-       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("icono",null)}>
+       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("icono","")}>
         <Delete2Icon style={{color:'red'}} />
 
        </TouchableOpacity>

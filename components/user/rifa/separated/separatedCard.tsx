@@ -1,50 +1,86 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback } from 'react-native';
 import { CheckMarkIcon,CrossMarkIcon } from '../../../../assets/icons/userIcons';
+import { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 
 interface SeparatedCardProps {
   info:any;
   onCancel(info:any):void;
-  onConfirm(info:any):void
+  onConfirm(info:any):void;
+  prueba:boolean;
 }
 
-const SeparatedCard: React.FC<SeparatedCardProps> = ({ info,onCancel,onConfirm }) => {
+const SeparatedCard: React.FC<SeparatedCardProps> = ({ info,prueba,onCancel,onConfirm }) => {
   const [modalVisible, setModalVisible] = useState(false);
   
  // const getTextStatusColor = (status: any) => (status == "separado" ? '#166534' : '#991b1b');
  // const getBGStatusColor = (status: any) => (status == "separado" ? '#dcfce7' : '#fee2e2');
-
+const ShimmerPlacerholder = createShimmerPlaceholder(LinearGradient);
   
 
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
-        <View style={styles.cardContent}>
-          <View style={[styles.userIcon, { backgroundColor: "#fb923c" }]}>
-            <Text style={styles.userIconText}>{info.number}</Text>
-          </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{info.purchaser_name}</Text>
-            <Text style={styles.userEmail}>{info.purchaser_email}</Text>
-            <Text style={styles.userEmail}>{info.purchaser_phone}</Text>
-          </View>
-          <View style={{flexDirection:'row'}}>
-            <TouchableOpacity onPress={()=>onConfirm(info)}
-            style={{backgroundColor:"#4ade80",padding:5,marginRight:5,borderRadius:20,shadowColor:'#000',shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.6,shadowRadius: 4,elevation: 5,}}>
-                <CheckMarkIcon style={{color:"#166534"}} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={()=>onCancel(info)}
-            style={{backgroundColor:"#f87171",padding:5,marginLeft:5,borderRadius:20,shadowColor:'#000',shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.6,shadowRadius: 4,elevation: 5,}}>
-              <CrossMarkIcon  style={{color:"#991b1b"}} />
-            </TouchableOpacity>
+        
+         {!prueba && (
+         <View style={styles.cardContent}>
+           <View style={styles.userIcon}>
+           <Text style={styles.userIconText}>{info.number}</Text>
+         </View>
+         <View style={styles.userInfo}>
+           <Text style={styles.userName}>{info.purchaser_name}</Text>
+           
+           <Text style={styles.userEmail}>{info.purchaser_email}</Text>
+           <Text style={styles.userEmail}>{info.purchaser_phone}</Text>
+         </View>
+         <View style={{flexDirection:'row'}}>
+           <TouchableOpacity onPress={()=>onConfirm(info)}
+           style={{backgroundColor:"#4ade80",padding:5,marginRight:5,borderRadius:20,shadowColor:'#000',shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.6,shadowRadius: 4,elevation: 5,}}>
+               <CheckMarkIcon style={{color:"#166534"}} />
+           </TouchableOpacity>
+           <TouchableOpacity onPress={()=>onCancel(info)}
+           style={{backgroundColor:"#f87171",padding:5,marginLeft:5,borderRadius:20,shadowColor:'#000',shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.6,shadowRadius: 4,elevation: 5,}}>
+             <CrossMarkIcon  style={{color:"#991b1b"}} />
+           </TouchableOpacity>
 
-          </View>
-          <TouchableOpacity style={styles.menuButton} >
-             {//<Text style={styles.menuButtonText}>⋮</Text>
-             }          
-          </TouchableOpacity>
-        </View>
+         </View>
+         <TouchableOpacity style={styles.menuButton} >
+            {//<Text style={styles.menuButtonText}>⋮</Text>
+            }          
+         </TouchableOpacity>
+         </View>
+         )}
+         {prueba && (
+              <View style={styles.cardContent}>
+              <ShimmerPlacerholder style={{width: 40,height: 40, borderRadius: 5,justifyContent: 'center', alignItems: 'center', marginRight: 20,backgroundColor: "#cbd5e1"}}>
+              
+            </ShimmerPlacerholder>
+            <View style={styles.userInfo}>
+              <ShimmerPlacerholder style={{ width:120,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:10 }} ></ShimmerPlacerholder>
+              <ShimmerPlacerholder style={{ width:70,borderRadius:10,backgroundColor:"#cbd5e1",height:15,marginBottom:10 }} ></ShimmerPlacerholder>
+              <ShimmerPlacerholder style={{ width:70,borderRadius:10,backgroundColor:"#cbd5e1",height:15,marginBottom:10 }} ></ShimmerPlacerholder>
+            </View>
+            <View style={{flexDirection:'row',marginRight:10  }}>
+
+                
+            <ShimmerPlacerholder style={{ height:40,width:40,backgroundColor:"#cbd5e1",marginRight:5,borderRadius:20}}>
+                
+            </ShimmerPlacerholder>
+                  <ShimmerPlacerholder style={{height:40,width:40,backgroundColor:"#cbd5e1",marginLeft:5,borderRadius:20,shadowColor:'#000'}}>
+               
+                </ShimmerPlacerholder>
+   
+            </View>
+          
+            </View>
+
+         )
+
+         }
+      
       </View>
      
     </View>
@@ -82,6 +118,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 20,
+     backgroundColor: "#fb923c"
   },
   userIconText: {
     color: '#fff',

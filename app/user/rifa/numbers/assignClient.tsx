@@ -30,6 +30,7 @@ export default function AssignClient() {
     const {auth,user,logout}=useAuth();
     const navigationItems = [
      { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
+     { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
       { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
       { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
     ];
@@ -63,8 +64,8 @@ export default function AssignClient() {
     }
 
     async function save() {
-        setTouched({ name: true, email: true, phone: true, document: true });
-        const errors = validateForm(comprador, { name: true, email: true, phone: true, document: true }, compradorValidationRules);
+        setTouched({ name: true, email: true, phone: true, document: false });
+        const errors = validateForm(comprador, { name: true, email: true, phone: true, document: false }, compradorValidationRules);
         console.log(errors);
         setError(errors);
 
@@ -148,13 +149,13 @@ const a= await  main();
                         <TextInput style={styles.input} value={comprador.phone} placeholderTextColor={"#cccc"} onBlur={() => change('phone', comprador.phone)} onChangeText={(text) => change('phone', text)} placeholder="Ingrese el teléfono +57 3210987654" keyboardType="phone-pad" />
                         {touched.phone && error.phone && <Text style={{ color: 'red' }}>{error.phone}</Text>}
                     </View>
-
+{/*
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Documento</Text>
                         <TextInput style={styles.input} value={comprador.document} placeholderTextColor={"#cccc"} onBlur={() => change('document', comprador.document)} onChangeText={(text) => change('document', text)} placeholder="Ingrese el documento" keyboardType="numeric" />
                         {touched.document && error.document && <Text style={{ color: 'red' }}>{error.document}</Text>}
                     </View>
-
+               
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Método de Pago</Text>
                         <Picker
@@ -165,7 +166,7 @@ const a= await  main();
                             <Picker.Item label="Nequi" value="nequi" />
                         </Picker>
                     </View>
-
+             */    }
                     <View style={styles.inputGroup}>
                         <TouchableOpacity style={styles.saveButton} disabled={loading} onPress={save}>
                             <Text style={styles.buttonText}>{loading ? 'Processing...' : 'Validate'}</Text>

@@ -5,6 +5,7 @@ import { router, useRouter } from 'expo-router';
 import GradientLayout from './layout';
 import { generalConfig } from '../services/api';
 import { setStorageItemAsync } from '../services/storage';
+import { useAuth } from '../services/authContext2';
 
 
 
@@ -12,12 +13,16 @@ import { setStorageItemAsync } from '../services/storage';
 
 const home = ()=>{
 
+  const {user,check,auth}=useAuth();
+
+  const Auth = async()=>{await check()}
 
   const handleConfig = async()=>{
    try {
     const response = await generalConfig();
     if(!!response.mensaje){
       await setStorageItemAsync('general_config', JSON.stringify(response.config));
+      await setStorageItemAsync('subscriptions', JSON.stringify(response.subscriptions));
     }
     console.log(response);
    } catch (error) {
@@ -26,11 +31,15 @@ const home = ()=>{
   }
 
 useEffect(()=>{
+  Auth();
   handleConfig();
-  setTimeout(() => {
-  router.replace("auth/login");
-  }, 3000);
+  setTimeout(()=>{change()},3000);
   },[]);
+
+
+  const change = ()=>{
+    router.replace("/loading");
+  }
 
 return(
     <LinearGradient

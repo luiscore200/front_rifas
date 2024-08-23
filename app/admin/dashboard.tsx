@@ -44,6 +44,8 @@ export default function App() {
  const [toast,setToast]=useState(false);
  const [buscar,setBuscar]=useState<string>("");
  const [reload, setReload] = useState(false); 
+ const [loading,setLoading]=useState(true);
+ const array = [1,1,1,1];
 
  const isUser = (item: any): item is User => {
   return (
@@ -75,11 +77,15 @@ const handleUsers = async()=>{
   if(Array.isArray(users2) && users2.every(isUser)){
     setUsers(users2);
     setUsers3(users2);
+    setLoading(false);
   }else {
     console.log('Data is not of type User[]');
+    setResponseIndexMessage("Ha ocurrido un error, formato de lista incorrecto");
+    setToast(true);
+    setLoading(false);
   }
 }catch(e:any){
-  setResponseIndexMessage(e.message);
+  setResponseIndexMessage("ha ocurrido un error al cargar la lista");
   setToast(true);
   console.error(e);
 
@@ -198,7 +204,7 @@ useEffect(() => {
         </View>
         <View style={styles.cardContainer}>
          
-          { users2.length>0 &&  users2.map(user => (
+          {  !loading &&  users2.length>0 && users2.map(user => (
             <TouchableOpacity key={user.id} onPress={() => handleOptions(user)}>
              <Card
              key={user.id}
@@ -206,7 +212,18 @@ useEffect(() => {
         
            /></TouchableOpacity>
           ))}
-           {users2.length===0 && (
+
+          {  loading && array.map((user,index) => (
+            <TouchableOpacity key={index} onPress={() => undefined} activeOpacity={1} > 
+             <Card
+             prueba = {true}
+             key={index}
+             user={null}
+        
+           /></TouchableOpacity>
+          ))}
+          
+           {  !loading && users2.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado usuarios . . .</Text></View>
           )}
         </View>

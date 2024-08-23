@@ -48,8 +48,8 @@ const MenuCard: React.FC<MenuCardProps> = ({ isvisible,event,rifa,onOptions,onCl
               backgroundColor: '#fff',
               borderRadius: 10,
               position: 'absolute',
-              top: event.y + 70 > windowHeight * 0.85 ? event.y-220 : event.y + 70,
-              left: event.y + 70 > windowHeight * 0.85 ? event.x-120 : event.x-120,
+              top: event.y + 70 > windowHeight * 0.80 ? event.y-220 : event.y + 70,
+              left: event.y + 70 > windowHeight * 0.80 ? event.x-120 : event.x-120,
               transform: [{ translateX: -50 }, { translateY: -50 }],
             }}
 

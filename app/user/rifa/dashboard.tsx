@@ -19,6 +19,7 @@ export default function App() {
   const {auth,logout}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
@@ -42,36 +43,30 @@ export default function App() {
  const [buscar,setBuscar]=useState<string>("");
  const [compradores,setCompradores]=useState<any[]>();
  const [notificaciones,setNotificaciones]=useState<any[]>();
+ const [touchedOut,setTouchedOut]=useState<boolean>(false);
 
  const [reload, setReload] = useState(false);
+ const [loading,setLoading]= useState(true);
+ const array = [1,1,1];
  
 
  function handleMenu(obj:any,rifa:any,indexx:number){
   const { height: windowHeight } = Dimensions.get('window');
   const { pageX, pageY } = obj.nativeEvent;
 
-
+  selectedRifa(rifa);
   //console.log(obj);
   if(index!==indexx){
     setIndex(indexx);
   setCardPosition({x:pageX,y:pageY});
-  selectedRifa(rifa);
+  
   setCard(true)
   }else{
     setCard(!card);
   }
 
  }
- const handleNotificaciones = async()=>{
-  try {
-    const response = await getNotification();
-    console.log(response.notificaciones);
-    if(!!response.mensaje){ setNotificaciones(response.notificaciones)};
-    
-  } catch (error) {
-    
-  }
- }
+ 
 
  const handleCompradores = async()=>{
   try {
@@ -120,12 +115,16 @@ const handleRifas = async()=>{
     if(Array.isArray(rifas2) && rifas2.every(isRifa)){
       setRifas(rifas2);
       setRifas2(rifas2);
+      setLoading(false);
     }else {
-      console.log(rifas2);
-      console.log('Data is not of type Rifa[]');
+     // console.log(rifas2);
+     // console.log('Data is not of type Rifa[]');
+      setResponseIndexMessage("Ha ocurrido un error, formato de lista incorrecto");
+      setToast(true);
+      setLoading(false);
     }
   }catch(e:any){
-    setResponseIndexMessage(e.message);
+    setResponseIndexMessage("ha ocurrido un error al cargar el listado");
   
     setToast(true);
   }
@@ -283,13 +282,17 @@ useEffect(() => {
       setCompartir(false);
       if(!!rifa && rifa.id){
         const response =await sendTokens(rifa.id,value);
+        if(response.error){
+          setResponseIndexMessage(response.error);
+          setToast(true);
+        }
       }
   }
    
 
   return (
  
-   <GradientLayout  navigationItems={navigationItems}  hasDrawer={true}  hasNotifications={true} Touched={()=>{setCard(false);setCompartir(false)}}>
+   <GradientLayout  navigationItems={navigationItems}  hasDrawer={true}  hasNotifications={true} Touched={()=>{setCard(false);setCompartir(false)}} touchOut={touchedOut} touchedOut={()=>setTouchedOut(false)}>
 
 
       
@@ -307,18 +310,34 @@ useEffect(() => {
         </View>
         <View style={styles.cardContainer}>
          
-          { rifas.length>0 &&  rifas.map((rifa,index) => (
+          {!loading && rifas.length>0 &&  rifas.map((rifa,index) => (
             <View key={index}>
              <Card
              key={index}
+             prueba={false}
              rifa={rifa}
-             onTouch={(obj,rifa)=>handleMenu(obj,rifa,index)}
+             onTouch={(obj,rifa)=>{setTouchedOut(true);  handleMenu(obj,rifa,index)}}
             
-             onToggle={()=>setCard(false)}
+           onToggle={()=>{setCard(false);setTouchedOut(true)}}
+            
         
            /></View>
           ))}
-          {rifas.length===0 && (
+           
+           {loading  && array.map((rifa,index) => (
+            <View key={index}>
+             <Card
+             prueba={true}
+             key={index}
+             rifa={null}
+             onTouch={(obj,rifa)=>{setTouchedOut(true);  handleMenu(obj,rifa,index)}}
+            
+           onToggle={()=>{setCard(false);setTouchedOut(true)}}
+            
+        
+           /></View>
+          ))}
+          {!loading &&  rifas.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado rifas . . .</Text></View>
           )}
         </View>
@@ -363,7 +382,7 @@ useEffect(() => {
         {(
         <ToastModal
         message={responseIndexMessage == null ? '' : responseIndexMessage}
-        blockTime={2000}
+        blockTime={500}
         time={2000}
         visible={toast}
         onClose={()=>setToast(false)}  

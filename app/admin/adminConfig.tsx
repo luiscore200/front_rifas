@@ -13,9 +13,11 @@ import { CheckMarkIcon, InfoIcon, NextIcon, QuestionMarkIcon, UpIcon } from '../
 import { Linking } from 'react-native';
 import NotificationCard from '../../components/admin/dashboard/notificationCard';
 import BannerCard from '../../components/admin/dashboard/bannerCard';
-import UnSuscriptedCard from '../../components/admin/dashboard/UnSuscriptedCard';
-import { Ionicons } from '@expo/vector-icons';
+
+
 import LandingCard from '../../components/admin/dashboard/LandingStyleCard';
+import SuscriptedCard from '../../components/admin/dashboard/suscriptionCard';
+import { subs } from '../../config/Interfaces';
 
 
 
@@ -46,17 +48,20 @@ export default function App() {
   const [unSuscriptedCard,setunSuscriptedCard]=useState(false);
   const [notificationCard,setNotificationCard]=useState(false);
   const [landingCard,setLandingCard]=useState(false);
-  const [image1, setImage1] = useState<string | null>(null);
-  const [image2, setImage2] = useState<string | null>(null);
-  const [image3, setImage3] = useState<string | null>(null);
+  const [image1, setImage1] = useState<string >("");
+  const [image2, setImage2] = useState<string >("");
+  const [image3, setImage3] = useState<string >("");
   const [image1Changed, setImage1Changed] = useState<boolean>(false);
   const [image2Changed, setImage2Changed] = useState<boolean>(false);
   const [image3Changed, setImage3Changed] = useState<boolean>(false);
+  const [suscripciones,setSuscripciones]= useState<subs[]>([{sub_id:"",name:"",url:"",image:"", max_raffle:"",max_num:"",whatsapp:false, banners:false, email:false,share:false}]);
+  const [susImageChanged,setSusImageChanged] = useState<boolean[]>([false]);
+  const [toggleSus,setToggleSus]=useState<boolean[]>([false]);
+  
 
-  const [countRifas,setCountRifas]=useState<string>("");
-  const [maximo,setMaximo]=useState<number>(0);
-  const [logo,setLogo]=useState<string | null>(null);
-  const [icono,setIcono]=useState<string | null>(null);
+  
+  const [logo,setLogo]=useState<string>("");
+  const [icono,setIcono]=useState<string >("");
   const [app_name,setApp_name]=useState<string>("");
   const [logoChanged,setLogoChanged]=useState<boolean>(false);
   const [iconoChanged,setIconoChanged]=useState<boolean>(false);
@@ -68,27 +73,26 @@ export default function App() {
  const handleConfig = async()=>{
   try {
     const response = await importAdminConfig();
+    console.log(response);
     if(!!response.mensaje){
       setResponseMessage(response.mensaje);
       setModalVisible(true);
         if(!!response.config){
           setEmail(response.config.email);
           setPassword(response.config.email_password);
-          setImage1(response.config.banner_1===""?null:response.config.banner_1); 
-          setImage2(response.config.banner_2===""?null:response.config.banner_2); 
-          setImage3(response.config.banner_3===""?null:response.config.banner_3); 
-          setMaximo(response.config.raffle_number);
-          setCountRifas(response.config.raffle_count);
+          setImage1(response.config.banner_1===""?"":response.config.banner_1); 
+          setImage2(response.config.banner_2===""?"":response.config.banner_2); 
+          setImage3(response.config.banner_3===""?"":response.config.banner_3); 
           setApp_name(response.config.app_name);
-          setLogo(response.config.app_logo===""?null:response.config.app_logo);
-          setIcono(response.config.app_icon===""?null:response.config.app_icon);
+          setLogo(response.config.app_logo===""?"":response.config.app_logo);
+          setIcono(response.config.app_icon===""?"":response.config.app_icon);
+         if(response.subscriptions && response.subscriptions!==null){ setSuscripciones(response.subscriptions);}else{setSuscripciones([]);}
+        if(response.subscriptions && response.subscriptions!==null) {setToggleSus(array(response.subscriptions));}else{setToggleSus([]);}
+        if(response.subscriptions && response.subscriptions!==null) {setSusImageChanged(array(response.subscriptions));}else{setSusImageChanged([]);}
 
-          
-
-
-       
         console.log(response.config);
        }
+       
     }else if(!!response.error){
       setResponseMessage(response.error);
       setModalVisible(true);
@@ -99,6 +103,14 @@ export default function App() {
   }
 
  }
+ 
+ const array = (obj: any) => {
+  const aa = obj.length;
+  return new Array(aa).fill(false);
+}
+
+
+ //useEffect(()=>{setToggleSus(toggleSus)},[toggleSus]);
 
  const handleEmailStatus = ()=>{
   setIsGmActive(!isGmActive);
@@ -126,35 +138,73 @@ export default function App() {
       data.append("email",email);
       data.append("email_password",password);
       data.append("app_name",app_name);
-      data.append("raffle_count",countRifas);
-      data.append("raffle_number",maximo);
+
+
+      const name = async(image:any)=>{
+        const aa= await imageBody(image);
+        return aa.name;
+       }
+       const promises = suscripciones.map(async (item) => {
+        return {
+          ...item,
+          image: await name(item.image)
+        };
+      });
+    
+      const mappedSuscripciones = await Promise.all(promises);
+      console.log(mappedSuscripciones);
+      data.append("subscriptions",JSON.stringify(mappedSuscripciones));
+     
+    
       
 
 
 
-      if (image1Changed && image1) {
-        const body =  await imageBody(image1)
+      if (image1Changed) {
+        const body = image1!==""? await imageBody(image1):"";
         data.append('banner_1',body);
       }
-      if (image2Changed && image2) {
-        const body =  await imageBody(image2)
+      if (image2Changed ) {
+        const body =  image2!==""? await imageBody(image2):"";
         data.append('banner_2',body);
       }
-      if (image3Changed && image3) {
-        const body =  await imageBody(image3)
+      if (image3Changed ) {
+        const body =  image3!==""? await imageBody(image3):"";
         data.append('banner_3',body);
       }
-      if (logoChanged && logo) {
-        const body =  await imageBody(logo)
+      if (logoChanged ) {
+        const body =  logo!==""? await imageBody(logo):"";
         data.append('app_logo',body);
       }
-      if (iconoChanged && icono) {
-        const body =  await imageBody(icono)
+      if (iconoChanged) {
+        const body =  icono!==""? await imageBody(icono):"";
         data.append('app_icon',body);
       }
+
+      suscripciones.forEach(async(item,index)=>{
+          if(susImageChanged[index] && item.image!==""){
+          //  console.log("eee");
+            const body =await imageBody(item.image);
+           // console.log("body",body);
+            data.append('image',body);
+          }
+      });
+      
+
+
     //console.log(data);
+   
      const response = await saveAdminConfig(data);
       console.log(response);
+
+      if(response.mensaje){
+        setResponseMessage(response.mensaje);
+        setModalVisible(true);
+      }
+      if(response.error){
+        setResponseMessage(response.error);
+        setModalVisible(true);
+      }
 
     } catch (error) { 
       
@@ -241,16 +291,37 @@ const handleBannerUpdate = (input:string,value:any)=>{
   }
   
 }
-const handleUnsuscriptedUpdate = (input:string,value:any)=>{
-  if(input==="rifas"){
-    setCountRifas(value);
-  }
-  if(input==="numeros"){
-    setMaximo(value);
-  }
- 
+const handleSuscriptedUpdate =  (field:any, value:any, index:number) => {
+    
+
+    const update = [...suscripciones];
+    update[index] = {
+      ...update[index],
+      [field]: value
+    };
+    
+    if(field==="image"){
+      const change = [...susImageChanged];
+      change[index] = true;
+      console.log(change);
+      setSusImageChanged(change);  
+    }
+
+    setSuscripciones(update);
+     
+    }
+
   
-}
+    const handleDeleteSuscription = (index: number) => {
+      const nuevaSuscripcion = suscripciones.filter((_:any, i:any) => i !== index);
+      const nuevaSus = toggleSus.filter((_, i) => i !== index);
+   
+  
+      setSuscripciones(nuevaSuscripcion);
+      setToggleSus(nuevaSus)
+
+    };
+
 
 const handleLandingdUpdate = (input:string,value:any)=>{
   if(input==="nombre"){
@@ -265,6 +336,18 @@ const handleLandingdUpdate = (input:string,value:any)=>{
     setIconoChanged(true);
    }
   
+}
+
+
+const handleStatus = (index:any)=>{
+  const change = Array(toggleSus.length).fill(false);
+  change[index] = !toggleSus[index];
+  setToggleSus(change);
+}
+
+const addSuscription = ()=>{
+  setSuscripciones([...suscripciones,{sub_id:"",name:"",url:"",image:"",max_raffle:"",max_num:"",whatsapp:false, banners:false,email:false,share:false}]);
+  setToggleSus([...toggleSus,false]);
 }
 
 
@@ -335,9 +418,41 @@ const handleLandingdUpdate = (input:string,value:any)=>{
 
 {unSuscriptedCard && (
     <View style={styles.formContainer}>
-      <TouchableOpacity onPress={undefined} activeOpacity={1}>
-    <UnSuscriptedCard obj={{maximo,countRifas}} onToggle={()=>toggle(3)} onUpdate={(value1,value2)=>handleUnsuscriptedUpdate(value1,value2)}/>
-      </TouchableOpacity>
+       <TouchableOpacity onPress={undefined} activeOpacity={1}>
+       <View>
+    <TouchableOpacity onPress={()=>toggle(4)} activeOpacity={1}>
+    <Text style={{ fontWeight: 'bold', fontSize: 20,color:'#374151', marginBottom: 10 }}>Suscripciones</Text>
+<Text style={{ fontSize: 16, color: '#666',paddingBottom:15 }}>En esta parte podras configurar tu sistema de suscripciones.</Text>
+</TouchableOpacity>
+
+{suscripciones.length>0 &&  (
+    suscripciones.map((item:any, index:any) =>  
+    <SuscriptedCard 
+        key={index}
+        obj={item}
+        onUpdate={(value,field)=>handleSuscriptedUpdate(value,field,index)} 
+        onToggle={()=>handleStatus(index)}
+        onDelete={()=>handleDeleteSuscription(index)}
+        open={toggleSus[index]}
+    />))
+}
+<TouchableOpacity style={{
+              backgroundColor: '#f1f1f1f1',
+              padding: 15,
+              borderRadius: 5,
+              marginTop:10
+            }}
+              onPress={()=>{addSuscription()}}
+            >
+              <Text style={{
+                textAlign: 'center',
+                color: '#CCCC1',
+                fontWeight: 'bold',
+              }}>Agregar Plan</Text>
+            </TouchableOpacity>
+</View>
+
+       </TouchableOpacity>
     </View>
     
 )}

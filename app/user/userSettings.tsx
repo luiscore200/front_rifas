@@ -11,6 +11,7 @@ import { useAuth } from '../../services/authContext2';
 import ConfirmationModal from '../../components/ConfirmModal';
 import { CheckMarkIcon, InfoIcon, QuestionMarkIcon } from '../../assets/icons/userIcons';
 import { Linking } from 'react-native';
+import { getStorageItemAsync } from '../../services/storage';
 
 
 
@@ -21,6 +22,7 @@ export default function App() {
 
   const navigationItems = [
     { label: 'Inicio', action: () => router.push('/user/rifa/dashboard'),status:1 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () => console.log("holaa"),status:0 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
@@ -32,22 +34,35 @@ export default function App() {
   const [isWpActive, setIsWpActive] = useState(false);
   const [isWpVerified, setIsWpVerified] = useState(false);
    const [isGmActive, setIsGmActive] = useState(false);
-   const [isSuscripted,setIsSuscripted]=useState(false);
    const [responseMessage, setResponseMessage] = useState<string >("");
    const [modalVisible,setModalVisible]=useState(false);
   const [confirmation,setConfirmation]=useState(false);
   const [verifiedError,setVerifiedError]=useState(false);
   const [verifiedGmailError,setVerifiedGmailError]=useState(false);
   const [emailVerified,setEmailVerified]=useState(false);
+  const [procesando,setProcesando]= useState(false);
+  const [verificandoWp,setVerificandoWp]= useState(false);
+  const [verificandoEmail,setVerificandoEmail]= useState(false);
+  const [sub,setSub]=useState<any>({whatsapp:false,email:false,banners:true});
 
  
 
-  useEffect(()=>{ setIsSuscripted(user?.payed? true:false)
+  useEffect(()=>{handleSub(user?.id_subscription);
   },[user]);
 
    useEffect(()=>{handleConfig()},[]);
   
 
+   const handleSub = async(aa:string)=>{
+        const aaa= await getStorageItemAsync("subscriptions");
+      //  console.log("suscripciones",aaa);
+       const jaaa= aaa!==null? JSON.parse(aaa):[];
+        if(Array.isArray(jaaa)){
+         const aaaa= jaaa.find(item => item.sub_id===aa);
+         console.log("suscripcion",aaaa);
+         if(aaaa) setSub(aaaa);
+        }
+   }
 
 
  
@@ -59,9 +74,10 @@ export default function App() {
        if(!!response.config){
         setEmail(response.config.email===null?'':response.config.email);
         setPassword(response.config.password_email===null?'':response.config.password_email);
-        setIsWpVerified(response.config.phone_verified===1?true:false);
-        setIsWpActive(response.config.phone_status===1?true:false);
-        setEmailVerified(response.config.email_verified===1?true:false);
+        setIsWpVerified(response.config.phone_verified);
+        setIsWpActive(response.config.phone_status);
+        setEmailVerified(response.config.email_verified);
+        setIsGmActive(response.config.email_status);
 
 
        
@@ -75,6 +91,7 @@ export default function App() {
  }
 
  const handleWpStatus = ()=>{
+  console.log(sub);
   setIsWpActive(!isWpActive);
   if(!isWpVerified){
     setVerifiedError(true);
@@ -99,65 +116,80 @@ export default function App() {
 
   const handleSave = async () =>{
   //  if(!isSuscripted){setResponseMessage("Las opciones de notificacion solo estan disponibles para usuarios suscritos");setModalVisible(true);}
+ setProcesando(true);
 
     try {
-      const response = await saveConfig({phone_status:isWpActive?1:0,phone_verified:isWpVerified?1:0,email:email,password_email:password,email_verified:emailVerified?1:0,email_status:isGmActive?1:0});
+      const response = await saveConfig({phone_status:isWpActive,phone_verified:isWpVerified,email:email,password_email:password,email_verified:emailVerified,email_status:isGmActive});
       console.log(response);
+      if(response.mensaje){
+        setProcesando(false);
+        setResponseMessage(response.mensaje);
+        setModalVisible(true);
+      }if(response.error){
+        setProcesando(false);
+        setResponseMessage(response.error);
+        setModalVisible(true);
+      }
     } catch (error) {
+      setProcesando(false);
+      setResponseMessage("Ha ocurrido un error");
+      setModalVisible(true);
       
     }
 
     
   }
-  const handleConfirm = ()=>{
-    if(!isSuscripted){
-      setResponseMessage("Las opciones de notificacion solo estan disponibles para usuarios suscritos");
-      setModalVisible(true);
-    }
 
-  }
 
   const handleVerify = async () => {
+    setVerificandoWp(true);
     // Lógica para verificar el teléfono aquí
     console.log("Verificar teléfono");
     try {
       const response = await verifySession();
       if(!!response.mensaje){
+        setVerificandoWp(false);
         setIsWpVerified(true);
         setResponseMessage(response.mensaje);
         setModalVisible(true);
       }
       if(!!response.error){
+        setVerificandoWp(false);
         setIsWpVerified(false);
         setResponseMessage(response.error);
         setModalVisible(true);
       }
       console.log(response);
     } catch (error:any) {
+      setVerificandoWp(false);
       setIsWpVerified(false);
-      setResponseMessage(error.message);
+      setResponseMessage("error al verificar");
       setModalVisible(true);
     }
   };
 
 const handleEmailVerify= async()=>{
+  setVerificandoEmail(true);
   try {
     const response = await verifyEmail(email,password);
     console.log(response);
     if(!!response.mensaje){
+      setVerificandoEmail(false);
       setEmailVerified(true);
       setResponseMessage(response.mensaje);
       setModalVisible(true);
     }
     if(!!response.error){
+      setVerificandoEmail(false);
       setEmailVerified(false);
       setResponseMessage(response.error);
       setModalVisible(true);
     }
     console.log(response);
   } catch (error:any) {
+    setVerificandoEmail(false);
     setEmailVerified(false);
-    setResponseMessage(error.message);
+    setResponseMessage("Error al verificar");
     setModalVisible(true);
   }
       
@@ -204,7 +236,7 @@ const handleEmailVerify= async()=>{
                 <Text style={styles.buttonText}>Enviar QR</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.button, { backgroundColor: '#6366F1', marginLeft: 10 }]} onPress={handleVerify}>
-                <Text style={styles.buttonText}>Verificar</Text>
+                <Text style={styles.buttonText}>{verificandoWp?"Verificando...":"Verificar"}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -215,12 +247,12 @@ const handleEmailVerify= async()=>{
               <Switch
                 value={isWpActive}
                 onValueChange={handleWpStatus}
-                trackColor={{ false: isSuscripted ? "#fee2e2" : "#ccc", true: "#dcfce7" }}
-                thumbColor={isWpActive ? "#34D399" : isSuscripted ? "#EF4444" : "#888"}
-                disabled={!isSuscripted}
+                trackColor={{ false: sub.whatsapp ? "#fee2e2" : "#ccc", true: "#dcfce7" }}
+                thumbColor={isWpActive ? "#34D399" : sub.whatsapp ? "#EF4444" : "#888"}
+                disabled={!sub.whatsapp}
               />
-                <Text style={[styles.statusText, { color: isSuscripted ? (isWpActive ? '#10B981' : '#EF4444') : '#888' }]}>
-                {isSuscripted ? (isWpActive ? 'Activo' : 'Inactivo') : 'Disabled'}
+                <Text style={[styles.statusText, { color: sub.whatsapp ? (isWpActive ? '#10B981' : '#EF4444') : '#888' }]}>
+                {sub.whatsapp ? (isWpActive ? 'Activo' : 'Inactivo') : 'Disabled'}
               </Text>
             </View>
             {verifiedError && !isWpVerified && (<Text style={{color:'red',marginTop:10}}>Necesita tener la sesion verificada antes de activar el servicio</Text>)}
@@ -250,7 +282,7 @@ const handleEmailVerify= async()=>{
 
         <TouchableOpacity  onPress={openLink} style={{marginLeft:25}}><InfoIcon style={{color:'#6b7280'}}/></TouchableOpacity>
             <TouchableOpacity style={[ { backgroundColor: '#6366F1', borderRadius:10,alignItems:'center',justifyContent:'center', marginLeft: 10,width:150,height:45 }]} onPress={handleEmailVerify}>
-                <Text style={styles.buttonText}>Verificar</Text>
+                <Text style={styles.buttonText}>{verificandoEmail?"Verificando...":"Verificar"}</Text>
               </TouchableOpacity>
              
               
@@ -264,12 +296,12 @@ const handleEmailVerify= async()=>{
             <Switch
                 value={isGmActive}
                 onValueChange={handleEmailStatus}
-                trackColor={{ false: isSuscripted ? "#fee2e2" : "#ccc", true: "#dcfce7" }}
-                thumbColor={isGmActive ? "#34D399" : isSuscripted ? "#EF4444" : "#888"}
-                disabled={!isSuscripted}
+                trackColor={{ false: sub.email ? "#fee2e2" : "#ccc", true: "#dcfce7" }}
+                thumbColor={isGmActive ? "#34D399" : sub.email ? "#EF4444" : "#888"}
+                disabled={!sub.email}
               />
-              <Text style={[styles.statusText, { color: isSuscripted ? (isGmActive ? '#10B981' : '#EF4444') : '#888' }]}>
-                {isSuscripted ? (isGmActive ? 'Activo' : 'Inactivo') : 'Disabled'}
+              <Text style={[styles.statusText, { color: sub.email ? (isGmActive ? '#10B981' : '#EF4444') : '#888' }]}>
+                {sub.email ? (isGmActive ? 'Activo' : 'Inactivo') : 'Disabled'}
               </Text>
             </View>
              {verifiedGmailError && !emailVerified && (<Text style={{color:'red',marginTop:10}}>Necesita tener la sesion verificada antes de activar el servicio</Text>)}
@@ -278,7 +310,7 @@ const handleEmailVerify= async()=>{
      
           <View style={styles.inputGroup}>
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.buttonText}>Guardar</Text>
+              <Text style={styles.buttonText}>{procesando?"Procesando...":"Guardar"}</Text>
             </TouchableOpacity>
           </View>
 </View>
