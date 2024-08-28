@@ -354,6 +354,32 @@ export const rifaUpdate = async (obj:any,id:any) => {
 
   };
 
+  export const indexAssign = async () => {
+    
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/rifa/indexNumeros`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
+        },
+      });
+      if (response.ok) {
+        const numeros:any = await response.json();
+     //   console.log(rifa);
+      return numeros;
+      }else{
+        return response.json();
+      }
+      
+    }catch(error:any){
+     
+      throw error;
+     
+    }
+
+  };
+
   export const createComprador = async (comprador:any)=>{
 
     try {
@@ -420,7 +446,7 @@ export const rifaUpdate = async (obj:any,id:any) => {
   }
 
 
-  export const assignNumbers = async (id_rifa:number,id_comprador:number,numbers:number[],method:string)=>{
+  export const assignNumbers = async (id_rifa:number,id_comprador:number,numbers:number[])=>{
 
     
 
@@ -431,7 +457,7 @@ export const rifaUpdate = async (obj:any,id:any) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${await getToken()}`, 
         },
-        body: JSON.stringify({id_comprador:id_comprador,numbers:numbers,method:method}),
+        body: JSON.stringify({id_comprador:id_comprador,numbers:numbers}),
       });
       const data = await response.json();
       console.log(data);
@@ -443,6 +469,32 @@ export const rifaUpdate = async (obj:any,id:any) => {
       throw error;
     }
   };
+
+
+  export const forcedAssign = async (rifa:number,comprador:number,status:string,numero:number)=>{
+
+    
+
+    try {
+      const response = await fetchWithTimeout(`${API_URL}/rifa/forcedUpdateAssign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
+        },
+        body: JSON.stringify({rifa,comprador,status,numero}),
+      });
+      const data = await response.json();
+      console.log(data);
+      if (!response.ok) {
+        return data;
+      }
+      return data;
+    } catch (error:any) {
+      throw error;
+    }
+  };
+
 
   export const indexSeparated = async(id:number)=>{
     try{

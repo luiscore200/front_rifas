@@ -98,7 +98,7 @@ export default function App() {
       setModalVisible(true);
     }
   } catch (error:any) {
-    setResponseMessage(error.message);
+    setResponseMessage("No se pudo conectar al servidor");
     setModalVisible(true);
   }
 

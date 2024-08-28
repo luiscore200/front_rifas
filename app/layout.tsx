@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, ScrollView, Platform } from 'react-native';
 import { MenuIcon2, NotificationBellIcon } from '../assets/icons/userIcons';
+import Database from '../services/sqlite';
 
 
 import { router } from 'expo-router';
 import { getNotification } from '../services/api';
 import { getStorageItemAsync, setStorageItemAsync } from '../services/storage';
+import { useAuth } from '../services/authContext2';
+import { process } from '../services/reconect';
 
 
 interface GradientLayoutProps {
@@ -20,32 +23,63 @@ interface GradientLayoutProps {
 }
 
 const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems,hasNotifications=true,touchOut, hasDrawer = false,Touched,touchedOut }) => {
+
+  const {online,setOnline,notificacionesContext,setNotificacionesContext}=useAuth();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
   const [menu,setMenu]=useState(false);
-  const [notificaciones,setNotificaciones]=useState<any>(async()=>{await getStorageItemAsync("notificaciones");});
+  const [notificaciones,setNotificaciones]=useState<any>([]);
+  const db = new Database();
 
   useEffect(()=>{if(touchOut===true){closeAll2()}},[touchOut]);
 
   useEffect(()=>{handleNotificaciones()},[])
 
+  useEffect(()=>{ if(online)aa();},[online]);
+
+  const aa= async  () => { try { await process() ; } catch (error) {} }
+
   const handleNotificaciones = async()=>{
+   
     try {
       const response = await getNotification();
+      
      
-      if(!!response.notificaciones){ setNotificaciones(response.notificaciones);
-        console.log(response.notificaciones);
-        await setStorageItemAsync('notificaciones', JSON.stringify(response.notificaciones));
+      if(!!response.notificaciones){ 
+        if(!online)setOnline(true);
+        setNotificaciones(response.notificaciones);
+        setNotificacionesContext(response.notificaciones);
+        if(Platform.OS!=='web'){
+          await db.deleteDataTable('notificaciones');
+          response.notificaciones.length>0? await db.insert('notificaciones',response.notificaciones):undefined;
+        }
+     
       }else{
-        const not= await getStorageItemAsync("notificaciones");
-         setNotificaciones(not? JSON.parse(not):[]);
+        if(Platform.OS!=='web'){
+        //  const noti= await db.index('notificaciones');
+         // setNotificaciones(noti);
+       
+        }
+       
       }
   
       
     } catch (error) {
-      const not= await getStorageItemAsync("notificaciones");
-      setNotificaciones(not? not:[]);
-    }
+      if(online){
+
+        if(Platform.OS!=='web'){
+          const noti= await db.index('notificaciones');
+           setNotificaciones(noti); 
+           setNotificacionesContext(noti);
+          }
+          setOnline(false);
+      }else{
+        setNotificaciones(notificacionesContext);
+      }
+
+      }
+      //  const not= await getStorageItemAsync("notificaciones");
+ 
    }
 
    useEffect(()=>{console.log("notificaiones", notificaciones)},[notificaciones]);
@@ -182,7 +216,7 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
 
   <TouchableWithoutFeedback onPress={closeAll}>
     <LinearGradient
-      colors={['#6366F1', '#BA5CDE']}
+      colors={online?['#6366F1', '#BA5CDE']:['#94a3b8','#cbd5e1']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.container}
@@ -210,7 +244,7 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
         <Animated.View style={[styles.drawer, { transform: [{ translateX: drawerTranslateX }] }]} pointerEvents={'box-none'}>
           <View style={styles.drawer} pointerEvents='box-none'>
             <LinearGradient
-              colors={['#6366F1', '#a78bfa']}
+              colors={online?['#6366F1', '#a78bfa']:['#94a3b8','#cbd5e1']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.drawerGradient}

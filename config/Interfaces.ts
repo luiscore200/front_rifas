@@ -36,6 +36,7 @@ export interface rifa {
   tipo: string;
   numeros: string;
   asignaciones?:string;
+  local?:number;
   premios?:premio[];
 }
 
@@ -51,4 +52,14 @@ export interface subs {
   email:boolean;
   banners:boolean;
   share:boolean;
+}
+export interface AppConfig {
+  id: number;
+  email: string;
+  banner_1: string;
+  banner_2: string;
+  banner_3: string;
+  app_logo: string;
+  app_icon: string;
+  app_name: string;
 }

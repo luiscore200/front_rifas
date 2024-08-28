@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { rifa } from '../../../config/Interfaces';
@@ -16,6 +16,7 @@ import { premio } from '../../../config/Interfaces';
 import GradientLayout from '../../layout';
 import { getStorageItemAsync } from '../../../services/storage';
 import { CheckMarkIcon, InfoIcon, NextIcon, QuestionMarkIcon, UpIcon } from '../../../assets/icons/userIcons';
+import Database from '../../../services/sqlite';
 
 
 
@@ -24,7 +25,7 @@ import { CheckMarkIcon, InfoIcon, NextIcon, QuestionMarkIcon, UpIcon } from '../
 
 const userCreate: React.FC = () => {
 
-  const {auth,user,logout}=useAuth();
+  const {auth,user,logout,mySubContext}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => router.push('/user/rifa/dashboard'),status:1 },
     { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
@@ -35,7 +36,7 @@ const userCreate: React.FC = () => {
   const [cardForm, setCardForm] = useState(false); 
   const [cardForm2, setCardForm2] = useState(false);
  
-  const [premios, setPremios] = useState<premio[]>([{ id: 0, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
+  const [premios, setPremios] = useState<premio[]>([{ id: 1, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
   const [rifa, setRifa] = useState<rifa>({ titulo: "", pais: user?.country||"Colombia",precio:0, numeros: '100', tipo: "oportunidades" });
  
   const [errorRifa, setErrorRifa] = useState({});
@@ -50,6 +51,7 @@ const userCreate: React.FC = () => {
   const [image1, setImage1] = useState<string>("");
   const [image1Changed, setImage1Changed] = useState<boolean>(false);
   const [procesando, setProcesando]=useState<boolean>(false);
+  const db = new Database();
   
   useEffect(()=>{
      
@@ -69,7 +71,7 @@ const userCreate: React.FC = () => {
 
   // Reset premios, touched fields y error fields cuando cambia el tipo de rifa
   useEffect(() => {
-    setPremios([{ id: 0, descripcion: "", loteria: "", ganador:"",fecha: "" }]);
+    setPremios([{ id: 1, descripcion: "", loteria: "", ganador:"",fecha: "" }]);
     setTouchedFieldPremios([{ descripcion: false, loteria: false, fecha: false }]);
     setErrorPremios([{}]);
   }, [rifa.tipo]);
@@ -95,22 +97,7 @@ const userCreate: React.FC = () => {
 
   const handleSave = async() => {
     setProcesando(true);
-/*
-    if (!user) {
-      setHasError(true);
-      setResponseMessage("No existe ningún usuario autenticado para solicitar la actualización");
-      setModalVisible(true);
-      return;
-    }
-  
-    // Verificar si el usuario no ha pagado y si el número de entradas es mayor al máximo permitido
-    if (user.payed === 0 && config && Number(rifa.numeros) > Number(config.raffle_number)) {
-      setHasError(true);
-      setResponseMessage(`El número máximo de entradas para no suscritos es ${config.raffle_number}`);
-      setModalVisible(true);
-      return;
-    }
-*/
+
     const updatedTouchedRifa = {titulo:true,precio:true,numeros:true,tipo:true};
     setTouchedFieldRifa(updatedTouchedRifa);
     const formErrors = validateForm(rifa, updatedTouchedRifa, createRifaValidationRules);
@@ -154,21 +141,49 @@ const userCreate: React.FC = () => {
            setModalVisible(true);
         }
       } catch (error:any) {
-        setProcesando(false);
-        setResponseMessage(error.message);
+
+
+      if(Platform.OS==='web'){
+      
+        setResponseMessage('ha ocurrido un error, verifica tu conexion');
         setHasError(true);
+   
+      }else{
+
+        if(rifa.numeros>mySubContext.max_num){
+          setResponseMessage('tu suscripcion actual no maneja esta cantidad de numeros');
+          setProcesando(false);
+          setModalVisible(true);
+          return;
+
+        }
+
+        const aa = await db.index('rifas');
+        if(aa.length>=mySubContext.max_raffle){
+          setResponseMessage('ya has alcanzado el maximo de rifas soportado por tu plan');
+          setProcesando(false);
+          setModalVisible(true);
+          return;
+
+        }
+        
+        await db.insert('rifas',[{id:-Date.now(),titulo:rifa.titulo,pais:rifa.pais,precio:rifa.precio,tipo:rifa.tipo,numeros:rifa.numeros,imagen:image1,local:1,premios:JSON.stringify(premios)}]);
+        setHasError(false);
+        setResponseMessage('datos guardados localmente, verifica tu conexion');
+
+      }
+        setProcesando(false);
         setModalVisible(true);
+      
+
       } 
       //  console.log(request);
      
    
-    } else {
-   
-    
-     
-      console.log("formulario invalido");
-     // console.log(formErrors);
-     // console.log(premioErrors);
+    } else{
+      setResponseMessage('formulario invalido');
+      setProcesando(false);
+      setModalVisible(true);
     }
   };
 

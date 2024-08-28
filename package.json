@@ -23,7 +23,9 @@
     "expo-linking": "~6.3.1",
     "expo-router": "~3.5.14",
     "expo-secure-store": "~13.0.1",
+    "expo-sqlite": "~14.0.6",
     "expo-status-bar": "~1.12.1",
+    "expo-system-ui": "~3.0.7",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.74.1",
@@ -36,7 +38,7 @@
     "react-native-svg": "^15.2.0",
     "react-native-web": "~0.19.10",
     "styled-components": "^6.1.11",
-    "expo-system-ui": "~3.0.7"
+    "expo-dev-client": "~4.0.25"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

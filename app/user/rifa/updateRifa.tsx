@@ -13,6 +13,7 @@ import { useAuth } from '../../../services/authContext2';
 import GradientLayout from '../../layout';
 import { getStorageItemAsync } from '../../../services/storage';
 import { NextIcon } from '../../../assets/icons/userIcons';
+import Database from '../../../services/sqlite';
 
 
 
@@ -27,7 +28,7 @@ const userCreate: React.FC = () => {
     const rifa2= JSON.parse(rifa1);
    // console.log("inicio: ",rifa2);
 
-   const {auth,user,logout}=useAuth();
+   const {auth,user,logout,mySubContext}=useAuth();
    const navigationItems = [
     { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
     { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
@@ -37,8 +38,8 @@ const userCreate: React.FC = () => {
     const [config,setConfig]=useState<any>();
     const [cardForm, setCardForm] = useState(false);
     const [cardForm2, setCardForm2] = useState(false);
-    const [premios, setPremios] = useState<premio[]>(rifa2.premios || [{ id: 0, descripcion: "", loteria: "", fecha: "" }]);
-    const [rifa, setRifa] = useState<rifa>({id:rifa2.id||0, titulo: rifa2.titulo || "", pais: rifa2.pais || "Colombia", precio: rifa2.precio || 0, numeros: rifa2.numeros || 100, tipo: rifa2.tipo || "premio_unico" });
+    const [premios, setPremios] = useState<premio[]>(rifa2.premios || [{ id: 1, descripcion: "", loteria: "", fecha: "" }]);
+    const [rifa, setRifa] = useState<rifa>({id:rifa2.id||0, titulo: rifa2.titulo || "", pais: rifa2.pais || "Colombia", precio: rifa2.precio || 0, numeros: rifa2.numeros || 100, tipo: rifa2.tipo || "premio_unico",local:rifa2.local? rifa2.local:0 });
     const [errorRifa, setErrorRifa] = useState({});
     const [touchedFieldRifa, setTouchedFieldRifa] = useState({ titulo: false, numeros: false, tipo: false, precio: false });
     const [touchedFieldPremios, setTouchedFieldPremios] = useState(rifa2.premios.map(() => ({ descripcion: false, loteria: false, fecha: false })));
@@ -50,6 +51,7 @@ const userCreate: React.FC = () => {
     const [image1, setImage1] = useState<string>(rifa2.imagen||"");
     const [image1Changed, setImage1Changed] = useState<boolean>(false);
     const [procesando, setProcesando]=useState<boolean>(false);
+    const db = new Database();
   
     const handleConfig = async ()=>{
       const conf = await getStorageItemAsync("general_config");
@@ -108,7 +110,32 @@ const userCreate: React.FC = () => {
 
      // const request:rifa = {... rifa,premios: premios};
      
-      const request = new FormData();
+  
+       
+      try {
+    
+      if(rifa.local && rifa.local === 1){
+        
+        if(Platform.OS==='android'||'ios'){
+
+        if(rifa.numeros>mySubContext.max_num){
+          setResponseMessage('tu suscripcion actual no maneja esta cantidad de numeros');
+          setProcesando(false);
+          setModalVisible(true);
+          return;
+
+        }
+
+        await db.update('rifas',{titulo:rifa.titulo,pais:rifa.pais,precio:rifa.precio,tipo:rifa.tipo,numeros:rifa.numeros,local:1,premios:JSON.stringify(premios)},[{id:rifa.id},'']);
+      
+        setProcesando(false);
+        setResponseMessage('datos guardados localmente, verifica tu conexion');
+        setHasError(false);
+         setModalVisible(true);
+     
+      }
+      }else{
+        const request = new FormData();
         request.append("id",rifa.id?rifa.id.toString():"0");
         request.append("titulo",rifa.titulo);
         request.append("pais",rifa.pais);
@@ -118,8 +145,6 @@ const userCreate: React.FC = () => {
         request.append("premios",JSON.stringify(premios));
         if (image1Changed ) {const body = image1!==""? await imageBody(image1):"";request.append('imagen',body);}
    
-       
-      try {
         const response:any = await rifaUpdate(request,rifa.id);
         console.log(response);
         if(response.mensaje){
@@ -135,20 +160,33 @@ const userCreate: React.FC = () => {
            setModalVisible(true);
         }
 
+
+      }
       } catch (error:any) {
+        if(Platform.OS==='android'||'ios'){
+          if(rifa.numeros>mySubContext.max_num){
+            setResponseMessage('tu suscripcion actual no maneja esta cantidad de numeros');
+            setProcesando(false);
+            setModalVisible(true);
+            return;
+  
+          }
+          await db.update('rifas',{titulo:rifa.titulo,pais:rifa.pais,precio:rifa.precio,tipo:rifa.tipo,numeros:rifa.numeros,local:1,premios:JSON.stringify(premios)},[{id:rifa.id},'']);
+        setResponseMessage('datos guardados localmente, verifica tu conexion');
+
+
+        }else{
+          setResponseMessage('Ha ocurrido un error, verifica tu conexion');
+          setHasError(true);
+        }
+         setHasError(false);
         setProcesando(false);
-        setResponseMessage(error.message);
-        setHasError(true);
         setModalVisible(true);
       } 
       //  console.log(request);
      
    
-    } else {
-   
-console.log("formulario invalido");
-
-  };
+    } 
 }
 
 const imageBody= async(image:any)=>{

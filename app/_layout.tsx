@@ -1,9 +1,9 @@
 import { Slot, Stack, router, useSegments } from 'expo-router';
 import {useAuth,AuthContextProvider} from '../services/authContext2'
-import { useEffect,useState } from 'react';
+import { useEffect } from 'react';
 import routes from '../config/routesConfig';
 import { Appearance } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+
 
 
 const MainLayout = () => {

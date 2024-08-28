@@ -11,6 +11,7 @@ import Deleted from '../../components/responseModal';
 import ToastModal from '../../components/toastModal';
 import GradientLayout from '../layout';
 import { useAuth } from '../../services/authContext2';
+import DisconectedCard from '../../components/disconectedCard';
 
 
 
@@ -45,7 +46,8 @@ export default function App() {
  const [buscar,setBuscar]=useState<string>("");
  const [reload, setReload] = useState(false); 
  const [loading,setLoading]=useState(true);
- const array = [1,1,1,1];
+ const array = [1,1,1];
+ const [connectionError,setConnectionError]=useState<boolean>(false);
 
  const isUser = (item: any): item is User => {
   return (
@@ -66,8 +68,10 @@ export default function App() {
 
 
 const handleUsers = async()=>{
-
+      setConnectionError(false);
+      setLoading(true);
   try{
+
   const users2 = await userIndex();
   if(users2.error){ 
     setResponseIndexMessage(users2.error);
@@ -85,9 +89,12 @@ const handleUsers = async()=>{
     setLoading(false);
   }
 }catch(e:any){
-  setResponseIndexMessage("ha ocurrido un error al cargar la lista");
-  setToast(true);
-  console.error(e);
+//  setResponseIndexMessage("ha ocurrido un error al cargar la lista");
+ // setToast(true);
+ // console.error(e);
+ setConnectionError(true);
+ setLoading(false);
+
 
 }
   
@@ -204,7 +211,7 @@ useEffect(() => {
         </View>
         <View style={styles.cardContainer}>
          
-          {  !loading &&  users2.length>0 && users2.map(user => (
+          {  !loading && !connectionError && users2.length>0 && users2.map(user => (
             <TouchableOpacity key={user.id} onPress={() => handleOptions(user)}>
              <Card
              key={user.id}
@@ -213,7 +220,7 @@ useEffect(() => {
            /></TouchableOpacity>
           ))}
 
-          {  loading && array.map((user,index) => (
+          {  loading && !connectionError &&  array.map((user,index) => (
             <TouchableOpacity key={index} onPress={() => undefined} activeOpacity={1} > 
              <Card
              prueba = {true}
@@ -223,8 +230,15 @@ useEffect(() => {
            /></TouchableOpacity>
           ))}
           
-           {  !loading && users2.length===0 && (
+           {  !loading &&  !connectionError &&  users2.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado usuarios . . .</Text></View>
+          )}
+           {  !loading &&  connectionError &&  (
+            <DisconectedCard
+              onOffline={()=>{}}
+              onReload={()=>{handleUsers()}}
+              offline={false}
+            />
           )}
         </View>
       </ScrollView>

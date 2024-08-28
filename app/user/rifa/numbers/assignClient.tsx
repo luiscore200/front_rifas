@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
@@ -9,6 +9,7 @@ import { cashInNequi, getNequiToken, validateClientAndAmount, createComprador,as
 import ToastModal from '../../../../components/toastModal';
 import { useAuth } from '../../../../services/authContext2';
 import GradientLayout from '../../../layout';
+import Database from '../../../../services/sqlite';
 
 
 interface error {
@@ -27,7 +28,7 @@ interface comprador {
 export default function AssignClient() {
 
 
-    const {auth,user,logout}=useAuth();
+    const {auth,user,logout,online,setOnline}=useAuth();
     const navigationItems = [
      { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
      { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
@@ -46,7 +47,7 @@ export default function AssignClient() {
     const [loading, setLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('manual');
     const [hasError,setHasError]= useState(false);
-    const [responseMessage,setResponseMessage]=useState();
+    const [responseMessage,setResponseMessage]=useState<string>();
     const [modal,setModal]=useState(false);
 
     useEffect(() => { setRifa2(JSON.parse(rifa)) }, [rifa]);
@@ -70,7 +71,7 @@ export default function AssignClient() {
         setError(errors);
 
         if (Object.keys(errors).length === 0) {
-            console.log("formulario valido");
+          //  console.log("formulario valido");
             setLoading(true);
             try {
                 const create = await createComprador(comprador);
@@ -79,7 +80,8 @@ export default function AssignClient() {
                   setResponseMessage(create.error);
                   setModal(true);
                 } else {
-                  const assign = await assignNumbers(id,create.comprador.id,Numbers,paymentMethod);
+                    !online? setOnline(true):undefined;
+                  const assign = await assignNumbers(id,create.comprador.id,Numbers);
                   if(!!assign.error){
                     setHasError(true);
                     setResponseMessage(assign.error);
@@ -95,12 +97,64 @@ export default function AssignClient() {
 
                 setLoading(false);
             } catch (error:any) {
-              setHasError(true);
-              setResponseMessage(error.message);
+           
+               // setHasError(true);
+               // setResponseMessage(error.message);
+              //  setModal(true);
+           
+
+                //verificar si comprador existe, si existe
+                        //tomar el id y subirlo a la tabla "asignaciones_pendientes" (id rifa, id comprador, [numeros])
+                //si no existe agregar a "compradores_pendientes", sera una replica de compradores, sin el id
+
+                //cuando haya internet se ejecutara primero la consulta compradores_pendientes y luego asignaciones_pendientes
+
+               
+                if (Platform.OS !== 'web') {
+                    const db = new Database();
+                  const ee = await db.find('compradores',{email:comprador.email});
+                  console.log("eee",ee);
+                  if(ee.length===0){
+                  
+                     await db.insert('compradores',[{...comprador,local:1,id:-Date.now()}]);
+                     const cr = await db.find('compradores',{local:1,email:comprador.email});
+                     const query = Numbers.map(number => ({
+                        id: -Date.now() - Math.floor(Math.random() * 1000), 
+                        id_raffle: id,  
+                        id_purchaser: cr[0].id,  
+                        local: 1,  
+                        status: 'separado',  
+                        created_at:"",
+                        number 
+                    }));
+                       await db.insert('asignaciones',query)
+                     //  console.log("asignaciones locals",await db.find("asignaciones",{local:1}));
+                  }else{
+                    const query = Numbers.map(number => ({
+                        id: -Date.now() - Math.floor(Math.random() * 1000), 
+                        id_raffle: id,  
+                        id_purchaser: ee[0].id,  
+                        local: 1,  
+                        status: 'separado',  
+                        created_at:"",
+                        number 
+                    }));
+                       await db.insert('asignaciones',query)
+                     //  console.log("asignaciones locals",await db.find("asignaciones",{local:1}));
+
+                  }
+                  console.log('index compradores', await db.index('compradores'));
+                  
+              }
+              setLoading(false);
+              setResponseMessage('verifica tu conexion, datos guardados localmente');
               setModal(true);
-            } finally {
-                setLoading(false);
+
             }
+
+            
+
+            
         } else {
             console.log("formulario invalido");
         }

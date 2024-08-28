@@ -3,61 +3,35 @@ import { View, StyleSheet, Image, Dimensions, FlatList, Animated, TouchableOpaci
 import { router } from 'expo-router';
 import GradientLayout from '../layout';
 import { useAuth } from '../../services/authContext2';
-import { getStorageItemAsync } from '../../services/storage';
 
-const { width: viewportWidth, height: viewportHeigth } = Dimensions.get('window');
+const { width: viewportWidth, height: viewportHeight } = Dimensions.get('window');
 const ITEM_WIDTH = Math.round(viewportWidth * 0.7);
-const ITEM_HEIGHT = Math.round(viewportHeigth * 0.65);
+const ITEM_HEIGHT = Math.round(viewportHeight * 0.65);
 
 export default function App() {
-  const { user, auth, logout } = useAuth();
-  const navigationItems = [
-    { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"), status: 1 },
-    { label: 'Suscripcion', action: () => undefined, status: 0 },
-    { label: 'Configuracion', action: () => router.push('/user/userSettings'), status: 1 },
-    { label: 'Logout', action: async () => await logout(), status: auth === true ? 1 : 0 },
-  ];
-
-  const [sub, setSub] = useState<any>(null);
+  const { auth, logout, subContext } = useAuth();
+  const [sub, setSub] = useState<any>(subContext || []);
+  const [images, setImages] = useState<any[]>([]);
   const scrollX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    handleConfig();
-  }, []);
+    if (Array.isArray(sub)) {
+      const loadedImages = sub
+        .filter(element => element.url !== "" && element.image !== "")
+        .map((element, index) => ({ id: index, src: element.image, url: element.url }));
+      setImages(loadedImages);
+    }
+  }, [sub]);
 
-  const openLink = (link:string) => {
-  //  const url = 'https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=2c9380849007283701903771e1850ce0';
+  const openLink = (link: string) => {
     Linking.openURL(link).catch(err => console.error('Failed to open URL:', err));
   };
 
-  const handleConfig = async () => {
-    const sub = await getStorageItemAsync("subscriptions");
-    setSub(sub ? JSON.parse(sub) : null);
-  };
-
-  const images:any = [];
-
-  useEffect(() => {
-    if (sub !== null && Array.isArray(sub)) {
-      sub.map((element, index) => {
-        // Si el elemento tiene una URL, retorna el objeto completo
-        if (element.url !== "" && element.image!=="") {
-           images.push({ id: index, src:element.image, url: element.url });
-        }
-        // Si no tiene URL, retorna un objeto con solo el id y un mensaje vacío o null
-       
-      });
-      
-      
-      // Aquí puedes hacer algo con `result`, como actualizar el estado, etc.
-    }
-  }, [sub]);
-  
-  const renderItem = ({ item, index }: any) => {
+  const renderItem = ({ item }: any) => {
     const inputRange = [
-      (index - 1) * ITEM_WIDTH,
-      index * ITEM_WIDTH,
-      (index + 1) * ITEM_WIDTH,
+      (item.id - 1) * ITEM_WIDTH,
+      item.id * ITEM_WIDTH,
+      (item.id + 1) * ITEM_WIDTH,
     ];
 
     const scale = scrollX.interpolate({
@@ -74,7 +48,7 @@ export default function App() {
 
     return (
       <Animated.View style={[styles.card, { transform: [{ scale }], opacity }]}>
-        <TouchableOpacity key={index} onPress={ ()=>openLink(item.url)}>
+        <TouchableOpacity onPress={() => openLink(item.url)}>
           <Image source={{ uri: item.src }} style={styles.image} />
         </TouchableOpacity>
       </Animated.View>
@@ -82,7 +56,12 @@ export default function App() {
   };
 
   return (
-    <GradientLayout navigationItems={navigationItems} hasDrawer={true}>
+    <GradientLayout navigationItems={[
+      { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"), status: 1 },
+      { label: 'Suscripcion', action: () => undefined, status: 0 },
+      { label: 'Configuracion', action: () => router.push('/user/userSettings'), status: 1 },
+      { label: 'Logout', action: async () => await logout(), status: auth === true ? 1 : 0 },
+    ]} hasDrawer={true}>
       <View style={styles.container}>
         <Animated.FlatList
           data={images}
@@ -99,7 +78,7 @@ export default function App() {
           )}
         />
         <View style={styles.pagination}>
-          {images.map((_:any, i:any) => {
+          {images.map((_, i) => {
             const inputRange = [
               (i - 1) * ITEM_WIDTH,
               i * ITEM_WIDTH,

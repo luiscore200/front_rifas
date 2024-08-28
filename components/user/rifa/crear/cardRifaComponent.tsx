@@ -151,7 +151,7 @@ return(
        style={styles.input}  
      // style={{ color: '#a1a1a1', height: 40, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 8 }}
         keyboardType="numeric"
-      value={rifa.precio.toString()}
+      value={rifa.precio===0?"":rifa.precio.toString()}
       onChangeText={(text) => handleFieldChange("precio", Number(text))}
       onBlur={() => handleFieldChange("precio", rifa.precio)}
     />
