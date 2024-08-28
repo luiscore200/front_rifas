@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from 'react';
 import { indexSeparated,deleteSeparated,confirmSeparated } from "../../../../services/api";
 import RifaGrid from "../../../../components/user/rifa/rifaGrid";
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput,ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput,ScrollView, Platform } from 'react-native';
 import { rifa } from "../../../../config/Interfaces";
 import { LinearGradient } from "expo-linear-gradient";
 import ToastModal from "../../../../components/toastModal";
@@ -10,6 +10,7 @@ import SeparatedCard from "../../../../components/user/rifa/separated/separatedC
 import Delete from "../../../../components/ConfirmModal";
 import { useAuth } from "../../../../services/authContext2";
 import GradientLayout from "../../../layout";
+import Database from "../../../../services/sqlite";
 
 
 
@@ -20,11 +21,12 @@ export default function Assign() {
   const {auth,logout}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
 
-
+ 
   const { id }: any = useLocalSearchParams<{ id: string }>();
   const { rifa }: any = useLocalSearchParams<{ rifa: string }>();
   const [separated,setSeparated] = useState<any[]>([]);
@@ -36,6 +38,9 @@ export default function Assign() {
   const [buscar,setBuscar]=useState<string>("");
   const [selected,setSelected]=useState<any>();
   const [confirm,setConfirm]=useState(false);
+  const [loading,setLoading]=useState<boolean>(true);
+  const array = [1,1,1];
+  const db = new Database();
  
 
   const [confirmModal,setConfirmModal]=useState(false);
@@ -45,34 +50,78 @@ export default function Assign() {
   useEffect(() => { console.log(rifa2) }, [rifa2]);
  
   async function handleAsignaciones() {
+    setLoading(true);
+   
     try{
       const response = await indexSeparated(id);
       if(!!response.error){
         setResponseMessage(response.error);
         setHasError(true);
         setModal(true);
-        
 
       }else{
         if(!Array.isArray(response)){
           setSeparated([]);
           setSeparated2([]);
-          
-          setResponseMessage("algo ha ocurrido, no se ha podido cargar el listado");
-          setHasError(true);
+          setResponseMessage("Ha ocurrido un error");
           setModal(true);
         }else{
+          
+          if(Platform.OS!=='web'){
+                 
+          const aa =  await db.indexWithRelations(
+            {tableName:'asignaciones' },
+            [{tableName:'compradores',alias:'purchaser',foreignKey:'id_purchaser'},{tableName:'rifas',alias:'rifa',foreignKey:'id_raffle'}],
+            ['id','number','status','local'],
+            [{alias:'purchaser',fields:['id','phone','name','email','deleted']},{alias:'rifa',fields:['deleted']}],
+            `id_raffle = ${id} AND asignaciones.deleted = 0 AND status = 'separado' AND rifa.deleted = 0 AND purchaser.deleted = 0 AND asignaciones.local = 1`
+          );
+
+          const total = aa.concat(response);
           setSeparated(response);
           setSeparated2(response);
-          console.log(response);
+
+
+          }else{
+            setSeparated(response);
+            setSeparated2(response);
+
+          }
+
+          setLoading(false);
+      
         }
      
       }
       
     }catch(e:any){
-      setResponseMessage(e.message);
-      setHasError(true);
-      setModal(true);
+    
+
+        if(Platform.OS!=='web'){
+          setResponseMessage('verifica tu conexion, datos cargados localmente');
+          //setHasError(true);
+            setModal(true);
+            console.log('index asignaciones', await db.index('asignaciones'))
+          const aa =  await db.indexWithRelations(
+            {tableName:'asignaciones' },
+            [{tableName:'compradores',alias:'purchaser',foreignKey:'id_purchaser'},{tableName:'rifas',alias:'rifa',foreignKey:'id_raffle'}],
+            ['id','number','status','local'],
+            [{alias:'purchaser',fields:['id','phone','name','email','deleted']},{alias:'rifa',fields:['deleted']}],
+            `id_raffle = ${id} AND asignaciones.deleted = 0 AND status = 'separado' AND rifa.deleted = 0 AND purchaser.deleted = 0`
+          );
+
+          if(Array.isArray(aa)){
+            setSeparated(aa);
+            setSeparated2(aa);
+            
+            console.log(aa);
+          }
+          
+        }else{
+          setResponseMessage('Ha ocurrido un error, verifica tu conexion');
+            setModal(true);
+        }
+        setLoading(false);
     }
     
   }
@@ -82,46 +131,104 @@ export default function Assign() {
   }
 
   function OpenConfirm(obj:any,tipo:boolean){
-
     tipo===true?setConfirm(true):setConfirm(false);
     setSelected(obj)
     setConfirmModal(true);
-    
   }
 
   async function HandleConfirm(){
       try{
-      
-        const response = await confirmSeparated(selected.id);
-       setResponseMessage(response.mensaje||response.error);
-        setHasError(!!response.error);
-        setModal(true) 
-        handleAsignaciones();
-       // console.log(response);
+     if(!selected.local){
+       
+      const response = await confirmSeparated(selected.id);
+   if(response.mensaje){
+    setResponseMessage(response.mensaje);
+    setModal(true);
+    const a = separated.filter(obj => obj.id !== selected.id);
+    setSeparated(a);
+    setSeparated2(a);
+    
+    
+   }else{
+    setResponseMessage(response.error);
+    setModal(true);
+   }
+     }else{
+
+       await db.update('asignaciones',{status:'pagado'},[{id:selected.id},""]);
+      const aa = separated.filter(obj => obj.id!==selected.id);
+      setSeparated(aa);
+      setSeparated2(aa);
+      console.log('index asignaciones', await db.index('asignaciones'))
+     }
+
       }catch(e:any){
-        setResponseMessage(e.message);
-        setHasError(true);
+
+        if(Platform.OS!=='web'){
+      
+          if(selected.local){
+            await db.update('asignaciones',{status:'pagado'},[{id:selected.id},""]);
+          }else{
+            if(selected.id>0){
+            await db.update('asignaciones',{status:'pagado',local:1},[{id:selected.id},""]);
+            }
+        }
+          const a = separated.filter(obj => obj.id !== selected.id);
+          setSeparated(a);
+          setSeparated2(a);
+          console.log('index asignaciones', await db.index('asignaciones'))
+          setResponseMessage('verifica tu conexion, datos guardados localmente');
+        }else{
+          setResponseMessage('Ha ocurrido un error, verifica tu conexion');
+        }
+        
         setModal(true);
-        handleAsignaciones();
-      //  console.log(e.message)
+  
       }
   }
 
   async function HandleDelete(){
     try{
-      
-      const response = await deleteSeparated(selected.id);
+      if(!selected.local){
+        const response = await deleteSeparated(selected.id);
         setResponseMessage(response.mensaje||response.error);
         setHasError(!!response.error);
         setModal(true)
         handleAsignaciones();
+      } else{
+
+        await db.deleteDataTable('asignaciones',{id:selected.id});
+          //   handleAsignaciones();
+        const aa = separated.filter(obj => obj.id!==selected.id);
+        setSeparated(aa);
+        setSeparated2(aa);
+      }
+     
     //  console.log(response);
     }catch(e:any){
-         setResponseMessage(e.message);
-        setHasError(true);
+       if(Platform.OS!=='web'){
+        if(selected.local){
+          await db.deleteDataTable('asignaciones',{id:selected.id})
+        }else{
+          if(selected.id>0){
+            await db.update('asignaciones',{local:1,deleted:1},[{id:selected.id},""]);
+
+            console.log('index asignaciones', await db.index('asignaciones'))
+          }
+          
+        const a = separated.filter(obj => obj.id !== selected.id);
+        setSeparated(a);
+        setSeparated2(a);
+        }
+        console.log('index asignaciones', await db.index('asignaciones'))
+        setResponseMessage('verifica tu conexion, datos borrados localmente');
+        
+       }else{
+        setResponseMessage('Ha ocurrido un error, verifica tu conexion');
+       }
+
+      
         setModal(true);
-        handleAsignaciones();
-    // console.log(e.message)
     }
     
   }
@@ -140,7 +247,7 @@ export default function Assign() {
     });
 
     // Actualiza el array separated2 con los resultados filtrados
-    console.log("separated2 :",filteredArray)
+  //  console.log("separated2 :",filteredArray)
     setSeparated2(filteredArray);
 }
  
@@ -159,19 +266,35 @@ export default function Assign() {
           /> 
         </View>
         <View style={styles.cardContainer}>
-            { separated2.length>0 && (
+            {!loading && separated2.length>0 && (
                separated2.map((obj,index)=>(
+             <TouchableOpacity key={index} onPress={()=>undefined} activeOpacity={1}>
                 <SeparatedCard
                 key={index}
+                prueba={false}
                 info={obj}
                 onCancel={(info)=>OpenConfirm(info,false)}
                 onConfirm={(info)=> OpenConfirm(info,true)}
-                />
+                /></TouchableOpacity>
               ))
             )
+           }
+           {loading && (
+              array.map((obj,index)=>(
+                <TouchableOpacity key={index} onPress={()=>undefined} activeOpacity={1}>
+                <SeparatedCard
+                prueba={true}
+                key={index}
+                info={obj}
+                onCancel={(info)=>undefined}
+                onConfirm={(info)=> undefined}
+                /></TouchableOpacity>
+              ))
+
+           )
            }       
 
-               { separated2.length===0 && (
+          { !loading && separated2.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado asignaciones . . .</Text></View>
             )
            }                     

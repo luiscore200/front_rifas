@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { rifa } from '../../../config/Interfaces';
@@ -15,6 +15,8 @@ import ToastModal from '../../../components/toastModal';
 import { premio } from '../../../config/Interfaces';
 import GradientLayout from '../../layout';
 import { getStorageItemAsync } from '../../../services/storage';
+import { CheckMarkIcon, InfoIcon, NextIcon, QuestionMarkIcon, UpIcon } from '../../../assets/icons/userIcons';
+import Database from '../../../services/sqlite';
 
 
 
@@ -23,17 +25,19 @@ import { getStorageItemAsync } from '../../../services/storage';
 
 const userCreate: React.FC = () => {
 
-  const {auth,user,logout}=useAuth();
+  const {auth,user,logout,mySubContext}=useAuth();
   const navigationItems = [
-    { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Inicio', action: () => router.push('/user/rifa/dashboard'),status:1 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
 
-  
-  const [cardForm, setCardForm] = useState(false);
-  const [premios, setPremios] = useState<premio[]>([{ id: 0, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
-  const [rifa, setRifa] = useState<rifa>({ titulo: "", pais: user?.country||"Colombia",precio:0, numeros: '100', tipo: "premio_unico" });
+  const [cardForm, setCardForm] = useState(false); 
+  const [cardForm2, setCardForm2] = useState(false);
+ 
+  const [premios, setPremios] = useState<premio[]>([{ id: 1, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
+  const [rifa, setRifa] = useState<rifa>({ titulo: "", pais: user?.country||"Colombia",precio:0, numeros: '100', tipo: "oportunidades" });
  
   const [errorRifa, setErrorRifa] = useState({});
   const [touchedFieldRifa, setTouchedFieldRifa] = useState({ titulo: false, numeros: false, tipo: false, precio:false });
@@ -41,9 +45,13 @@ const userCreate: React.FC = () => {
   const [errorPremios, setErrorPremios] = useState([{}]);
   const [saved,setSaved]=useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [hasError,setHasError]=useState(false);
+  const [hasError,setHasError]=useState(true);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
   const [config,setConfig]=useState<any>();
+  const [image1, setImage1] = useState<string>("");
+  const [image1Changed, setImage1Changed] = useState<boolean>(false);
+  const [procesando, setProcesando]=useState<boolean>(false);
+  const db = new Database();
   
   useEffect(()=>{
      
@@ -63,7 +71,7 @@ const userCreate: React.FC = () => {
 
   // Reset premios, touched fields y error fields cuando cambia el tipo de rifa
   useEffect(() => {
-    setPremios([{ id: 0, descripcion: "", loteria: "", ganador:"",fecha: "" }]);
+    setPremios([{ id: 1, descripcion: "", loteria: "", ganador:"",fecha: "" }]);
     setTouchedFieldPremios([{ descripcion: false, loteria: false, fecha: false }]);
     setErrorPremios([{}]);
   }, [rifa.tipo]);
@@ -88,21 +96,7 @@ const userCreate: React.FC = () => {
   
 
   const handleSave = async() => {
-
-    if (!user) {
-      setHasError(true);
-      setResponseMessage("No existe ningún usuario autenticado para solicitar la actualización");
-      setModalVisible(true);
-      return;
-    }
-  
-    // Verificar si el usuario no ha pagado y si el número de entradas es mayor al máximo permitido
-    if (user.payed === 0 && config && Number(rifa.numeros) > Number(config.raffle_number)) {
-      setHasError(true);
-      setResponseMessage(`El número máximo de entradas para no suscritos es ${config.raffle_number}`);
-      setModalVisible(true);
-      return;
-    }
+    setProcesando(true);
 
     const updatedTouchedRifa = {titulo:true,precio:true,numeros:true,tipo:true};
     setTouchedFieldRifa(updatedTouchedRifa);
@@ -120,39 +114,85 @@ const userCreate: React.FC = () => {
 
     if (Object.keys(formErrors).length === 0 && premioErrors.every(error => Object.keys(error).length === 0)) {
 
-      const request = {
-      
-        rifa: rifa,
-        premios: premios
-      };
+    //  const request = {rifa: rifa,premios: premios};
 
-   
+    const request = new FormData();
+    request.append("titulo",rifa.titulo);
+    request.append("pais",rifa.pais);
+    request.append("precio",rifa.precio.toString());
+    request.append("tipo",rifa.tipo);
+    request.append("numeros",rifa.numeros);
+    request.append("premios",JSON.stringify(premios));
+    if (image1Changed ) {const body = image1!==""? await imageBody(image1):"";request.append('imagen',body);}
 
       try {
         const response:any = await rifaCreate(request);
         console.log(response);
-        setResponseMessage(response.mensaje || response.error);
-       setHasError(!!response.error);
-        setModalVisible(true);
+        if(response.mensaje){
+          setProcesando(false);
+          setResponseMessage(response.mensaje);
+          setHasError(false);
+           setModalVisible(true);
+        }
+        if(response.error){
+          setProcesando(false);
+          setResponseMessage(response.error);
+          setHasError(true);
+           setModalVisible(true);
+        }
       } catch (error:any) {
-        setResponseMessage(error.message);
+
+
+      if(Platform.OS==='web'){
+      
+        setResponseMessage('ha ocurrido un error, verifica tu conexion');
         setHasError(true);
+   
+      }else{
+
+        if(rifa.numeros>mySubContext.max_num){
+          setResponseMessage('tu suscripcion actual no maneja esta cantidad de numeros');
+          setProcesando(false);
+          setModalVisible(true);
+          return;
+
+        }
+
+        const aa = await db.index('rifas');
+        if(aa.length>=mySubContext.max_raffle){
+          setResponseMessage('ya has alcanzado el maximo de rifas soportado por tu plan');
+          setProcesando(false);
+          setModalVisible(true);
+          return;
+
+        }
+        
+        await db.insert('rifas',[{id:-Date.now(),titulo:rifa.titulo,pais:rifa.pais,precio:rifa.precio,tipo:rifa.tipo,numeros:rifa.numeros,imagen:image1,local:1,premios:JSON.stringify(premios)}]);
+        setHasError(false);
+        setResponseMessage('datos guardados localmente, verifica tu conexion');
+
+      }
+        setProcesando(false);
         setModalVisible(true);
+      
+
       } 
       //  console.log(request);
      
    
-    } else {
-   
-    
-     
-      console.log("formulario invalido");
-     // console.log(formErrors);
-     // console.log(premioErrors);
+    } else{
+      setResponseMessage('formulario invalido');
+      setProcesando(false);
+      setModalVisible(true);
     }
   };
 
-  
+  const imageBody= async(image:any)=>{
+    const filename = image.split('/').pop();
+    const match =  filename? /\.(\w+)$/.exec(filename):undefined;
+    const type = match ? `image/${match[1]}` : `image`;
+    return {uri:image,name:filename,type};
+   }
 
     
   const handleCloseModal = () => {
@@ -167,12 +207,18 @@ const userCreate: React.FC = () => {
 
 
   const handleUpdateRifa = (field:string,value:any) => {
-    const updatedRifa= {...rifa,[field]:value};
-    setRifa(updatedRifa);
-    const updatedTouched= {...touchedFieldRifa,[field]:true};
-    setTouchedFieldRifa(updatedTouched);
-    setErrorRifa(validateForm(updatedRifa, updatedTouched, createRifaValidationRules));
-  
+    if(field==="image1"){
+        setImage1(value);
+        setImage1Changed(true);
+    }else{
+          
+      const updatedRifa= {...rifa,[field]:value};
+      setRifa(updatedRifa);
+      const updatedTouched= {...touchedFieldRifa,[field]:true};
+      setTouchedFieldRifa(updatedTouched);
+      setErrorRifa(validateForm(updatedRifa, updatedTouched, createRifaValidationRules));
+    }
+      
 
   };
 
@@ -228,19 +274,16 @@ const userCreate: React.FC = () => {
     if (premios.length < 4) {
       if (rifa.tipo === "premio_unico" && premios.length >= 1) {
         
-        setResponseMessage("Rifa de premio único solo acepta una entrada");
+        setResponseMessage("El numero maximo de premios es uno");
         setModalVisible(true);
       } else {
         setPremios([...premios, { id: premios.length, descripcion: "", loteria: "",ganador:"", fecha: "" }]);
         setTouchedFieldPremios([...touchedFieldPremios, { descripcion: false, loteria: false, fecha: false }]);
         setErrorPremios([...errorPremios, {}]);
-        if (rifa.tipo === "anticipados") {
-          setResponseMessage("Recuerda rellenar los premios del último 'mayor' al primero en orden regresivo");
-          setModalVisible(true);
-        }
+   
       }
     } else {
-      setResponseMessage("El máximo de entradas para cualquier tipo de rifas es 4");
+      setResponseMessage("El numero maximo de premios es cuatro");
       setModalVisible(true);
     }
   };
@@ -251,40 +294,66 @@ const userCreate: React.FC = () => {
   return (
     <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
       <ScrollView style={styles.main}>
-        <TouchableOpacity style={styles.formCard} onPress={() => setCardForm(!cardForm)}>
-          <View style={{ marginRight: 20 }} >
-          <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Rifa</Text>
-          <Text style={{ fontSize: 16, color: '#666', }}>Añade las propiedades de tu evento.</Text>
-          </View>
-          <Ionicons name="chevron-forward-outline" style={{ position: 'absolute', right: 25 }} size={24} color="#CCCCC" />
-        </TouchableOpacity>
-        {!cardForm && (  <View style={styles.formContainer}>
+     {!cardForm && (
+         <TouchableOpacity style={styles.formCard} onPress={() => setCardForm(!cardForm)}>
+         <View style={{ marginRight: 20 }} >
+         <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Rifa</Text>
+         <Text style={{ fontSize: 16, color: '#666', }}>Añade las propiedades de tu evento.</Text>
+         </View>
+         <View style={{position: 'absolute', right: 25}}>
+   <NextIcon style={{color:"#CCCCC", width:28,height:28 }} />
+       
+         </View>
+       </TouchableOpacity>
+     )}
+
+
+        {cardForm && ( 
+      <TouchableOpacity onPress={()=>undefined} activeOpacity={1}>
+            <View style={styles.formContainer}>
+          <TouchableOpacity onPress={undefined} activeOpacity={1}>
            <CardRifaComponent
            touched={touchedFieldRifa}
            error={errorRifa}
             rifa={rifa}
-            onUpdate={(field,value)=>handleUpdateRifa(field,value)}
+            imagen={image1}
+            onUpdate={(field:any,value:any)=>handleUpdateRifa(field,value)}
+            onToggle={()=>setCardForm(!cardForm)}
           />
+          </TouchableOpacity>
         </View> 
+       </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.formCard} onPress={() => setCardForm(!cardForm)}>
+     {!cardForm2 && (
+         <TouchableOpacity style={styles.formCard} onPress={() => setCardForm2(!cardForm2)}>
           <View style={{ marginRight: 20 }} >
           <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 5 }}>Premios</Text>
           <Text style={{ fontSize: 16, color: '#666', }}> Añade premios para tu evento.</Text>
           </View>
-          <Ionicons name="chevron-forward-outline" size={24} style={{ position: 'absolute', right: 25 }} color="#CCCCC" />
+          <View style={{position: 'absolute', right: 25}}>
+    <NextIcon style={{color:"#CCCCC", width:28,height:28 }} />
+        
+          </View>
         </TouchableOpacity>
+     )}
 
-        {cardForm && (
-            <View style={styles.formContainer}>
+        {cardForm2 && (
+          <TouchableOpacity onPress={()=>undefined} activeOpacity={1}>
+              <View style={styles.formContainer}>
+                <TouchableOpacity onPress={()=>setCardForm2(!cardForm2)} activeOpacity={1}>
+              <Text style={{ fontWeight: 'bold', fontSize: 20,color:'#374151', marginBottom: 10 }}>Rifa</Text>
+              <Text style={{ fontSize: 16, color: '#666',paddingBottom:15 }}>En esta parte podras configurar tu formato de juego.</Text>
+              </TouchableOpacity>
+
+            
             {premios.map((premio, index) => (
               <CardPrizeComponent
                 obj={premio}
                
                 touched={touchedFieldPremios[index]}
                 error={errorPremios[index]}
-                first={index === 0}
+                first={false}
                 key={index}
                 onUpdate={(field,value) => handleUpdatePrize(index,field,value)}
                 onDelete={() => handleDeletePrize(index)}
@@ -304,11 +373,12 @@ const userCreate: React.FC = () => {
               }}>Agregar Premio</Text>
             </TouchableOpacity>
           </View>
+          </TouchableOpacity>
         )}
 
         <View style={styles.inputGroup}>
           <TouchableOpacity style={styles.saveButton} onPress={() => { handleSave() }}>
-            <Text style={styles.buttonText}>Guardar</Text>
+            <Text style={styles.buttonText}>{procesando?"Procesando...":"Guardar"}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

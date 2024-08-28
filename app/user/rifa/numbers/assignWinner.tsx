@@ -17,6 +17,7 @@ export default function Assign() {
   const {auth,logout}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
@@ -160,11 +161,13 @@ export default function Assign() {
                  />
             )))
            }
-              <PremioCard  
+           {/*
+               <PremioCard  
             
-                premio={{"id":1,"descripcion":"Primer Premio","loteria":"SINUANO NOCHE","ganador":"","fecha":"2024-05-31"}}
-                onTouch={()=>selectedPremio(0)}
-                 />
+               premio={{"id":1,"descripcion":"Primer Premio","loteria":"SINUANO NOCHE","ganador":"","fecha":"2024-05-31"}}
+               onTouch={()=>selectedPremio(0)}
+                />
+         */  }
            { premios.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado premios . . .</Text></View>
             )

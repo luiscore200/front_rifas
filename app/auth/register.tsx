@@ -64,11 +64,12 @@ export default function Register() {
     setTouchedFields({ ...touchedFields, [fieldName]: true });
   };
 ////////// validacion de array de codigos 
-  const isCode = (item: any): item is code => {return item && typeof item.id === 'number' && typeof item.name === 'string';};
+  const isCode = (item: any): item is code => {return item && typeof item.code === 'string' && typeof item.name === 'string';};
   
   const handleCodePhone = async () => {
    try{
     const data = await phoneCodeIndex();
+   // console.log(data);
     if(data.error){
       setResponseIndexMessage(data.error);
       setIndexToast(true);
@@ -108,10 +109,14 @@ export default function Register() {
   try{
         
     const response = await register(userData);
-    const a=  await login(response);
+  
     setResponseMessage(response.mensaje || response.error);
     setHasError(!!response.error);
     setToast(!toast);
+    const a=  await login(response);
+
+    if(response.user.role==="user"){ router.replace('user/rifa/dashboard');}
+    
   }catch(e:any){
     setResponseMessage(e.message);
     setHasError(true);

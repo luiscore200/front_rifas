@@ -10,6 +10,8 @@ const routes = {
       { path: 'admin/editUser' },
       { path: 'admin/userCreate' },
       { path: 'admin/adminConfig' },
+      { path: 'index' },
+      { path: '/' },
     ],
     user: [
       { path: 'user/rifa/dashboard'},
@@ -20,6 +22,9 @@ const routes = {
       { path: 'user/rifa/numbers/assignClient' },
       { path: 'user/userSettings' },
       { path: 'user/rifa/numbers/dashboard' },
+      { path: 'user/suscripcion' },
+      { path: 'index' },
+      { path: '/' },
     ],
   };
   

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,Platfor
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Picker } from '@react-native-picker/picker';
+import { NextIcon, UpIcon } from '../../../assets/icons/userIcons';
+import SuscriptedCard from './suscriptionCard';
 
 
 
@@ -13,10 +15,12 @@ interface unSuscriptedCardComponentProps{
     obj?:any
     error?:error;
     touched?:any;
+    status?:any
    
     
-    onUpdate: (field:string,value:any) => void;
+    onUpdate: (obj:any) => void;
     onToggle:()=>void;
+    onChangeStatus:(obj:any)=>void;
 }
 interface error{
   tipo?:string;
@@ -26,24 +30,34 @@ interface error{
   precio?:string;
 }
 
-const UnSuscriptedCard : React.FC<unSuscriptedCardComponentProps> = ({ obj,touched,error,onToggle,  onUpdate }) => {
-  
+const UnSuscriptedCard : React.FC<unSuscriptedCardComponentProps> = ({ obj,touched,error,status,onToggle, onChangeStatus, onUpdate }) => {
 
-   
-   
-  
    const number =['100','1000','10000'];
   
   
-    const handleFieldChange = (field:any, value:any) => {
+    const handleFieldChange = (field:any, value:any, index:number) => {
       
-      onUpdate(field,value);
-      
+    const update = [...obj];
+    update[index] = {
+      ...update[index],
+      [field]: value
+    };
+
+    onUpdate(update);
      
     };
+
+
+    const handleStatus = (index:any)=>{
+         const change = status;
+          change[index]= !change[index];
+          console.log(change[index]);
+          onChangeStatus(change);  
+    }
+
     
   
-    
+
 return(
   <View>
     <TouchableOpacity onPress={onToggle} activeOpacity={1}>
@@ -51,39 +65,21 @@ return(
 <Text style={{ fontSize: 16, color: '#666',paddingBottom:15 }}>En esta parte podras configurar tu sistema de suscripciones.</Text>
 </TouchableOpacity>
 
-  <View style={styles.inputGroup}>
-            <Text style={styles.label}>Numero de rifas</Text>
-            <TextInput
-            style={styles.input}
-            value={obj.countRifas.toString()}
-            onChangeText={(value)=>handleFieldChange("rifas",value)}
-            keyboardType='numeric'
-            />
-          
-          </View>
-        
 
-   <View style={styles.inputGroup}>
-    <Text style={styles.label}>Numeros</Text>
-    <View style={{ borderColor: "#ccc", borderWidth: 1, borderRadius: 8, justifyContent: 'center' }}>
-      <Picker
-        selectedValue={obj.maximo}
-
-        onValueChange={(itemValue) => handleFieldChange("numeros",Number(itemValue))}
-       
-        style={{
-          height: 40,
-          paddingHorizontal: 10,
-          borderColor: '#fff',
-          borderWidth: 1,
-          borderRadius: 8,
-        }}
-      >
-        {number.map(array => <Picker.Item key={array} label={array.toString()} value={array} />)}
-      </Picker>
-    </View>
-  
-</View>     
+<TouchableOpacity style={{
+              backgroundColor: '#f1f1f1f1',
+              padding: 15,
+              borderRadius: 5,
+              marginTop:10
+            }}
+              onPress={()=>{undefined}}
+            >
+              <Text style={{
+                textAlign: 'center',
+                color: '#CCCC1',
+                fontWeight: 'bold',
+              }}>Agregar Premio</Text>
+            </TouchableOpacity>
 </View>
 
 );
@@ -107,6 +103,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#FFFFFF',
     },
     statusContainer: {
+      marginTop:10,
       flexDirection: 'row',
       alignItems: 'center',
     },

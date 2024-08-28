@@ -53,11 +53,12 @@ const userCreate: React.FC = () => {
   }, [name, domain, email, selectedCode, phone, password, touchedFields]);
 
 ///// atrapar y verificar codes
-  const isCode = (item: any): item is phoneCode => {return item && typeof item.id === 'number' && typeof item.name === 'string';};
+  const isCode = (item: any): item is phoneCode => {return item && typeof item.code === 'string' && typeof item.name === 'string';};
   
   const handleCodePhone = async () => {
     try{
       const data = await phoneCodeIndex();
+      console.log(data);
       if(data.error){
         setResponseIndexMessage(data.error);
         setIndexToast(true);

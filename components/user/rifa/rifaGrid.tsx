@@ -18,9 +18,10 @@ interface RifaGridProps {
   price: number;
   premios:number[];
   onConfirmSelection: (selectedNumbers: number[]) => void;
+  touched?:()=>void;
 }
 
-const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, price, maxHeight, onConfirmSelection }) => {
+const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, price, maxHeight, touched, onConfirmSelection }) => {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const  itemsPerPage= 100;
   const cuadricula = 5;
@@ -103,7 +104,7 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, pr
       <TouchableOpacity
         key={number}
         style={cellStyle}
-        onPress={() => toggleNumberSelection(number)}
+        onPress={() => {toggleNumberSelection(number);if(touched){touched()}}}
         disabled={isBlocked || isWinner|| status !== 'disponible'}
       >
         {!!isWinner &&(
@@ -164,7 +165,7 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, pr
           {lista.map((obj, index) => (
             <TouchableOpacity
               key={index}
-              onPress={() => {setList(false);setCurrentPage(obj.page);}}
+              onPress={() => {setList(false);setCurrentPage(obj.page);if(touched){touched()}}}
               style={{
                 paddingVertical: 5,
                 paddingHorizontal: 15,
@@ -187,18 +188,18 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, pr
     <View style={{    flexDirection: 'row',justifyContent: 'space-between',alignItems: 'center',marginBottom: 10,}}>
       <TouchableOpacity
         disabled={currentPage === 1}
-        onPress={() => setCurrentPage(currentPage - 1)}
+        onPress={() => {setCurrentPage(currentPage - 1);if(touched){touched()}}}
         style={[{  paddingHorizontal:30, padding: 10,}, currentPage === 1 && {  opacity: 0.3,}]}
       >
         <PrevIcon style={{color:"#6b7280"}}/>
       </TouchableOpacity>
-     <TouchableOpacity onPress={()=>setList(!list)}>
+     <TouchableOpacity onPress={()=>{setList(!list);if(touched){touched()}}}>
       <Text style={{  fontSize: 16,}}>{`Página ${currentPage} de ${totalPages}`}</Text>
      </TouchableOpacity>
    
       <TouchableOpacity
         disabled={currentPage === totalPages}
-        onPress={() => setCurrentPage(currentPage + 1)}
+        onPress={() => {setCurrentPage(currentPage + 1);if(touched){touched()}}}
         style={[{  paddingHorizontal:30, padding: 10,}, currentPage === totalPages && {  opacity: 0.3,}]}
       >
          <NextIcon style={{color:'#6b7280'}}/>
@@ -219,7 +220,7 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, pr
       matrix.push(
         <View key={i} style={{ flexDirection: 'column' }}>
           {duo.map((number, index) => (
-            <TouchableOpacity activeOpacity={1} onPress={()=>setList(false)} key={index} style={styles.selectedNumber}>
+            <TouchableOpacity activeOpacity={1} onPress={()=>{setList(false);if(touched){touched()}}} key={index} style={styles.selectedNumber}>
               <Text style={styles.selectedNumberText}>{number}</Text>
             </TouchableOpacity>
           ))}
@@ -256,12 +257,12 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, pr
   };
 
   return (
-    <TouchableOpacity activeOpacity={1} onPress={()=>setList(false)} style={styles.container}>
+    <TouchableOpacity activeOpacity={1} onPress={()=>{setList(false);if(touched){touched()}}} style={styles.container}>
         {renderPagination()}
      <View style={{paddingTop:5,paddingHorizontal:20}}>
      <ScrollView horizontal  onTouchStart={()=>setList(false)}>
         <ScrollView style={{ height:maxHeight}} onTouchStart={()=>setList(false)}>
-          <TouchableOpacity activeOpacity={1} onPress={()=>list?setList(false):undefined}>
+          <TouchableOpacity activeOpacity={1} onPress={()=>{list?setList(false):undefined;if(touched){touched()}}}>
             {renderGrid()
             }
           </TouchableOpacity>

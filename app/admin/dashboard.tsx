@@ -11,6 +11,7 @@ import Deleted from '../../components/responseModal';
 import ToastModal from '../../components/toastModal';
 import GradientLayout from '../layout';
 import { useAuth } from '../../services/authContext2';
+import DisconectedCard from '../../components/disconectedCard';
 
 
 
@@ -31,10 +32,7 @@ export default function App() {
     { label: 'Logout', action: async() => logout(),status:auth===true?1:0},
   ];
 
-  const notificaiones = [
-    {mensaje:"sistema de correos desactivado",fuente:"configuracion",seen:false},
-    {mensaje:"Tu cuenta no esta suscrita, conoce las mejoras que te ofrece un plan",fuente:"suscripcion",seen:false},
-  ];
+ 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
  const [users2, setUsers] = useState<User[]>([]);
@@ -47,6 +45,9 @@ export default function App() {
  const [toast,setToast]=useState(false);
  const [buscar,setBuscar]=useState<string>("");
  const [reload, setReload] = useState(false); 
+ const [loading,setLoading]=useState(true);
+ const array = [1,1,1];
+ const [connectionError,setConnectionError]=useState<boolean>(false);
 
  const isUser = (item: any): item is User => {
   return (
@@ -67,8 +68,10 @@ export default function App() {
 
 
 const handleUsers = async()=>{
-
+      setConnectionError(false);
+      setLoading(true);
   try{
+
   const users2 = await userIndex();
   if(users2.error){ 
     setResponseIndexMessage(users2.error);
@@ -78,13 +81,20 @@ const handleUsers = async()=>{
   if(Array.isArray(users2) && users2.every(isUser)){
     setUsers(users2);
     setUsers3(users2);
+    setLoading(false);
   }else {
     console.log('Data is not of type User[]');
+    setResponseIndexMessage("Ha ocurrido un error, formato de lista incorrecto");
+    setToast(true);
+    setLoading(false);
   }
 }catch(e:any){
-  setResponseIndexMessage(e.message);
-  setToast(true);
-  console.error(e);
+//  setResponseIndexMessage("ha ocurrido un error al cargar la lista");
+ // setToast(true);
+ // console.error(e);
+ setConnectionError(true);
+ setLoading(false);
+
 
 }
   
@@ -180,7 +190,7 @@ useEffect(() => {
   }
 
   return (
-    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} notificatioitems={notificaiones} hasNotifications={true}>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true}  hasNotifications={true}>
     
 
     
@@ -201,7 +211,7 @@ useEffect(() => {
         </View>
         <View style={styles.cardContainer}>
          
-          { users2.length>0 &&  users2.map(user => (
+          {  !loading && !connectionError && users2.length>0 && users2.map(user => (
             <TouchableOpacity key={user.id} onPress={() => handleOptions(user)}>
              <Card
              key={user.id}
@@ -209,8 +219,26 @@ useEffect(() => {
         
            /></TouchableOpacity>
           ))}
-           {users2.length===0 && (
+
+          {  loading && !connectionError &&  array.map((user,index) => (
+            <TouchableOpacity key={index} onPress={() => undefined} activeOpacity={1} > 
+             <Card
+             prueba = {true}
+             key={index}
+             user={null}
+        
+           /></TouchableOpacity>
+          ))}
+          
+           {  !loading &&  !connectionError &&  users2.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado usuarios . . .</Text></View>
+          )}
+           {  !loading &&  connectionError &&  (
+            <DisconectedCard
+              onOffline={()=>{}}
+              onReload={()=>{handleUsers()}}
+              offline={false}
+            />
           )}
         </View>
       </ScrollView>

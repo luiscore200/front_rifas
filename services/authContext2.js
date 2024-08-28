@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect,useState } from "react";
 import { saveLocalStorage,isAuthenticated,logout as logoutAuth,getUser, getToken } from "./auth";
+import { setStorageItemAsync } from "./storage";
+
 
 
 export const AuthContext = createContext();
@@ -8,6 +10,11 @@ export const AuthContextProvider =  ({children}) => {
     const [user, setUser]=useState(null);
     const [token,setToken]=useState(null);
     const [auth,setAuth]=useState(false);
+    const [online,setOnline]=useState(true);
+    const [configContext,setConfigContext]=useState(null);
+    const [subContext,setSubContext]=useState(null);
+    const [notificacionesContext,setNotificacionesContext]=useState([]);
+    const [mySubContext,setMySubContext]=useState(null);
     
 
     useEffect(()=>{
@@ -15,9 +22,7 @@ export const AuthContextProvider =  ({children}) => {
         //aaaaaa
         setTimeout(()=>{
            // setAuth(false);
-          Auth(); 
-          User();
-          Token();
+         check();
         })
     },[])
 
@@ -34,6 +39,20 @@ export const AuthContextProvider =  ({children}) => {
             
         }
     }
+
+    const check = async()=>{
+        try {
+            Token();
+            Auth();
+            User();
+        } catch (error) {
+            
+        }
+    }
+
+
+       
+    
 
     const logout = async ()=>{
         try {
@@ -80,7 +99,7 @@ export const AuthContextProvider =  ({children}) => {
 
 
     return(
-        <AuthContext.Provider value={{user,token,auth,login,logout}} >
+        <AuthContext.Provider value={{user,token,online,auth,configContext,subContext,notificacionesContext,mySubContext,check,setMySubContext, login,logout,setOnline,setConfigContext,setSubContext,setNotificacionesContext}} >
             {children}
         </AuthContext.Provider>
     )

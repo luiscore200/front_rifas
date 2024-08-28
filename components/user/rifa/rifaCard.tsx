@@ -4,18 +4,22 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedba
 import { rifa } from '../../../config/Interfaces';
 import { EditIcon,Delete2Icon,WinnerIcon,ShareIcon,CheckIcon, MenuIcon1,PlusIcon } from '../../../assets/icons/userIcons';
 
+import { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 interface RifaCardProps {
-  rifa: rifa;
+  rifa: any;
+  prueba:boolean;
   onTouch(event:any,rifa: any): void;
-  onToggle():void;
+  onToggle:()=>void;
 }
 
-const RifaCard: React.FC<RifaCardProps> = ({ rifa, onTouch,onToggle }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  const getTextStatusColor = (status: string) => (status === "En juego" ? '#166534' : '#991b1b');
-  const getBGStatusColor = (status: string) => (status === "En juego" ? '#dcfce7' : '#fee2e2');
+const RifaCard: React.FC<RifaCardProps> = ({ rifa,prueba, onTouch,onToggle }) => {
+  const [expanded, setExpanded] = useState(true);
+  const ShimmerPlacerholder = createShimmerPlaceholder(LinearGradient);
+  const getTextStatusColor = (status: string) => (status === "En juego" ? '#166534' :!"Finalizada"? '#991b1b':'#d97706');
+  const getBGStatusColor = (status: string) => (status === "En juego" ? '#dcfce7' :!"Finalizada"? '#fee2e2':'#fcd34d');
 
 
   const safeDate = (fechaString: string) => {
@@ -24,11 +28,11 @@ const RifaCard: React.FC<RifaCardProps> = ({ rifa, onTouch,onToggle }) => {
     return new Date(`${year}-${month}-${day}`);
   };
 
-  const getRifaStatus = (fecha: string) => {
+  const getRifaStatus = (fecha: string,ganador:string) => {
     const today = new Date(safeDate(new Date().toLocaleDateString()));
     const premioDate = safeDate(fecha);
     if (premioDate === "") return 'Finalizada';
-    return premioDate >= today ? 'En juego' : 'Finalizada';
+    return premioDate >= today ? 'En juego' : ganador!==""?'Finalizada':'Jugado';
   };
 
   const getRifaStatus2 = () => {
@@ -51,18 +55,19 @@ const RifaCard: React.FC<RifaCardProps> = ({ rifa, onTouch,onToggle }) => {
   };
 
   return (
-   <TouchableWithoutFeedback onPress={toggleExpand}>
+   <TouchableOpacity onPress={()=> {!prueba?onToggle():undefined}} activeOpacity={1}>
     <View style={styles.cardContainer}>
       <View style={styles.card}>
         <View style={styles.cardContent}>
           <View style={styles.userInfo}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <Text style={styles.userName}>{rifa.titulo}</Text>
+              {!prueba? <Text style={styles.userName}>{rifa.titulo}</Text>:   
+              <ShimmerPlacerholder style={{ width:120,borderRadius:10,backgroundColor:"#cbd5e1",height:24,marginBottom:10 }} ></ShimmerPlacerholder>}
 
               
             </View>
            
-            {!expanded && (
+            {!expanded && !prueba && (
               <>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={styles.userCountry}>{rifa.pais}</Text>
@@ -75,7 +80,7 @@ const RifaCard: React.FC<RifaCardProps> = ({ rifa, onTouch,onToggle }) => {
                 </View>
               </>
             )}
-            {expanded && (
+            {expanded && !prueba && (
               <View style={styles.expandedContent}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Precio:</Text>
@@ -85,44 +90,91 @@ const RifaCard: React.FC<RifaCardProps> = ({ rifa, onTouch,onToggle }) => {
                   <Text style={styles.detailLabel}>Números:</Text>
                   <Text style={styles.detailValue}>{rifa.numeros}</Text>
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Tipo:</Text>
-                  <Text style={styles.detailValue}>{rifa.tipo}</Text>
-                </View>
+               {/*
+                 <View style={styles.detailRow}>
+                 <Text style={styles.detailLabel}>Tipo:</Text>
+                 <Text style={styles.detailValue}>{rifa.tipo}</Text>
+               </View>
+              */   }
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Disponibles:</Text>
                   <Text style={styles.detailValue}>{Number(rifa.numeros) - Number(rifa.asignaciones)}</Text>
                 </View>
-                {rifa.premios?.map((premio, index) => (
+                {rifa.premios?.map((premio:any, index:number) => (
                   <View key={index} style={styles.premioContainer}>
-                    <Text style={styles.premioDescripcion}>{premio.descripcion}</Text>
-                    <View style={[styles.statusButton, { backgroundColor: getBGStatusColor(getRifaStatus(premio.fecha)) }]}>
-                      <Text style={[styles.statusText, { color: getTextStatusColor(getRifaStatus(premio.fecha)) }]}>
-                        {getRifaStatus(premio.fecha)}
+                  <View style={{flexDirection:'column'}}>
+                  <Text style={styles.premioDescripcion}>{premio.descripcion}</Text>
+                  <Text style={{color:'#6b7280',fontSize:14}}>{premio.fecha}</Text>
+                  </View>
+                    <View style={[styles.statusButton, { backgroundColor: getBGStatusColor(getRifaStatus(premio.fecha,premio.ganador)) }]}>
+                      <Text style={[styles.statusText, { color: getTextStatusColor(getRifaStatus(premio.fecha,premio.ganador)) }]}>
+                        {getRifaStatus(premio.fecha,premio.ganador)}
                       </Text>
                     </View>
                   </View>
                 ))}
               </View>
             )}
+              {expanded && prueba && (
+              <View style={styles.expandedContent}>
+                <View style={styles.detailRow}>
+                <ShimmerPlacerholder style={{ width:90,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+                <ShimmerPlacerholder style={{ width:60,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+                </View>
+                <View style={styles.detailRow}>
+                <ShimmerPlacerholder style={{ width:90,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+                <ShimmerPlacerholder style={{ width:60,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+                </View>
+               {/*
+                 <View style={styles.detailRow}>
+                 <Text style={styles.detailLabel}>Tipo:</Text>
+                 <Text style={styles.detailValue}>{rifa.tipo}</Text>
+               </View>
+              */   }
+                <View style={styles.detailRow}>
+                <ShimmerPlacerholder style={{ width:90,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+                <ShimmerPlacerholder style={{ width:60,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+                </View>
+              
+                  <View  style={styles.premioContainer}>
+                  <View style={{flexDirection:'column'}}>
+                  <ShimmerPlacerholder style={{ width:90,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+                <ShimmerPlacerholder style={{ width:60,borderRadius:10,backgroundColor:"#cbd5e1",height:20,marginBottom:5 }} ></ShimmerPlacerholder>
+                  </View>
+                  <ShimmerPlacerholder style={{ width:90,borderRadius:15,backgroundColor:"#cbd5e1",height:30,marginBottom:5 }} ></ShimmerPlacerholder>
+                  </View>
+                
+              </View>
+            )}
+
+
+
+
      {/*          <TouchableOpacity onPress={toggleExpand} > 
                 <Text style={styles.moreInfo}>{expanded===true? "ocultar informacion":"mostrar informacion"}</Text>
                 </TouchableOpacity>*/}
             
           </View>
           <View style={styles.menuContainer}>
-            <TouchableOpacity style={{paddingLeft:10,paddingTop:5}} 
-            onPress={(event) => onTouch(event,rifa)} 
-              >
-              <MenuIcon1 style={{color:'#CCCC'}}/>
-            </TouchableOpacity>
+            {!prueba && (
+               <TouchableOpacity style={{paddingLeft:10,paddingTop:5}} 
+               onPress={(event) => onTouch(event,rifa)} 
+                 >
+                 <MenuIcon1 style={{color:'#CCCC'}}/>
+               </TouchableOpacity>
+            )
+
+            }
+           
+              {prueba && (<ShimmerPlacerholder style={{ width:10,borderRadius:10,backgroundColor:"#cbd5e1",height:30,marginBottom:5 }} ></ShimmerPlacerholder>)}
+            
             
             
           </View>
         </View>
       </View>
     </View>
-    </TouchableWithoutFeedback> 
+    </TouchableOpacity> 
   );
 };
 
@@ -175,7 +227,7 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#555',
+    color: '#6b7280',
   },
   detailValue: {
     fontSize: 14,
@@ -188,10 +240,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#eee',
     paddingTop: 8,
+    justifyContent:'space-between'
   },
   premioDescripcion: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
+    fontWeight:'700',
     flex: 1,
   },
   menuContainer: {

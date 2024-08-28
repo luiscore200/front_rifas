@@ -9,6 +9,7 @@ export interface User {
     role?:string;
     password?:string;
     payed?:boolean;
+    id_suscription?:string;
     // ... other user properties
   }
 
@@ -27,7 +28,7 @@ export interface premio{
 }
 
 export interface rifa {
-  id?:number,
+  id?:number;
   titulo: string;
   pais: string;
   imagen?:string;
@@ -35,5 +36,30 @@ export interface rifa {
   tipo: string;
   numeros: string;
   asignaciones?:string;
+  local?:number;
   premios?:premio[];
+}
+
+export interface subs {
+  id?:number;
+  name:string;
+  sub_id:string;
+  url:string;
+  image:string;
+  max_raffle:string;
+  max_num:string;
+  whatsapp:boolean;
+  email:boolean;
+  banners:boolean;
+  share:boolean;
+}
+export interface AppConfig {
+  id: number;
+  email: string;
+  banner_1: string;
+  banner_2: string;
+  banner_3: string;
+  app_logo: string;
+  app_icon: string;
+  app_name: string;
 }

@@ -77,7 +77,7 @@ useEffect(() => {
 
 
 ///// atrapar y verificar codes
-const isCode = (item: any): item is phoneCode => {return item && typeof item.id === 'number' && typeof item.name === 'string';};
+const isCode = (item: any): item is phoneCode => {return item && typeof item.code === 'string' && typeof item.name === 'string';};
 
 const handleCodePhone = async () => {
   try{

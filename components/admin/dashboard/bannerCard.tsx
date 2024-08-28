@@ -109,10 +109,10 @@ return(
           
 
   </View>
-  {obj.image1 &&(
+  {obj.image1!=="" &&(
     <View style={{marginTop:20,flexDirection:'row',alignItems:'center'}}>
        <Image source={{ uri: obj.image1 }} style={[styles.image]}></Image>
-       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("image1",null)}>
+       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("image1","")}>
         <Delete2Icon style={{color:'red'}} />
 
        </TouchableOpacity>
@@ -134,10 +134,10 @@ return(
           
 
   </View>
-  {obj.image2 &&(
+  {obj.image2!=="" &&(
     <View style={{marginTop:20,flexDirection:'row',alignItems:'center'}}>
        <Image source={{ uri: obj.image2 }} style={[styles.image]}></Image>
-       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("image2",null)}>
+       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("image2","")}>
         <Delete2Icon style={{color:'red'}} />
 
        </TouchableOpacity>
@@ -160,10 +160,10 @@ return(
   </View>
   {
   
-  obj.image3 &&(
+  obj.image3!=="" &&(
     <View style={{marginTop:20,flexDirection:'row',alignItems:'center'}}>
        <Image source={{ uri: obj.image3 }} style={[styles.image]}></Image>
-       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("image3",null)}>
+       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>HandleUpdate("image3","")}>
         <Delete2Icon style={{color:'red'}} />
 
        </TouchableOpacity>

@@ -1,27 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image, TouchableWithoutFeedback, Dimensions,Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Card from '../../../components/user/rifa/rifaCard';
 import {rifa} from '../../../config/Interfaces';
 import { router } from 'expo-router';
-import {rifaDelete, indexRifa} from '../../../services/api';
+import {rifaDelete, indexRifa, indexComprador, sendTokens, getNotification, indexAssign} from '../../../services/api';
 import Delete from '../../../components/ConfirmModal';
 import Options from '../../../components/optionsModal';
 import ToastModal from '../../../components/toastModal';
 import MenuCard from '../../../components/user/rifa/optionsRifaModal';
 import GradientLayout from '../../layout';
 import { useAuth } from '../../../services/authContext2';
+import CompartirModal from '../../../components/user/rifa/compartirRifaModal';
+import Database from '../../../services/sqlite';
+import DisconectedCard from '../../../components/disconectedCard';
+
 
 export default function App() {
 
   
-  const {auth,logout}=useAuth();
+  const {auth,logout,user,subContext,setSubContext, mySubContext,online,setMySubContext,setOnline}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => console.log("hola"),status:0 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
 
+ 
 
   const [rifa, selectedRifa] = useState<rifa | null>(null);
  const [modalVisible, setModalVisible] = useState(false);
@@ -35,28 +41,91 @@ export default function App() {
  const [card, setCard] = useState(false);
  const [hasError, setHasError] = useState(false);
  const [toast,setToast]=useState(false);
+ const [compartir,setCompartir]=useState(false);
  const [index,setIndex]=useState<number>();
  const [buscar,setBuscar]=useState<string>("");
+ const [compradores,setCompradores]=useState<any[]>();
+ const [touchedOut,setTouchedOut]=useState<boolean>(false);
+ const [connectionError,setConnectionError]=useState<boolean>(false);
 
  const [reload, setReload] = useState(false);
+ const [loading,setLoading]= useState(true);
+ const array = [1];
+ const db = new Database();
  
 
  function handleMenu(obj:any,rifa:any,indexx:number){
   const { height: windowHeight } = Dimensions.get('window');
   const { pageX, pageY } = obj.nativeEvent;
 
-
+  selectedRifa(rifa);
   //console.log(obj);
   if(index!==indexx){
     setIndex(indexx);
   setCardPosition({x:pageX,y:pageY});
-  selectedRifa(rifa);
+  
   setCard(true)
   }else{
     setCard(!card);
   }
 
  }
+
+ const sub= async()=>{
+     
+ 
+
+    if(Array.isArray(subContext)){
+      
+      const aa=  subContext.find((obj:any) => obj.sub_id === user.id_subscription);
+      setMySubContext(aa);
+      console.log('mi subcripcion especifica',aa);
+    }
+    
+  
+ }
+
+ 
+useEffect(() => {
+  sub();
+  handleRifas();
+  handleData();
+  
+}, [reload]);
+ 
+
+ const handleData = async()=>{
+  try {
+    const response = await indexComprador();
+    const response2= await indexAssign();
+   // console.log(response.compradores);
+  //  console.log(response2);
+    if(response.compradores && Array.isArray(response2)){ 
+      
+      if(Platform.OS !=='web'){
+
+        const ee  = await db.find('compradores',{deleted:0,local:1});
+        const  all = ee.concat(response.compradores);
+        setCompradores(all);
+
+        await db.deleteDataTable('asignaciones',{local:0});
+         await db.deleteDataTable('compradores',{local:0});
+         await db.insert('compradores',response.compradores);
+        await db.insert('asignaciones',response2);
+         console.log("estos son las asignaciones ingresadas",await db.index('asignaciones'));
+         console.log("estos son los compradores ingresados",await db.index('compradores'));
+      }else{
+        setCompradores(response.compradores);
+      }
+    };
+  } catch (error) {
+    
+  }
+
+ }
+
+
+
 
  const isRifa = (item: any): item is rifa => {
   return (
@@ -82,26 +151,102 @@ export default function App() {
 };
 
 
+
+
 const handleRifas = async()=>{
+  
+ // setConnectionError(false);
+  setLoading(true);
   try{
+    
     const rifas2 = await indexRifa();
     console.log(rifas);
-    if(!!rifas2.error){
+    if(rifas2.error){
       setResponseIndexMessage(rifas2.error);
       setToast(true);
+      return;
     }
    
     if(Array.isArray(rifas2) && rifas2.every(isRifa)){
+      
+      if (Platform.OS !== 'web') {
+        const rifas3 = rifas2.map(obj =>{
+          return {
+            ...obj,local:0,deleted:0
+          };
+        })
+
+        const ee = await db.find('rifas',{deleted:0,local:1});
+        const ii = ee.length>0? ee.map(obj=>{
+          return {...obj,premios:JSON.parse(obj.premios),asignaciones:0};
+        }):[];
+        const all = rifas3.concat(ii);
+  
+        setRifas(all);
+        setRifas2(all);
+        setLoading(false);
+        
+        await db.deleteDataTable("rifas",{local:0,deleted:0});
+        const objs = rifas2.map(obj => {
+          return {
+            ...obj,
+            premios: JSON.stringify(obj.premios)
+          };
+        });
+
+      console.log('rifas totals del telefono',objs);
+      await db.insert('rifas',objs);
+    }else{
+
       setRifas(rifas2);
       setRifas2(rifas2);
-    }else {
-   
-      console.log('Data is not of type Rifa[]');
+      setLoading(false);
+
+    }
+
+    
     }
   }catch(e:any){
-    setResponseIndexMessage(e.message);
+    
+   
+   
+   // if(online){
+    //  setConnectionError(true);
+   // }else{
+
+      if (Platform.OS !== 'web') {
+       // console.log('index asignaciones',await db.index('asignaciones'))
+       // console.log('index compradores',await db.index('compradores'))
+        const ee = await db.find('rifas',{deleted:0});
+        const rifasRecuperadas =ee.length>0? ee.map((obj:any) => {
+          return {
+            ...obj,
+            premios: JSON.parse(obj.premios),
+            asignaciones:0
+          };
+        }):[];
   
-    setToast(true);
+      if(Array.isArray(rifasRecuperadas) && rifasRecuperadas.every(isRifa)){
+        setRifas(rifasRecuperadas);
+        setResponseIndexMessage('verifica tu conexion, datos guardados localmente');
+  
+        console.log('rifas totals del telefono',rifasRecuperadas);
+      }else{
+        console.log("no es rifa");
+        console.log(rifasRecuperadas);
+      }
+    }else{
+      setResponseIndexMessage('ha ocurrido un error, verifica tu conexion')
+    }
+  //  }
+  setToast(true);
+  setLoading(false);
+ 
+
+    
+    
+
+
   }
 
 }
@@ -115,9 +260,6 @@ const handleNew = () =>{
   });
 }
 
-useEffect(() => {
-  handleRifas();
-}, [reload]);
 
 
     const handleOptions = (rifa:rifa,opcion:string) => {
@@ -129,12 +271,14 @@ useEffect(() => {
 
       if(opcion==="asignar"){
         handleTouch(rifa);
+        
       }
       if(opcion==="compartir"){
-       
+          setCompartir(true);
       }
       if(opcion==="editar"){
           handleEdit(rifa);
+
       }
       if(opcion==="ganador"){
 
@@ -188,25 +332,50 @@ useEffect(() => {
     };
 
     const handleCancelDelete = () => {
-      
+   
       setShowDeleteConfirmation(false);
     };
 
     const handleConfirmDelete = async () => {
+      setCard(false);
       if (rifa?.id) { // Aquí está la modificación
         try{
-        const aa = await rifaDelete(rifa.id);
-        console.log(aa);
-        // Lógica para eliminar el usuario
-        setResponseMessage(aa.mensaje || aa.error);
-        setHasError(!!aa.error);
-        setResponseModalVisible(true);
-        if (!aa.error) {
-          setReload(!reload);   
-        }
+          if(rifa.local && rifa.local===1 && Platform.OS!=='web'){
+            await db.deleteDataTable('asignaciones',{id_raffle:rifa.id});
+            await db.deleteDataTable('rifas',{id:rifa.id});
+          }else{
+
+            const aa = await rifaDelete(rifa.id);
+            console.log(aa);
+            // Lógica para eliminar el usuario
+            setResponseMessage(aa.mensaje || aa.error);
+            setHasError(!!aa.error);
+            setResponseModalVisible(true);
+            if (!aa.error) {
+              setReload(!reload);   
+            }
+    
+          }
+     
+
+
         }catch(error:any){
-          setResponseMessage(error.message);
-          setHasError(true);
+          if(Platform.OS==='web'){
+            setResponseMessage('ha ocurrido un error, verifica tu conexion');
+            setHasError(true);
+          }else{
+            if(rifa.local && rifa.local===1){
+              await db.deleteDataTable('asignaciones',{id_raffle:rifa.id});
+              await db.deleteDataTable('rifas',{id:rifa.id});
+            }else{
+              await db.update('rifas',{local:1,deleted:1},[{id:rifa.id},""])
+
+
+            }
+
+            setResponseMessage('datos eliminados localmente, verifica tu conexion');
+          }
+
           setResponseModalVisible(true);
         }
 
@@ -247,11 +416,22 @@ useEffect(() => {
     setRifas(filteredArray);
   
   }
+
+  const sendToken = async(value:number[])=>{
+      setCompartir(false);
+      if(!!rifa && rifa.id){
+        const response =await sendTokens(rifa.id,value);
+        if(response.error){
+          setResponseIndexMessage(response.error);
+          setToast(true);
+        }
+      }
+  }
    
 
   return (
  
-   <GradientLayout  navigationItems={navigationItems} hasDrawer={true} Touched={()=>setCard(false)}>
+   <GradientLayout  navigationItems={navigationItems}  hasDrawer={true}  hasNotifications={true} Touched={()=>{setCard(false);setCompartir(false)}} touchOut={touchedOut} touchedOut={()=>setTouchedOut(false)}>
 
 
       
@@ -269,18 +449,44 @@ useEffect(() => {
         </View>
         <View style={styles.cardContainer}>
          
-          { rifas.length>0 &&  rifas.map((rifa,index) => (
+          {!loading && rifas.length>0 && !connectionError && rifas.map((rifa,index) => (
             <View key={index}>
              <Card
              key={index}
+             prueba={false}
              rifa={rifa}
-             onTouch={(obj,rifa)=>handleMenu(obj,rifa,index)}
+             onTouch={(obj,rifa)=>{setTouchedOut(true);  handleMenu(obj,rifa,index)}}
             
-             onToggle={()=>setCard(false)}
+           onToggle={()=>{setCard(false);setTouchedOut(true)}}
+            
         
            /></View>
           ))}
-          {rifas.length===0 && (
+          {!loading && connectionError && (
+             <DisconectedCard
+             onOffline={()=>{setOnline(false);setReload(!reload)}}
+             onReload={()=>{handleRifas()}}
+             offline={true}
+             />
+          )
+
+          }
+           
+           {loading && !connectionError && array.map((rifa,index) => (
+            <View key={index}>
+             <Card
+             prueba={true}
+             key={index}
+             rifa={null}
+             onTouch={(obj,rifa)=>{setTouchedOut(true);  handleMenu(obj,rifa,index)}}
+            
+           onToggle={()=>{setCard(false);setTouchedOut(true)}}
+            
+        
+           /></View>
+          ))}
+           
+          {!loading && !connectionError && rifas.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado rifas . . .</Text></View>
           )}
         </View>
@@ -294,6 +500,7 @@ useEffect(() => {
           onDelete={handleDelete}
         />
       )}
+    
   
            <Delete
         mode="delete"
@@ -325,7 +532,7 @@ useEffect(() => {
         {(
         <ToastModal
         message={responseIndexMessage == null ? '' : responseIndexMessage}
-        blockTime={2000}
+        blockTime={500}
         time={2000}
         visible={toast}
         onClose={()=>setToast(false)}  
@@ -343,6 +550,15 @@ useEffect(() => {
     />
   )}
 
+  {compartir &&(
+    <CompartirModal 
+      visible={compartir}
+      compradores={compradores?compradores:[]}
+      onShared={(numbers)=>{setCard(false);sendToken(numbers)}}
+      onClose={()=>{setCompartir(false);setCard(false)}}
+    />
+  )}
+
 
 </GradientLayout>
    
@@ -352,6 +568,7 @@ useEffect(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    
   },
   header: {
     flexDirection: 'row',

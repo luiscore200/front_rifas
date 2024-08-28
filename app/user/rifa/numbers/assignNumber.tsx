@@ -2,19 +2,21 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from 'react';
 import { rifaAssign } from "../../../../services/api";
 import RifaGrid from "../../../../components/user/rifa/rifaGrid";
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import { rifa } from "../../../../config/Interfaces";
 import { LinearGradient } from "expo-linear-gradient";
 import ToastModal from "../../../../components/toastModal";
 import { useAuth } from "../../../../services/authContext2";
 import GradientLayout from "../../../layout";
+import Database from "../../../../services/sqlite";
 
 
 export default function Assign() {
 
-  const {auth,logout}=useAuth();
+  const {auth,logout,online,setOnline}=useAuth();
   const navigationItems = [
     { label: 'Inicio', action: () => router.push("/user/rifa/dashboard"),status:1 },
+    { label: 'Suscripcion', action: () =>router.push('/user/suscripcion'),status:1},
     { label: 'Configuracion', action: () =>router.push('/user/userSettings'),status:1 },
     { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
   ];
@@ -26,8 +28,10 @@ export default function Assign() {
   const [rifa2, setRifa2] = useState<rifa>();
   const [premios,setPremios]= useState<number[]>([])
   const [modal,setModal]=useState(false);
-  const [responseMessage,setResponseMessage]=useState();
+  const [responseMessage,setResponseMessage]=useState<string>();
   const [hasError,setHasError]=useState(false);
+  const [touchedOut,setTouchedOut]=useState<boolean>(false);
+  const db = new Database();
 
   useEffect(() => { handleAsignaciones() }, [id]);
   useEffect(() => { setRifa2(JSON.parse(rifa)) }, [rifa]);
@@ -43,19 +47,39 @@ export default function Assign() {
   async function handleAsignaciones() {
     try{
       const response = await rifaAssign(id);
+     
       if(!!response.error){
         setResponseMessage(response.error);
         setHasError(true);
         setModal(true);
 
       }else{
+       // !online? setOnline(true):undefined; 
+
         setAsignaciones(response);
       }
       
     }catch(e:any){
-      setResponseMessage(e.message);
-      setHasError(true);
+      setResponseMessage('verifica tu conexion, datos guardados localmente');
+    
+    //  setHasError(true);
       setModal(true);
+
+ //   if(!online){
+       
+  
+        if (Platform.OS !== 'web') {
+          const ee = await db.find('asignaciones',{id_raffle:id,deleted:0});
+          if(Array.isArray(ee)){
+             setAsignaciones(ee);
+          }
+          
+      }
+    //  }
+  
+
+
+
     }
     
   }
@@ -65,6 +89,7 @@ export default function Assign() {
   }
 
   const handleConfirmSelection = (selected: number[]) => {
+    
     setSelectedNumbers(selected);
     // Aquí puedes manejar el envío de los números seleccionados al servidor o cualquier otra lógica
     console.log('Números seleccionados confirmados:', selected);
@@ -75,7 +100,7 @@ export default function Assign() {
   };
 
   return (
-    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} touchOut={touchedOut} touchedOut={()=>{setTouchedOut(false)}} >
 
     
       <View style={styles.gridContainer}>
@@ -88,6 +113,7 @@ export default function Assign() {
             onConfirmSelection={handleConfirmSelection}
             price={rifa2 != undefined ? rifa2?.precio : 0}
             premios={premios}
+            touched={()=>setTouchedOut(true)}
           
           />
        
