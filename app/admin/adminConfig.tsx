@@ -65,6 +65,11 @@ export default function App() {
   const [app_name,setApp_name]=useState<string>("");
   const [logoChanged,setLogoChanged]=useState<boolean>(false);
   const [iconoChanged,setIconoChanged]=useState<boolean>(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
+
  
 
 
@@ -355,10 +360,15 @@ const addSuscription = ()=>{
 
   return (
  
-   <GradientLayout  navigationItems={navigationItems} hasDrawer={true}>
+   <GradientLayout  navigationItems={navigationItems} hasDrawer={true}  size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}}>
 
 
-<ScrollView   style={styles.main}  nestedScrollEnabled={true}>
+<ScrollView style={[styles.main,
+          isSmallScreen && { },
+         isMediumScreen && { },
+         isLargeScreen && { paddingHorizontal:'33%' },
+         isXLargeScreen && {paddingHorizontal:'33%'},
+      ]}>
 
 {!notificationCard && (
   <TouchableOpacity style={styles.formCard} onPress={() => toggle(1)}>

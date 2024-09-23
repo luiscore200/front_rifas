@@ -515,10 +515,48 @@ export const rifaUpdate = async (obj:any,id:any) => {
       throw error;
     } 
   }
+  export const getAllAssignament = async(id:number)=>{
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/rifa/getAllAssignament/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
+        },
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
+  export const notificarPendientes = async(id:number)=>{
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/rifa/notificarPendientes/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken()}`, 
+        },
+      });
+      if (response.ok) {
+        const assigns = await response.json();
+      return assigns;
+      }else{
+        return response.json();
+      }
+    }catch(error:any){
+      throw error;
+    } 
+  }
   
   export const deleteSeparated = async(id:number)=>{
     try{
-      const response = await fetchWithTimeout(`${API_URL}/rifa/deleteSeparated/${id}`, {
+      const response = await fetchWithTimeout(`${API_URL}/rifa/deleteAssignament/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

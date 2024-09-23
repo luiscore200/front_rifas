@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Switch, ScrollView } from 'react-native';
 
 import { router } from 'expo-router';
-import { sendQr, verifySession, importConfig, verifyEmail, saveConfig} from '../../services/api';
+import { sendQr, verifySession, importConfig, verifyEmail, saveConfig, generalConfig} from '../../services/api';
 
 import ToastModal from '../../components/toastModal';
 
@@ -18,7 +18,7 @@ import { getStorageItemAsync } from '../../services/storage';
 
 export default function App() {
 
-  const {user,auth,logout}=useAuth();
+  const {user,auth,logout,subContext,mySubContext}=useAuth();
 
   const navigationItems = [
     { label: 'Inicio', action: () => router.push('/user/rifa/dashboard'),status:1 },
@@ -44,6 +44,11 @@ export default function App() {
   const [verificandoWp,setVerificandoWp]= useState(false);
   const [verificandoEmail,setVerificandoEmail]= useState(false);
   const [sub,setSub]=useState<any>({whatsapp:false,email:false,banners:true});
+  
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
 
  
 
@@ -54,14 +59,31 @@ export default function App() {
   
 
    const handleSub = async(aa:string)=>{
-        const aaa= await getStorageItemAsync("subscriptions");
+       // const aaa= await getStorageItemAsync("subscriptions");
+    
       //  console.log("suscripciones",aaa);
-       const jaaa= aaa!==null? JSON.parse(aaa):[];
-        if(Array.isArray(jaaa)){
-         const aaaa= jaaa.find(item => item.sub_id===aa);
-         console.log("suscripcion",aaaa);
-         if(aaaa) setSub(aaaa);
-        }
+      // const jaaa= aaa!==null? JSON.parse(aaa):[];
+      if(mySubContext===null){
+        if(Array.isArray(subContext)){
+          const aaaa= subContext.find(item => item.sub_id===aa);
+          console.log("suscripcion",aaaa);
+          if(aaaa) setSub(aaaa);
+         }else{
+          try {
+            const response = await generalConfig();
+            if(response.subscriptions){
+              const aaaa= response.subscriptions.find((item:any) => item.sub_id===aa);
+              console.log("suscripcion",aaaa);
+              if(aaaa) setSub(aaaa);
+            }
+          } catch (error) {
+            
+          }
+
+         }
+      }else{
+        setSub(mySubContext);
+      }
    }
 
 
@@ -201,6 +223,10 @@ const handleEmailVerify= async()=>{
  try {
     setIsWpVerified(false);
     const response = await sendQr()
+    if(response.mensaje){
+      setResponseMessage(response.mensaje);
+      setModalVisible(true);
+    }
      console.log(response);
  } catch (error) {
   
@@ -214,10 +240,15 @@ const handleEmailVerify= async()=>{
 
   return (
  
-   <GradientLayout  navigationItems={navigationItems} hasDrawer={true}>
+   <GradientLayout  navigationItems={navigationItems} hasDrawer={true}   size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}}  >
 
-<ScrollView  style={styles.main}>
-<View style={styles.formContainer}>
+<ScrollView  style={styles.main}  contentContainerStyle={{alignItems:'center'}}>
+<View style={[styles.formContainer,
+      isSmallScreen && { width:'95%' },
+      isMediumScreen && { width:'95%' },
+      isLargeScreen && { width:'30%' },
+      isXLargeScreen && {width:'30%'},
+]}>
 <Text style={{ fontWeight: 'bold', fontSize: 20,color:'#374151', marginBottom: 10 }}>Notificaciones</Text>
 <Text style={{ fontSize: 16, color: '#666',paddingBottom:15 }}>En esta parte podras configurar tu sistema de notificaciones.</Text>
 

@@ -11,15 +11,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 interface RifaCardProps {
   rifa: any;
   prueba:boolean;
+  width?:any;
   onTouch(event:any,rifa: any): void;
   onToggle:()=>void;
+  onWinner(rifa:any,index:number):void;
+
 }
 
-const RifaCard: React.FC<RifaCardProps> = ({ rifa,prueba, onTouch,onToggle }) => {
+const RifaCard: React.FC<RifaCardProps> = ({ rifa,prueba,width, onTouch,onToggle,onWinner }) => {
   const [expanded, setExpanded] = useState(true);
   const ShimmerPlacerholder = createShimmerPlaceholder(LinearGradient);
-  const getTextStatusColor = (status: string) => (status === "En juego" ? '#166534' :!"Finalizada"? '#991b1b':'#d97706');
-  const getBGStatusColor = (status: string) => (status === "En juego" ? '#dcfce7' :!"Finalizada"? '#fee2e2':'#fcd34d');
+  const getTextStatusColor = (status: string) => (status === "En juego" ? '#166534' :status ==="Finalizada"? '#991b1b':'#d97706');
+  const getBGStatusColor = (status: string) => (status === "En juego" ? '#dcfce7' :status ==="Finalizada"? '#fee2e2':'#fcd34d');
 
 
   const safeDate = (fechaString: string) => {
@@ -56,7 +59,7 @@ const RifaCard: React.FC<RifaCardProps> = ({ rifa,prueba, onTouch,onToggle }) =>
 
   return (
    <TouchableOpacity onPress={()=> {!prueba?onToggle():undefined}} activeOpacity={1}>
-    <View style={styles.cardContainer}>
+    <View style={[styles.cardContainer,{width}]}>
       <View style={styles.card}>
         <View style={styles.cardContent}>
           <View style={styles.userInfo}>
@@ -106,11 +109,13 @@ const RifaCard: React.FC<RifaCardProps> = ({ rifa,prueba, onTouch,onToggle }) =>
                   <Text style={styles.premioDescripcion}>{premio.descripcion}</Text>
                   <Text style={{color:'#6b7280',fontSize:14}}>{premio.fecha}</Text>
                   </View>
-                    <View style={[styles.statusButton, { backgroundColor: getBGStatusColor(getRifaStatus(premio.fecha,premio.ganador)) }]}>
+                    <TouchableOpacity style={[getRifaStatus(premio.fecha,premio.ganador)!=='Jugado'?styles.statusButton:styles.statusButtonPressable , { backgroundColor: getBGStatusColor(getRifaStatus(premio.fecha,premio.ganador))},{}]}
+                      onPress={()=>{getRifaStatus(premio.fecha,premio.ganador)==='Jugado'? onWinner(rifa,index) :undefined }} activeOpacity={getRifaStatus(premio.fecha,premio.ganador)==='Jugado'? 0 :1}
+                    >
                       <Text style={[styles.statusText, { color: getTextStatusColor(getRifaStatus(premio.fecha,premio.ganador)) }]}>
                         {getRifaStatus(premio.fecha,premio.ganador)}
                       </Text>
-                    </View>
+                    </TouchableOpacity>
                   </View>
                 ))}
               </View>
@@ -180,8 +185,10 @@ const RifaCard: React.FC<RifaCardProps> = ({ rifa,prueba, onTouch,onToggle }) =>
 
 const styles = StyleSheet.create({
   cardContainer: {
+    
     marginVertical: 8,
     marginHorizontal: 16,
+    
   },
   card: {
     borderWidth: 1,
@@ -262,10 +269,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    width:80,
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
-    shadowRadius: 2,
+    shadowRadius: 1,
     elevation: 4,
+  },
+  statusButtonPressable: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    width:80,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.7,
+    shadowRadius: 3,
+    elevation: 5,
   },
   statusText: {
     fontSize: 12,

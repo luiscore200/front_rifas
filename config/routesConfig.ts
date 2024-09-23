@@ -17,6 +17,7 @@ const routes = {
       { path: 'user/rifa/dashboard'},
       { path: 'user/rifa/createRifa' },
       { path: 'user/rifa/updateRifa' },
+      { path: 'user/rifa/verRifa' },
       { path: 'user/rifa/numbers/assignWinner' },
       { path: 'user/rifa/numbers/assignNumber' },
       { path: 'user/rifa/numbers/assignClient' },

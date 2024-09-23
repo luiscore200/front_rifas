@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View,TextInput, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View,TextInput, Alert, TouchableOpacity , useWindowDimensions } from 'react-native';
 import ButtonGradient from '../../button';
 
 import { router } from 'expo-router';
@@ -37,6 +37,19 @@ export default function index() {
   const [toast,setToast]=useState(false);
   const [banner,setBanner]=useState<string>("");
   const [bannerVisible,setBannerVisible]=useState(false);
+  const { width, height } = useWindowDimensions();
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
+  useEffect(() => {
+    setIsSmallScreen(width < 360);
+    setIsMediumScreen(width >= 360 && width < 768);
+    setIsLargeScreen(width >= 768 && width < 1024);
+    setIsXLargeScreen(width >= 1024);
+  }, [width]);
+
+
 
 const handleConfig = async ()=>{
   const conf = await getStorageItemAsync("general_config");
@@ -134,7 +147,12 @@ setTimeout(() => {
           <Text style={styles.logoText}>{config?config.app_name:"MegaWIN"}</Text>
           <Text style={styles.logoDescription}>App de rifas digitales</Text>
         </View>
-        <View style={styles.card}>
+        <View style={[styles.card,
+             isSmallScreen && {width:'90%'},
+             isMediumScreen && { width:'90%'},
+             isLargeScreen && { width:'40%' },
+             isXLargeScreen && {width:'30%'},
+        ]}>
           <View style={styles.cardContent}>
                 <View style={{padding:16}}>
             <View style={styles.inputContainer}>
@@ -201,7 +219,10 @@ setTimeout(() => {
   )
   }
         {banner!=="" && (
-      <BannerModal visible={bannerVisible} imageUrl={banner} onClose={()=>setBannerVisible(false)}/>
+   
+        <BannerModal visible={bannerVisible} width={isLargeScreen?'40%':isXLargeScreen?'30%':undefined}
+         imageUrl={banner} onClose={()=>setBannerVisible(false)}/>
+     
   )
   }
     </LinearGradient>
@@ -217,6 +238,7 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     width: '90%',
+    alignItems:'center',
   
     
   },

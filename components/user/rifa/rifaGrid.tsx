@@ -19,9 +19,10 @@ interface RifaGridProps {
   premios:number[];
   onConfirmSelection: (selectedNumbers: number[]) => void;
   touched?:()=>void;
+  scroll:boolean;
 }
 
-const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, price, maxHeight, touched, onConfirmSelection }) => {
+const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, price, maxHeight,scroll, touched, onConfirmSelection }) => {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const  itemsPerPage= 100;
   const cuadricula = 5;
@@ -66,7 +67,7 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, pr
       premios.forEach((element,index) => {if(element===number){isWinner=true; Npremio=index+1;}});
     }
 
-    let cellStyle = styles.cell;
+    let cellStyle:any = styles.cell;
     let textStyle = styles.cellText;
 
     if (isBlocked) {
@@ -150,7 +151,8 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, pr
         minHeight: 200,
         maxHeight: 450,
         top: 55,
-        right:90,
+        left:'50%',
+        transform:[{translateX:-100}],
         zIndex: 999,
         borderColor: '#ccc',
         borderWidth: 1,
@@ -260,14 +262,25 @@ const RifaGrid: FC<RifaGridProps> = ({ totalNumbers, assignedNumbers,premios, pr
     <TouchableOpacity activeOpacity={1} onPress={()=>{setList(false);if(touched){touched()}}} style={styles.container}>
         {renderPagination()}
      <View style={{paddingTop:5,paddingHorizontal:20}}>
-     <ScrollView horizontal  onTouchStart={()=>setList(false)}>
-        <ScrollView style={{ height:maxHeight}} onTouchStart={()=>setList(false)}>
-          <TouchableOpacity activeOpacity={1} onPress={()=>{list?setList(false):undefined;if(touched){touched()}}}>
-            {renderGrid()
-            }
-          </TouchableOpacity>
-        </ScrollView>
-      </ScrollView>
+    {scroll?(
+       <ScrollView horizontal  onTouchStart={()=>setList(false)}>
+       <ScrollView style={{ height:maxHeight}} onTouchStart={()=>setList(false)}>
+         <TouchableOpacity activeOpacity={1} onPress={()=>{list?setList(false):undefined;if(touched){touched()}}}>
+           {renderGrid()
+           }
+         </TouchableOpacity>
+       </ScrollView>
+     </ScrollView>
+    ):(
+     
+      <View onTouchStart={()=>setList(false)} style={{alignItems:'center'}}>
+        <TouchableOpacity activeOpacity={1} onPress={()=>{list?setList(false):undefined;if(touched){touched()}}}>
+          {renderGrid()
+          }
+        </TouchableOpacity>
+      </View>
+   
+    )}
      </View>
       <View style={styles.selectedNumbersContainer}>
         <View style={styles.legendContainer}>

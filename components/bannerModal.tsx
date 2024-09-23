@@ -4,15 +4,17 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, Image } from 'react-na
 interface BannerModalProps {
   visible: boolean;
   imageUrl: string; // URL de la imagen para el banner
+  width?:any;
+  height?:any;
   onClose: () => void;
 }
 
-const BannerModal: React.FC<BannerModalProps> = ({ visible, imageUrl, onClose }) => {
+const BannerModal: React.FC<BannerModalProps> = ({ visible, imageUrl,width,height, onClose }) => {
 
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer,{width,height}]}>
           <Image source={{ uri: imageUrl }} style={styles.bannerImage} resizeMode="cover" />
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeText}>X</Text>

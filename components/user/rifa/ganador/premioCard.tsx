@@ -41,7 +41,7 @@ const PremioCard: React.FC<PremioCardProps> = (obj) => {
 
     return (
         <TouchableOpacity
-            style={[styles.card, isPending && styles.cardPending]}
+            style={[styles.card]}
             onPress={() => isPending && obj.onTouch()}
             disabled={!isPending}
         >
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     cardHeader: {
         flexDirection: 'row',
         paddingHorizontal: 10,
-        paddingVertical: 5,
+        paddingVertical: 3,
     },
     title: {
         fontSize: 16,
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     cardContent: {
         flexDirection: 'column',
         paddingHorizontal: 10,
-        paddingVertical: 5,
+        paddingVertical: 3,
         justifyContent: 'space-between',
     },
     subtitle: {

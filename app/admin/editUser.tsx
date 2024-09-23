@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,Switch, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,10 @@ import { phoneCode } from '../../config/Interfaces';
 import { userEditValidationRules, validateForm } from '../../config/Validators';
 import { Picker } from '@react-native-picker/picker';
 import ToastModal from '../../components/toastModal';
+import { useAuth } from '../../services/authContext2';
+import Database from '../../services/sqlite';
+import GradientLayout from '../layout';
+
 
 
 
@@ -24,10 +28,13 @@ const EditUser: React.FC = () => {
   const user1= JSON.parse(user);
 //console.log(user1);
  // const user = JSON.parse(user1);
+const {auth,user:us,logout}=useAuth();
 
 //const user1=   {  id:1,name: 'John Doe',email: 'john@example.com',status: 'Active',};
 
 interface Errors {email?: string;password?: string; name?:string,selectedCode?:string, phone?:string, domain?:string}
+
+ const {codigos,setCodigos}=useAuth();
   const [name, setName] = useState(user1.name);
   const [domain, setDomain] = useState(user1.domain);
   const [phone,setPhone]=useState(user1.phone);
@@ -40,6 +47,13 @@ interface Errors {email?: string;password?: string; name?:string,selectedCode?:s
   const [modalVisible, setModalVisible] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string|null>(null);
   const [hasError, setHasError] = useState(false);
+  const db = new Database();
+
+  const navigationItems = [
+    { label: 'Inicio', action: () => router.push('/admin/dashboard'),status:1 },
+    { label: 'Configuracion', action: () => console.log("holaa"),status:0 },
+    { label: 'Logout', action: async() => logout(),status:auth===true?1:0},
+  ];
 
     
   const [errors, setErrors] = useState<Errors>({});
@@ -48,7 +62,10 @@ interface Errors {email?: string;password?: string; name?:string,selectedCode?:s
   const [responseIndexMessage,setResponseIndexMessage]=useState<string | null>(null);
   const [indexToast,setIndexToast]=useState(false);
 
-
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
 
 
 
@@ -78,27 +95,64 @@ useEffect(() => {
 
 ///// atrapar y verificar codes
 const isCode = (item: any): item is phoneCode => {return item && typeof item.code === 'string' && typeof item.name === 'string';};
-
+  
+  
+  
 const handleCodePhone = async () => {
-  try{
-    const data = await phoneCodeIndex();
-    if(data.error){
-      setResponseIndexMessage(data.error);
-      setIndexToast(true);
-      }
-    
-    if (Array.isArray(data) && data.every(isCode)) {
-      setPhoneCode(data);
-    } else {
-      console.log('Los datos no son del tipo esperado: Code[]');
-    }
-  }catch(e:any){
-    console.log(e);
-    setResponseIndexMessage(e.message);
-    setIndexToast(true);
-  }
-};
+ if(codigos.length===0){
+    if(Platform.OS==='web'){
 
+        try{
+            const data = await phoneCodeIndex();
+           // console.log(data);
+            if(data.error){
+              setResponseIndexMessage(data.error);
+               setIndexToast(true);
+               }
+            
+            if (Array.isArray(data) && data.every(isCode)) {
+      
+              console.log(data);
+              setPhoneCode(data);
+            } else {
+              console.log('Los datos no son del tipo esperado: Code[]');
+            }
+           }catch(e:any){
+            console.log(e);
+            setResponseIndexMessage("error al obtener datos, verifica tu conexion");
+            setIndexToast(true);
+           }
+    }
+    if(Platform.OS==='android'||Platform.OS==='ios'){
+        try{
+            const data = await phoneCodeIndex();
+           // console.log(data);
+            if(data.error){
+              setResponseMessage(data.error);
+              setIndexToast(true);
+               }
+            
+            if (Array.isArray(data) && data.every(isCode)) {
+      
+              console.log(data);
+              setPhoneCode(data);
+              setCodigos(data);
+              await db.insert('codigos',data);
+            } else {
+              console.log('Los datos no son del tipo esperado: Code[]');
+            }
+           }catch(e:any){
+            console.log(e);
+            setResponseIndexMessage("error al obtener datos, verifica tu conexion");
+            setIndexToast(true);
+           }
+
+    }
+ }else{
+    setPhoneCode(codigos);
+
+ }
+};
 
 
 //atrapar touchedsfields
@@ -163,18 +217,24 @@ const handleSave = async () => {
   };
 
   return (
-    <LinearGradient colors={['#6366F1', '#BA5CDE']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.container}>
-      <View style={styles.header}></View>
-      <ScrollView style={styles.main}>
-        <View>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true}  size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}}>
+      
+      <ScrollView style={[styles.main,
+          isSmallScreen && { },
+         isMediumScreen && { },
+         isLargeScreen && { paddingHorizontal:'33%' },
+         isXLargeScreen && {paddingHorizontal:'33%'},
+      ]}>
+      {/**
+         <View>
           <TouchableOpacity style={styles.backButton} onPress={() => router.replace('admin/dashboard')}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             <Text style={styles.backButtonText}>Volver</Text>
           </TouchableOpacity>
         </View>
+       */
+
+      }
         <View style={styles.formContainer}>
           <Text style={styles.title}>Crear Usuario</Text>
           <View style={styles.inputGroup}>
@@ -226,7 +286,7 @@ const handleSave = async () => {
                       </View>
                     </View>
                     <View style={{ flex: 2 }}>
-                      <Text style={[styles.selectedCodeText, selectedCode === "" && styles.placeholderText]}>
+                      <Text style={[styles.selectedCodeText, selectedCode === "" && styles.placeholderText,{paddingTop:7}]}>
                         {selectedCode === "" ? "(000)" : `(${selectedCode})`}
                       </Text>
                     </View>
@@ -313,7 +373,7 @@ const handleSave = async () => {
   )
 
   }
-    </LinearGradient>
+    </GradientLayout>
   );
 };
 

@@ -36,7 +36,7 @@ const userCreate: React.FC = () => {
      { label: 'Logout', action: async() => await logout(),status:auth===true?1:0},
    ];
     const [config,setConfig]=useState<any>();
-    const [cardForm, setCardForm] = useState(false);
+    const [cardForm, setCardForm] = useState(true);
     const [cardForm2, setCardForm2] = useState(false);
     const [premios, setPremios] = useState<premio[]>(rifa2.premios || [{ id: 1, descripcion: "", loteria: "", fecha: "" }]);
     const [rifa, setRifa] = useState<rifa>({id:rifa2.id||0, titulo: rifa2.titulo || "", pais: rifa2.pais || "Colombia", precio: rifa2.precio || 0, numeros: rifa2.numeros || 100, tipo: rifa2.tipo || "premio_unico",local:rifa2.local? rifa2.local:0 });
@@ -52,6 +52,11 @@ const userCreate: React.FC = () => {
     const [image1Changed, setImage1Changed] = useState<boolean>(false);
     const [procesando, setProcesando]=useState<boolean>(false);
     const db = new Database();
+    const [isSmallScreen, setIsSmallScreen] = useState(false);
+    const [isMediumScreen, setIsMediumScreen] = useState(false);
+    const [isLargeScreen, setIsLargeScreen] = useState(false);
+    const [isXLargeScreen, setIsXLargeScreen] = useState(false);
+  
   
     const handleConfig = async ()=>{
       const conf = await getStorageItemAsync("general_config");
@@ -287,8 +292,14 @@ const imageBody= async(image:any)=>{
  
 
   return (
-    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
-      <ScrollView style={styles.main}>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true}  size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}} >
+      <ScrollView 
+        style={[styles.main,  
+          isSmallScreen && {paddingHorizontal:'2%' },
+          isMediumScreen && {paddingHorizontal:'4%'},
+          isLargeScreen && { paddingHorizontal:'30%',  },
+          isXLargeScreen && {paddingHorizontal:'25%',  },]}
+      >
       {!cardForm && (
          <TouchableOpacity style={styles.formCard} onPress={() => setCardForm(!cardForm)}>
          <View style={{ marginRight: 20 }} >

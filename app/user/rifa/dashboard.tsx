@@ -14,6 +14,8 @@ import { useAuth } from '../../../services/authContext2';
 import CompartirModal from '../../../components/user/rifa/compartirRifaModal';
 import Database from '../../../services/sqlite';
 import DisconectedCard from '../../../components/disconectedCard';
+import GanadorModal from '../../../components/user/rifa/ganador/nuevoModal';
+import NumberGridModal from '../../../components/user/rifa/ganador/numbersModalGrid';
 
 
 export default function App() {
@@ -43,16 +45,21 @@ export default function App() {
  const [toast,setToast]=useState(false);
  const [compartir,setCompartir]=useState(false);
  const [index,setIndex]=useState<number>();
+ const [indexPremio,setIndexPremio]=useState<number|null>(null);
  const [buscar,setBuscar]=useState<string>("");
  const [compradores,setCompradores]=useState<any[]>();
  const [touchedOut,setTouchedOut]=useState<boolean>(false);
  const [connectionError,setConnectionError]=useState<boolean>(false);
-
+ const [ganadorModal,setGanadorModal]=useState(false);
+ const [ganadorModal2,setGanadorModal2]=useState(false);
  const [reload, setReload] = useState(false);
  const [loading,setLoading]= useState(true);
  const array = [1];
  const db = new Database();
- 
+ const [isSmallScreen, setIsSmallScreen] = useState(false);
+ const [isMediumScreen, setIsMediumScreen] = useState(false);
+ const [isLargeScreen, setIsLargeScreen] = useState(false);
+ const [isXLargeScreen, setIsXLargeScreen] = useState(false);
 
  function handleMenu(obj:any,rifa:any,indexx:number){
   const { height: windowHeight } = Dimensions.get('window');
@@ -282,7 +289,12 @@ const handleNew = () =>{
       }
       if(opcion==="ganador"){
 
-          handleWinner(rifa);
+        //  handleWinner(rifa);
+      }
+
+      if(opcion==="ver"){
+
+          handleVer(rifa);
       }
       if(opcion==="confirmar"){
         handleConfirm(rifa);
@@ -302,13 +314,21 @@ const handleNew = () =>{
   router.navigate({pathname: "/user/rifa/updateRifa",params:{rifa1:rifa2},});
     };
 
-    const handleWinner = (rifa: rifa) => {
+    const handleWinner = (rifa: rifa, index:number) => {
       selectedRifa(rifa);
-      setModalVisible(false);
-      console.log("edit: "+rifa.id);
-      const rifa2 = JSON.stringify(rifa);
-      console.log("rifa2: "+ rifa2);
-  router.navigate({pathname: "/user/rifa/numbers/assignWinner",params:{id:rifa.id,rifa:rifa2},});
+      setIndexPremio(index);
+
+   console.log(index);
+
+
+     // setModalVisible(false);
+     // console.log("edit: "+rifa.id);
+     // const rifa2 = JSON.stringify(rifa);
+     // console.log("rifa2: "+ rifa2);
+ // router.navigate({pathname: "/user/rifa/numbers/assignWinner",params:{id:rifa.id,rifa:rifa2},});
+ setCard(false);
+ setGanadorModal(true);
+ setTouchedOut(true);
     };
 
     const handleConfirm = (rifa: rifa) => {
@@ -318,6 +338,15 @@ const handleNew = () =>{
       const rifa2 = JSON.stringify(rifa);
       console.log("rifa2: "+ rifa2);
   router.navigate({pathname: "/user/rifa/numbers/dashboard",params:{id:rifa.id,rifa:rifa2},});
+    };
+
+    const handleVer = (rifa: rifa) => {
+      selectedRifa(rifa);
+      setModalVisible(false);
+     // console.log("confirm: "+rifa.id);
+      const rifa2 = JSON.stringify(rifa);
+    //  console.log("rifa2: "+ rifa2);
+  router.navigate({pathname: "/user/rifa/verRifa",params:{id:rifa.id,rifa:rifa2},});
     };
 
     
@@ -427,16 +456,26 @@ const handleNew = () =>{
         }
       }
   }
+
+
    
 
   return (
  
-   <GradientLayout  navigationItems={navigationItems}  hasDrawer={true}  hasNotifications={true} Touched={()=>{setCard(false);setCompartir(false)}} touchOut={touchedOut} touchedOut={()=>setTouchedOut(false)}>
+   <GradientLayout  navigationItems={navigationItems}  hasDrawer={true}  hasNotifications={true}
+    Touched={()=>{setCard(false);setCompartir(false)}} touchOut={touchedOut}
+     touchedOut={()=>setTouchedOut(false)}  size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}}
+     >
 
 
       
-      <ScrollView style={styles.main} onScrollBeginDrag={()=>setCard(false)}>
-        <View style={styles.searchContainer}>
+      <View style={styles.main} >
+        <View style={[styles.searchContainer,
+             isSmallScreen && { width:'90%' },
+             isMediumScreen && { width:'90%' },
+             isLargeScreen && { width:'60%' },
+             isXLargeScreen && {width:'60%'},
+        ]}>
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar..."
@@ -447,20 +486,32 @@ const handleNew = () =>{
             <Text style={styles.addButtonText}>Crear</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.cardContainer}>
+        <ScrollView 
+            showsVerticalScrollIndicator={false} 
+        style={[styles.cardContainer,  
+          isSmallScreen && { width:'95%', },
+          isMediumScreen && { width:'95%',},
+          isLargeScreen && { width:'60%',  padding:20 },
+          isXLargeScreen && {width:'60%',  padding:40},]
+            
+        } onScrollBeginDrag={()=>setCard(false)}>
          
           {!loading && rifas.length>0 && !connectionError && rifas.map((rifa,index) => (
-            <View key={index}>
+           
              <Card
              key={index}
              prueba={false}
              rifa={rifa}
              onTouch={(obj,rifa)=>{setTouchedOut(true);  handleMenu(obj,rifa,index)}}
+             onWinner={(rifa,index)=>{handleWinner(rifa,index)}}
             
            onToggle={()=>{setCard(false);setTouchedOut(true)}}
+           width={'90%%'}
+           
+           
             
         
-           /></View>
+           />
           ))}
           {!loading && connectionError && (
              <DisconectedCard
@@ -479,6 +530,7 @@ const handleNew = () =>{
              key={index}
              rifa={null}
              onTouch={(obj,rifa)=>{setTouchedOut(true);  handleMenu(obj,rifa,index)}}
+             onWinner={(rifa,index)=>{}}
             
            onToggle={()=>{setCard(false);setTouchedOut(true)}}
             
@@ -489,8 +541,8 @@ const handleNew = () =>{
           {!loading && !connectionError && rifas.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado rifas . . .</Text></View>
           )}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
       {rifa && (
         <Options
           obj={rifa}
@@ -498,6 +550,7 @@ const handleNew = () =>{
           onClose={() => setModalVisible(false)}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          
         />
       )}
     
@@ -509,6 +562,7 @@ const handleNew = () =>{
         onClose={()=> setShowDeleteConfirmation(false)}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
+        width={400}
       />
 
 {/*responseModalVisible && (
@@ -556,8 +610,21 @@ const handleNew = () =>{
       compradores={compradores?compradores:[]}
       onShared={(numbers)=>{setCard(false);sendToken(numbers)}}
       onClose={()=>{setCompartir(false);setCard(false)}}
+      width={isXLargeScreen?'35%':isLargeScreen?'40%':undefined}
     />
   )}
+  {ganadorModal && rifa && indexPremio!==null  && (
+    <GanadorModal
+    visible={ganadorModal}
+    rifa={rifa}
+    index={indexPremio}
+    onUpdate={(mensaje)=>{setResponseIndexMessage(mensaje);setToast(true);setReload(!reload);setGanadorModal(false)}}
+    onClose={()=>{setGanadorModal(false);setIndexPremio(null);selectedRifa(null)}}
+    width={isXLargeScreen?'27%':isLargeScreen?'30%':undefined}
+    />
+  )}
+
+
 
 
 </GradientLayout>
@@ -595,13 +662,15 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
-    padding: 16,
+    
     backgroundColor: '#FFFFFF',
+    alignItems:'center'
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    marginTop:10
   },
   searchInput: {
     flex: 1,
@@ -625,5 +694,8 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     marginBottom: 16,
+    
+    
+    
   },
 });

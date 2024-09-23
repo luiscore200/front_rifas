@@ -15,7 +15,7 @@ interface CardRifaComponentProps{
     rifa:rifa;
     error:error;
     touched:any;
-    imagen?:string|null;
+    imagen?:string;
    
     
     onUpdate: (field:string,value:any) => void;
@@ -118,33 +118,34 @@ return(
 
   </View>
 
-  <View style={{marginTop:10, marginBottom:20}}>
-  <Text style={{marginBottom:10,fontWeight:'600', color:'black', fontSize:16}}>Imagen</Text>
-<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection:'row' }}>
-
-<TouchableOpacity style={[styles.button, { backgroundColor: '#6366F1' }]} onPress={()=>pickImage(1)} >
-              <Text style={styles.buttonText}>Escoger </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#6366F1', marginLeft: 10 }]} onPress={()=>takePhoto(1)} >
-              <Text style={styles.buttonText}>Capturar</Text>
-            </TouchableOpacity>
-          
-
-  </View>
-  {imagen && imagen!=="" &&(
-    <View style={{marginTop:20,flexDirection:'row',alignItems:'center'}}>
-       <Image source={{ uri: imagen }} style={[styles.image]}></Image>
-       <TouchableOpacity style={{marginLeft:40}}  onPress={()=>onUpdate("image1","")}>
-        <Delete2Icon style={{color:'red'}} />
-
-       </TouchableOpacity>
-    </View>
-  )
-  }
-
-</View>
+  {(Platform.OS==='android'|| Platform.OS==='ios') && (
+    <View style={{marginTop:10, marginBottom:20}}>
+    <Text style={{marginBottom:10,fontWeight:'600', color:'black', fontSize:16}}>Imagen</Text>
+  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection:'row' }}>
   
+  <TouchableOpacity style={[styles.button, { backgroundColor: '#6366F1' }]} onPress={()=>pickImage(1)} >
+                <Text style={styles.buttonText}>Escoger </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.button, { backgroundColor: '#6366F1', marginLeft: 10 }]} onPress={()=>takePhoto(1)} >
+                <Text style={styles.buttonText}>Capturar</Text>
+              </TouchableOpacity>
+            
+  
+    </View>
+    {imagen && imagen !== "" ? (
+  <View style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center' }}>
+    <Image source={{ uri: imagen }} style={[styles.image]} />
+    <TouchableOpacity style={{ marginLeft: 40 }} onPress={() => onUpdate("image1", "")}>
+      <Delete2Icon style={{ color: 'red' }} />
+    </TouchableOpacity>
+  </View>
+) : null}
 
+  
+  </View>
+    
+  
+  )}
   <View style={styles.inputGroup}>
     <Text style={styles.label}>Precio</Text>
     <TextInput
@@ -152,7 +153,7 @@ return(
      // style={{ color: '#a1a1a1', height: 40, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 8 }}
         keyboardType="numeric"
       value={rifa.precio===0?"":rifa.precio.toString()}
-      onChangeText={(text) => handleFieldChange("precio", Number(text))}
+      onChangeText={(text) => handleFieldChange("precio", isNaN(Number(text))?0:Number(text) )}
       onBlur={() => handleFieldChange("precio", rifa.precio)}
     />
     {touched.precio && error.precio && <Text style={{ color: 'red' }}>{error.precio}</Text>}

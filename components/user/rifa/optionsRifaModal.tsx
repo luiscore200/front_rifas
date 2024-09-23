@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback,Dimensions } from 'react-native';
 
 import { rifa } from '../../../config/Interfaces';
-import { EditIcon,Delete2Icon,WinnerIcon,ShareIcon,CheckIcon, MenuIcon1,PlusIcon } from '../../../assets/icons/userIcons';
+import { EditIcon,Delete2Icon,WinnerIcon,ShareIcon,CheckIcon, MenuIcon1,PlusIcon, EyeIcon } from '../../../assets/icons/userIcons';
 
 
 interface MenuCardProps {
@@ -68,24 +68,35 @@ const MenuCard: React.FC<MenuCardProps> = ({ isvisible,event,rifa,onOptions,onCl
                    </View>
                     <Text>Compartir</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingTop:10,paddingVertical:5}} onPress={()=>closeModal("asignar")}>
+                  <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingTop:10,paddingVertical:5}} onPress={()=>closeModal("ver")}>
+                   <View style={{paddingRight:10}}>
+                    <EyeIcon style={{width:18,height:18, color:"black"}}/>
+                   </View>
+                    <Text>Ver</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingVertical:5}} onPress={()=>closeModal("asignar")}>
                    <View style={{paddingRight:10}}>
                     <PlusIcon style={{width:18,height:18, color:"#fb923c"}}/>
                    </View>
-                    <Text>Asignar</Text>
+                    <Text>Agregar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingVertical:5}} onPress={()=>closeModal("confirmar")}>
                    <View style={{paddingRight:10}}>
                     <CheckIcon style={{width:18,height:18,color:'#22c55e'}}/>
                    </View>
-                    <Text>Confirmar</Text>
+                    <Text>Asignados</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingTop:5}} onPress={()=>closeModal("ganador")}>
+                  {
+
+                    /*
+                     <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingTop:5}} onPress={()=>closeModal("ganador")}>
                    <View style={{paddingRight:10}}> 
                     <WinnerIcon style={{width:18,height:18,color:'#fcd34d'}}/>
                    </View>
                     <Text>Ganador</Text>
                   </TouchableOpacity>
+                    */                   }
+                 
               </View>
                  <View  style={{borderTopWidth:1,borderColor:'#cccc',paddingVertical:10}}>
                  <TouchableOpacity style={{flexDirection:'row',alignContent:'center',paddingVertical:5}} onPress={()=>closeModal("editar")}>

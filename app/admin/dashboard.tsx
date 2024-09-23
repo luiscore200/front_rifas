@@ -48,6 +48,10 @@ export default function App() {
  const [loading,setLoading]=useState(true);
  const array = [1,1,1];
  const [connectionError,setConnectionError]=useState<boolean>(false);
+ const [isSmallScreen, setIsSmallScreen] = useState(false);
+ const [isMediumScreen, setIsMediumScreen] = useState(false);
+ const [isLargeScreen, setIsLargeScreen] = useState(false);
+ const [isXLargeScreen, setIsXLargeScreen] = useState(false);
 
  const isUser = (item: any): item is User => {
   return (
@@ -190,14 +194,22 @@ useEffect(() => {
   }
 
   return (
-    <GradientLayout  navigationItems={navigationItems} hasDrawer={true}  hasNotifications={true}>
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true}  hasNotifications={true} 
+    size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}}>
     
 
     
       
-      <ScrollView style={styles.main}>
+      <ScrollView style={styles.main} 
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{alignItems:'center'}}>
         
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer,
+             isSmallScreen && {width:'90%' },
+             isMediumScreen && {width:'90%' },
+             isLargeScreen && { width:'50%' },
+             isXLargeScreen && {width:'50%'},
+        ]}>
      
           <TextInput
             style={styles.searchInput}
@@ -209,7 +221,12 @@ useEffect(() => {
             <Text style={styles.addButtonText}>Crear</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.cardContainer}>
+        <View style={[styles.cardContainer,
+            isSmallScreen && {width:'95%' },
+            isMediumScreen && {width:'95%' },
+            isLargeScreen && { width:'50%' },
+            isXLargeScreen && {width:'50%'},
+        ]}>
          
           {  !loading && !connectionError && users2.length>0 && users2.map(user => (
             <TouchableOpacity key={user.id} onPress={() => handleOptions(user)}>
@@ -258,6 +275,7 @@ useEffect(() => {
         onClose={()=> setShowDeleteConfirmation(false)}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
+        width={500}
       />
 
 

@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Switch, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { phoneCode } from '../../config/Interfaces';
 import { Picker } from '@react-native-picker/picker';
 
-
+import { useAuth } from '../../services/authContext2';
 import Updated from '../../components/responseModal';
 import { userCreate as create, phoneCodeIndex } from '../../services/api';
 import { registerValidationRules, validateForm } from '../../config/Validators';
 import ToastModal from '../../components/toastModal';
+import Database from '../../services/sqlite';
+import GradientLayout from '../layout';
 
 const userCreate: React.FC = () => {
   interface Errors {email?: string;password?: string; name?:string,selectedCode?:string, phone?:string, domain?:string}
+  
+ const {codigos,setCodigos,auth,logout,user}=useAuth();
   const [name, setName] = useState('');
   const [domain, setDomain] = useState('');
   const [email, setEmail] = useState('');
@@ -27,11 +31,22 @@ const userCreate: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [hasError,setHasError]=useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
-  
+  const db = new Database();
   const [errors, setErrors] = useState<Errors>({});
   const [touchedFields, setTouchedFields] = useState({ name: false, domain: false, phone: false, selectedCode: false, email: false, password: false });
   const [responseIndexMessage,setResponseIndexMessage]=useState<string | null>(null);
   const [indexToast,setIndexToast]=useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
+
+  const navigationItems = [
+    { label: 'Inicio', action: () => router.push('/admin/dashboard'),status:1 },
+    { label: 'Configuracion', action: () => console.log("holaa"),status:0 },
+    { label: 'Logout', action: async() => logout(),status:auth===true?1:0},
+  ];
+
 
 
 /// actualiza los code
@@ -53,28 +68,65 @@ const userCreate: React.FC = () => {
   }, [name, domain, email, selectedCode, phone, password, touchedFields]);
 
 ///// atrapar y verificar codes
-  const isCode = (item: any): item is phoneCode => {return item && typeof item.code === 'string' && typeof item.name === 'string';};
+const isCode = (item: any): item is phoneCode => {return item && typeof item.code === 'string' && typeof item.name === 'string';};
   
-  const handleCodePhone = async () => {
-    try{
-      const data = await phoneCodeIndex();
-      console.log(data);
-      if(data.error){
-        setResponseIndexMessage(data.error);
-        setIndexToast(true);
-        }
+  
+  
+const handleCodePhone = async () => {
+ if(codigos.length===0){
+    if(Platform.OS==='web'){
+
+        try{
+            const data = await phoneCodeIndex();
+           // console.log(data);
+            if(data.error){
+              setResponseIndexMessage(data.error);
+               setIndexToast(true);
+               }
+            
+            if (Array.isArray(data) && data.every(isCode)) {
       
-      if (Array.isArray(data) && data.every(isCode)) {
-        setPhoneCode(data);
-      } else {
-        console.error('Los datos no son del tipo esperado: Code[]');
-      }
-    }catch(e:any){
-      console.log(e);
-      setResponseIndexMessage(e.message);
-      setIndexToast(true);
+              console.log(data);
+              setPhoneCode(data);
+            } else {
+              console.log('Los datos no son del tipo esperado: Code[]');
+            }
+           }catch(e:any){
+            console.log(e);
+            setResponseIndexMessage("error al obtener datos, verifica tu conexion");
+            setIndexToast(true);
+           }
     }
-  };
+    if(Platform.OS==='android'||Platform.OS==='ios'){
+        try{
+            const data = await phoneCodeIndex();
+           // console.log(data);
+            if(data.error){
+              setResponseMessage(data.error);
+              setIndexToast(true);
+               }
+            
+            if (Array.isArray(data) && data.every(isCode)) {
+      
+              console.log(data);
+              setPhoneCode(data);
+              setCodigos(data);
+              await db.insert('codigos',data);
+            } else {
+              console.log('Los datos no son del tipo esperado: Code[]');
+            }
+           }catch(e:any){
+            console.log(e);
+            setResponseIndexMessage("error al obtener datos, verifica tu conexion");
+            setIndexToast(true);
+           }
+
+    }
+ }else{
+    setPhoneCode(codigos);
+
+ }
+};
 
 //atrapar touchedsfields
   const handleBlur = (fieldName: string) => {
@@ -133,20 +185,24 @@ const userCreate: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={['#6366F1', '#BA5CDE']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.container}>
-      <View style={styles.header}>
-        
-      </View>
-      <ScrollView style={styles.main}>
-        <View>
+    <GradientLayout navigationItems={navigationItems} hasDrawer={true}  size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}}>
+      
+      <ScrollView style={[styles.main,
+          isSmallScreen && { },
+         isMediumScreen && { },
+         isLargeScreen && { paddingHorizontal:'33%' },
+         isXLargeScreen && {paddingHorizontal:'33%'},
+      ]}>
+       {/**
+         <View>
           <TouchableOpacity style={styles.backButton} onPress={() => router.replace('admin/dashboard')}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             <Text style={styles.backButtonText}>Volver</Text>
           </TouchableOpacity>
         </View>
+       */
+
+      }
         <View style={styles.formContainer}>
           <Text style={styles.title}>Crear Usuario</Text>
           <View style={styles.inputGroup}>
@@ -199,7 +255,7 @@ const userCreate: React.FC = () => {
                       </View>
                     </View>
                     <View style={{ flex: 2 }}>
-                      <Text style={[styles.selectedCodeText, selectedCode === "" && styles.placeholderText]}>
+                      <Text style={[styles.selectedCodeText, selectedCode === "" && styles.placeholderText,{paddingTop:7}]}>
                         {selectedCode === "" ? "(000)" : `(${selectedCode})`}
                       </Text>
                     </View>
@@ -295,7 +351,7 @@ const userCreate: React.FC = () => {
   )
 
   }
-    </LinearGradient>
+    </GradientLayout>
   );
 };
 

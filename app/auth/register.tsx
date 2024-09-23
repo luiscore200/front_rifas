@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput,TouchableOpacity, ScrollView, KeyboardAvoidingView,Platform } from 'react-native';
+import { StyleSheet, Text, View, TextInput,TouchableOpacity, ScrollView, KeyboardAvoidingView,Platform, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import {  phoneCodeIndex, register } from '../../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,17 +12,18 @@ import { validateForm,registerValidationRules } from '../../config/Validators';
 import { getStorageItemAsync } from '../../services/storage';
 
 import ToastModal from '../../components/toastModal';
+import Database from '../../services/sqlite';
 
 
 
 export default function Register() {
-  const {login}=useAuth();
+  const {login,codigos,setCodigos}=useAuth();
   interface Errors {email?: string;password?: string; name?:string,selectedCode?:string, phone?:string, domain?:string}
   const [config,setConfig]=useState<any>(null);
   const [phoneCode, setPhoneCode] = useState<code[]>([]);
   const [selectedCode, setSelectedCode] = useState<string>("");
   const [name, setName] = useState<string>("");
-  const [domain, setDomain] = useState<string>("");
+  const [domain, setDomain] = useState<string>(Date.now().toString() + generateRandomString(15));
   const [phone, setPhone] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [country, setCountry] = useState<string>("");
@@ -35,6 +36,33 @@ export default function Register() {
   const [toast,setToast]=useState(false);
   const [responseIndexMessage,setResponseIndexMessage]=useState<string | null>(null);
   const [indexToast,setIndexToast]=useState(false);
+  const db = new Database();
+  const { width, height } = useWindowDimensions();
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
+  useEffect(() => {
+    setIsSmallScreen(width < 360);
+    setIsMediumScreen(width >= 360 && width < 768);
+    setIsLargeScreen(width >= 768 && width < 1024);
+    setIsXLargeScreen(width >= 1024);
+  }, [width]);
+
+
+  function generateRandomString(length:number) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; // Define el conjunto de letras
+    let result = '';
+    const charactersLength = characters.length;
+    
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    
+    return result;
+}
+
+
 
   const handleConfig = async ()=>{
     
@@ -66,34 +94,70 @@ export default function Register() {
 ////////// validacion de array de codigos 
   const isCode = (item: any): item is code => {return item && typeof item.code === 'string' && typeof item.name === 'string';};
   
+  
+  
   const handleCodePhone = async () => {
-   try{
-    const data = await phoneCodeIndex();
-   // console.log(data);
-    if(data.error){
-      setResponseIndexMessage(data.error);
-      setIndexToast(true);
-       }
-    
-    if (Array.isArray(data) && data.every(isCode)) {
-      setPhoneCode(data);
-    } else {
-      console.log('Los datos no son del tipo esperado: Code[]');
-    }
-   }catch(e:any){
-    console.log(e);
-    setResponseIndexMessage(e.message);
-    setIndexToast(true);
+   if(codigos.length===0){
+      if(Platform.OS==='web'){
+
+          try{
+              const data = await phoneCodeIndex();
+             // console.log(data);
+              if(data.error){
+                setResponseIndexMessage(data.error);
+                 setIndexToast(true);
+                 }
+              
+              if (Array.isArray(data) && data.every(isCode)) {
+        
+                console.log(data);
+                setPhoneCode(data);
+              } else {
+                console.log('Los datos no son del tipo esperado: Code[]');
+              }
+             }catch(e:any){
+              console.log(e);
+              setResponseIndexMessage("error al obtener datos, verifica tu conexion");
+              setIndexToast(true);
+             }
+      }
+      if(Platform.OS==='android'||Platform.OS==='ios'){
+          try{
+              const data = await phoneCodeIndex();
+             // console.log(data);
+              if(data.error){
+                setResponseMessage(data.error);
+                setIndexToast(true);
+                 }
+              
+              if (Array.isArray(data) && data.every(isCode)) {
+        
+                console.log(data);
+                setPhoneCode(data);
+                setCodigos(data);
+                await db.insert('codigos',data);
+              } else {
+                console.log('Los datos no son del tipo esperado: Code[]');
+              }
+             }catch(e:any){
+              console.log(e);
+              setResponseIndexMessage("error al obtener datos, verifica tu conexion");
+              setIndexToast(true);
+             }
+
+      }
+   }else{
+      setPhoneCode(codigos);
+
    }
   };
-  /////////
   
 
   const handleRegister = async () => {
  //   showToast("aaaa","short");
   
-    setTouchedFields({ name: true, domain: true, phone: true, selectedCode: true, email: true, password: true });
-    const formErrors = validateForm({ name, domain, email, selectedCode, phone, password }, { name: true, domain: true, phone: true, selectedCode: true, email: true, password: true }, registerValidationRules);
+    setTouchedFields({ name: true, domain: false, phone: true, selectedCode: true, email: true, password: true });
+    const formErrors = validateForm({ name, domain, email, selectedCode, phone, password }, { name: true, domain: false, phone: true, selectedCode: true, email: true, password: true }, registerValidationRules);
     setErrors(formErrors);
 
     if (Object.keys(formErrors).length === 0) {
@@ -109,13 +173,23 @@ export default function Register() {
   try{
         
     const response = await register(userData);
-  
-    setResponseMessage(response.mensaje || response.error);
-    setHasError(!!response.error);
-    setToast(!toast);
-    const a=  await login(response);
 
-    if(response.user.role==="user"){ router.replace('user/rifa/dashboard');}
+    if(response.mensaje){
+      setResponseMessage(response.mensaje );
+      setHasError(false);
+      setToast(!toast);
+      const a=  await login(response);
+    //  router.replace('loading');
+    }
+    if(response.error){
+
+      setResponseMessage(response.mensaje || response.error);
+      setHasError(!!response.error);
+      setToast(!toast);
+    }
+  
+ 
+ 
     
   }catch(e:any){
     setResponseMessage(e.message);
@@ -170,7 +244,12 @@ export default function Register() {
           <Text style={styles.logoDescription}>App de rifas digitales</Text>
         </View>
         <KeyboardAvoidingView
-          style={styles.formContainer}
+          style={[styles.formContainer,
+            isSmallScreen && {width:'90%'},
+            isMediumScreen && { width:'90%'},
+            isLargeScreen && { width:'40%' },
+            isXLargeScreen && {width:'30%'},
+          ]}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
         >
@@ -188,7 +267,9 @@ export default function Register() {
                   />
                   {touchedFields.name && errors.name && <Text style={{ color: 'red' }}>{errors.name}</Text>}
                 </View>
-                <View style={styles.inputContainer}>
+              {
+                /**
+                   <View style={styles.inputContainer}>
                   <Text style={styles.label}>Dominio</Text>
                   <TextInput
                     style={styles.input}
@@ -199,6 +280,8 @@ export default function Register() {
                   />
                   {touchedFields.domain && errors.domain && <Text style={{ color: 'red' }}>{errors.domain}</Text>}
                 </View>
+                 */
+              }
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Correo</Text>
                   <TextInput
@@ -226,8 +309,8 @@ export default function Register() {
                         </Picker>
                       </View>
                     </View>
-                    <View style={{ flex: 2 }}>
-                      <Text style={[styles.selectedCodeText, selectedCode === "" && styles.placeholderText]}>
+                    <View style={{ flex: 2,justifyContent:'center' }}>
+                      <Text style={[styles.selectedCodeText, selectedCode === "" && styles.placeholderText,{paddingTop:7}]}>
                         {selectedCode === "" ? "(000)" : `(${selectedCode})`}
                       </Text>
                     </View>
@@ -322,6 +405,7 @@ const styles = StyleSheet.create({
   innerContainer: {
     width: '90%',
     flex: 1,
+    alignItems:'center',
   },
   logoContainer: {
     alignItems: 'center',

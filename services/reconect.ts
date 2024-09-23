@@ -1,4 +1,5 @@
-  import { createComprador, deleteSeparated, forcedAssign, rifaCreate, rifaDelete, rifaUpdate } from './api';
+  import { Platform } from 'react-native';
+import { createComprador, deleteSeparated, forcedAssign, rifaCreate, rifaDelete, rifaUpdate } from './api';
   import Database from './sqlite';
 
 
@@ -146,13 +147,15 @@
       
 
       export const process=async()=> {
-          try {
-                await updateRifas();
-              await AddCompradores();
-          await UpdateAsignaciones();
-          } catch (error) {
-              console.error('Error in process:', error);
-          }
+       if(Platform.OS==='android'|| Platform.OS==='ios'){
+        try {
+          await updateRifas();
+        await AddCompradores();
+    await UpdateAsignaciones();
+    } catch (error) {
+        console.error('Error in process:', error);
+    }
+       }
       }
         
 

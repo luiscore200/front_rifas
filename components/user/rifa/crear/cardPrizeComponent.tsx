@@ -4,6 +4,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { premio } from '../../../../config/Interfaces';
 import { Delete2Icon, StarIcon } from '../../../../assets/icons/userIcons';
 import { createPremioValidationRules, validateForm } from '../../../../config/Validators';
+import CustomDatePicker from './datePicker';
+
+
 
 interface CardPrizeComponentProps {
   obj: premio;
@@ -48,6 +51,7 @@ const CardPrizeComponent: React.FC<CardPrizeComponentProps> = ({ obj, first, tou
   };
 
   const onChange = (event: any, selectedDate?: Date) => {
+   if(Platform.OS==='android' || Platform.OS==='ios'){
     if (event.type === 'set' && selectedDate) {
       setShow(Platform.OS === 'ios');
       
@@ -57,6 +61,11 @@ const CardPrizeComponent: React.FC<CardPrizeComponentProps> = ({ obj, first, tou
     } else {
       setShow(false);
     }
+   }
+   if(Platform.OS==='web'){
+
+    onUpdate("fecha",selectedDate?.toLocaleDateString());
+   }
   };
 
 
@@ -101,34 +110,35 @@ const CardPrizeComponent: React.FC<CardPrizeComponentProps> = ({ obj, first, tou
       <View style={styles.fieldContainer}>
         <Text style={styles.label}>Fecha</Text>
         <View style={styles.inputRow}>
-        {show && (
-               <DateTimePicker
-              
-               mode="date"
-               display="spinner"
-               value={date}
-               onChange={onChange}
-               style={styles.pick}
-               minimumDate={new Date()}
-         
-              
-             />
-        
-        ) }
-       
-         
-             <Pressable onPress={togglePick}>
-             <TextInput
-             style={styles.inputWithIcon}
-             placeholder="06/03/2024"
-             placeholderTextColor={'#ccc'}
-             editable={false}
-             value={obj.fecha}
-             onBlur={()=>handleUpdateField("fecha",obj.fecha)}
-         
-             //onChangeText={handleDateChange}
-           /></Pressable>
-            
+          {Platform.OS !== 'web' ? (
+            <>
+              {show && (
+                <DateTimePicker
+                  mode="date"
+                  display="spinner"
+                  value={date}
+                  onChange={onChange}
+                  style={styles.pick}
+                  minimumDate={new Date()}
+                />
+              )}
+              <Pressable onPress={togglePick}>
+                <TextInput
+                  style={styles.inputWithIcon}
+                  placeholder="06/03/2024"
+                  placeholderTextColor="#ccc"
+                  editable={false}
+                  value={obj.fecha}
+                  onBlur={() => handleUpdateField("fecha", obj.fecha)}
+                />
+              </Pressable>
+            </>
+          ) : (
+            <CustomDatePicker
+            selectedDate={date}
+            onChange={(e:any)=>onChange('',e)}
+          />
+          )}
        {first && (   <View style={styles.starButton}>
           <StarIcon style={styles.starIcon}/>
           </View>)

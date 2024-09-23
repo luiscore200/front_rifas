@@ -15,6 +15,7 @@ export const AuthContextProvider =  ({children}) => {
     const [subContext,setSubContext]=useState(null);
     const [notificacionesContext,setNotificacionesContext]=useState([]);
     const [mySubContext,setMySubContext]=useState(null);
+    const [codigos,setCodigos]=useState([]);
     
 
     useEffect(()=>{
@@ -99,7 +100,8 @@ export const AuthContextProvider =  ({children}) => {
 
 
     return(
-        <AuthContext.Provider value={{user,token,online,auth,configContext,subContext,notificacionesContext,mySubContext,check,setMySubContext, login,logout,setOnline,setConfigContext,setSubContext,setNotificacionesContext}} >
+        <AuthContext.Provider value={{user,token,online,auth,configContext,subContext,notificacionesContext,mySubContext,codigos,
+        setCodigos,check,setMySubContext, login,logout,setOnline,setConfigContext,setSubContext,setNotificacionesContext}} >
             {children}
         </AuthContext.Provider>
     )

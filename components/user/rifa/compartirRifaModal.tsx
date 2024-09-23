@@ -13,11 +13,12 @@ interface Comprador {
 interface CompartirModalProps {
   visible: boolean;
   compradores: Comprador[];
+  width?:any;
   onClose: () => void;
   onShared: (obj: number[]) => void;
 }
 
-const CompartirModal: FC<CompartirModalProps> = ({ visible, compradores, onShared, onClose }) => {
+const CompartirModal: FC<CompartirModalProps> = ({ visible, compradores,width, onShared, onClose }) => {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [filter, setFilter] = useState<Comprador[]>(compradores);
   const [text, setText] = useState<string>("");
@@ -73,7 +74,7 @@ const CompartirModal: FC<CompartirModalProps> = ({ visible, compradores, onShare
 
   return (
     <View style={styles.modalOverlay}>
-      <View style={styles.modalContent}>
+      <View style={[styles.modalContent,{width}]}>
         <TouchableOpacity activeOpacity={1} style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}

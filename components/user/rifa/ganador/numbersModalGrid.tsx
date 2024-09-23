@@ -4,15 +4,14 @@ import { NextIcon, PrevIcon } from '../../../../assets/icons/userIcons';
 
 interface NumberGridModalProps {
   visible: boolean;
-  touchable: boolean;
+
   totalNumbers: number;
-  maxHeight: any;
-  cuadricula: number;
+ 
   onSelectNumber: (number: number) => void;
   onClose: () => void;
 }
 
-const NumberGridModal: FC<NumberGridModalProps> = ({ visible, cuadricula, touchable, totalNumbers, maxHeight, onSelectNumber, onClose }) => {
+const NumberGridModal: FC<NumberGridModalProps> = ({ visible,   totalNumbers,  onSelectNumber, onClose }) => {
   if (!visible) return null;
 
 
@@ -21,6 +20,9 @@ const NumberGridModal: FC<NumberGridModalProps> = ({ visible, cuadricula, toucha
   const totalPages = Math.ceil(totalNumbers / itemsPerPage);
   const [list,setList]=useState(false);
   const [lista,setLista]=useState<any[]>([]);
+  const maxHeight=600;
+  const cuadricula = 5;
+
 
 
   const verifyTouch = ()=>{
@@ -53,7 +55,7 @@ const NumberGridModal: FC<NumberGridModalProps> = ({ visible, cuadricula, toucha
     <TouchableOpacity
       key={number}
       style={styles.cell}
-      onPress={() => touchable && select(number)}
+      onPress={() => select(number)}
     >
       <Text style={styles.cellText}>{number}</Text>
     </TouchableOpacity>
@@ -149,6 +151,7 @@ const NumberGridModal: FC<NumberGridModalProps> = ({ visible, cuadricula, toucha
 
 
   const renderGrid = () => {
+    const cols = totalNumbers>=1000? 4:2;
     const startNumber = (currentPage - 1) * itemsPerPage + 1;
     const maxNumber= startNumber + itemsPerPage -1;
     console.log(startNumber +" "+maxNumber);
@@ -156,7 +159,7 @@ const NumberGridModal: FC<NumberGridModalProps> = ({ visible, cuadricula, toucha
     let number = startNumber;
     while (number <= maxNumber) {
       const row = [];
-      for (let i = 0; i < 4 && number <= maxNumber; i++) {
+      for (let i = 0; i < cols && number <= maxNumber; i++) {
         row.push(renderMatrix(number));
         number += cuadricula * cuadricula;
       }

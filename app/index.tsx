@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Switch, ScrollView
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useRouter } from 'expo-router';
 import GradientLayout from './layout';
-import { generalConfig } from '../services/api';
+import { generalConfig, phoneCodeIndex } from '../services/api';
 import { getStorageItemAsync, setStorageItemAsync } from '../services/storage';
 import { useAuth } from '../services/authContext2';
 import Database from '../services/sqlite';
@@ -17,7 +17,7 @@ import Database from '../services/sqlite';
 
 const home = ()=>{
   const db = new Database();
-  const {user,check,auth,setSubContext,setConfigContext,setMySubContext}=useAuth();
+  const {user,check,auth,setSubContext,setConfigContext,setMySubContext,codigos,setCodigos}=useAuth();
 
   const [loading,setLoading]=useState(true);
 
@@ -29,10 +29,12 @@ const home = ()=>{
   const handleConfig = async()=>{
    try {
     const response = await generalConfig();
+    const data = await phoneCodeIndex();
+    
     if(!!response.mensaje){
       await setStorageItemAsync('general_config', JSON.stringify(response.config));
       await setStorageItemAsync('subscriptions', JSON.stringify(response.subscriptions));
-
+      console.log('suscripciones',response.subscription);
       setSubContext(response.subscriptions);
       
       setConfigContext(response.config);
@@ -45,8 +47,12 @@ const home = ()=>{
        }
       }
 
+      if (Array.isArray(data)) {
+        setCodigos(data);
+      }
+
      
-      if (Platform.OS !== 'web') {
+      if (Platform.OS ==='android'||Platform.OS==='ios') {
 
     await db.deleteDataTable('general_config');
     const config = new Array(1).fill(response.config);
@@ -56,6 +62,19 @@ const home = ()=>{
 
     await db.deleteDataTable('subscriptions');
     await db.insert('subscriptions',response.subscriptions);
+
+    const localcode= await db.index('codigos');
+    if(localcode.left===0){
+      
+      if (Array.isArray(data)) {
+        await db.insert('codigos',data);
+        setCodigos(data);
+
+      }
+
+    }else{
+      setCodigos(localcode);
+    }
  
 
 
@@ -77,8 +96,17 @@ const home = ()=>{
     }else{
       const aa = await getStorageItemAsync('subscriptions');
       if(aa!==null && aa) setSubContext(JSON.parse(aa));
+
+      if(auth){
+        if(Array.isArray(aa)){
+         const ee=  aa.find((obj:any) => obj.sub_id === user.id_subscription);
+         setMySubContext(ee);
+        }
+      }
+
+
       const bb = await getStorageItemAsync('general_config');
-      if(bb!==null && bb) setSubContext(JSON.parse(bb));
+      if(bb!==null && bb) setConfigContext(JSON.parse(bb));
     }
 
     
@@ -127,6 +155,14 @@ await db.reset();
       { name: 'description', type: 'TEXT', nullable: true },
       { name: 'type', type: 'TEXT', nullable: true }
     ]);
+
+    await db.createTable('codigos', [
+      { name: 'id', type: 'INTEGER', nullable: false, options:'PRIMARY KEY AUTOINCREMENT'},
+      { name: 'code', type: 'TEXT', nullable: true },
+      { name: 'name', type: 'TEXT', nullable: true },
+   
+    ]);
+   
    
     await db.createTable('rifas', [
       { name: 'id', type: 'INTEGER', nullable: false, options:"PRIMARY KEY" },

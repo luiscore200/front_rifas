@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from 'react';
-import { indexSeparated,deleteSeparated,confirmSeparated } from "../../../../services/api";
+import { indexSeparated,deleteSeparated,confirmSeparated, getAllAssignament } from "../../../../services/api";
 import RifaGrid from "../../../../components/user/rifa/rifaGrid";
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput,ScrollView, Platform } from 'react-native';
 import { rifa } from "../../../../config/Interfaces";
@@ -11,6 +11,7 @@ import Delete from "../../../../components/ConfirmModal";
 import { useAuth } from "../../../../services/authContext2";
 import GradientLayout from "../../../layout";
 import Database from "../../../../services/sqlite";
+import InfoAssignamentModal from "../../../../components/user/rifa/infoCard";
 
 
 
@@ -39,8 +40,17 @@ export default function Assign() {
   const [selected,setSelected]=useState<any>();
   const [confirm,setConfirm]=useState(false);
   const [loading,setLoading]=useState<boolean>(true);
+  const [separadas,setSeparadas]=useState(true);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
+
+
+  const [open,setOpen]=useState(false);
   const array = [1,1,1];
   const db = new Database();
+ 
  
 
   const [confirmModal,setConfirmModal]=useState(false);
@@ -53,7 +63,8 @@ export default function Assign() {
     setLoading(true);
    
     try{
-      const response = await indexSeparated(id);
+    //  const response = await indexSeparated(id);
+   const response = await getAllAssignament(id);
       if(!!response.error){
         setResponseMessage(response.error);
         setHasError(true);
@@ -66,6 +77,7 @@ export default function Assign() {
           setResponseMessage("Ha ocurrido un error");
           setModal(true);
         }else{
+          console.log(response);
           
           if(Platform.OS!=='web'){
                  
@@ -74,7 +86,7 @@ export default function Assign() {
             [{tableName:'compradores',alias:'purchaser',foreignKey:'id_purchaser'},{tableName:'rifas',alias:'rifa',foreignKey:'id_raffle'}],
             ['id','number','status','local'],
             [{alias:'purchaser',fields:['id','phone','name','email','deleted']},{alias:'rifa',fields:['deleted']}],
-            `id_raffle = ${id} AND asignaciones.deleted = 0 AND status = 'separado' AND rifa.deleted = 0 AND purchaser.deleted = 0 AND asignaciones.local = 1`
+            `id_raffle = ${id} AND asignaciones.deleted = 0  AND rifa.deleted = 0 AND purchaser.deleted = 0 AND asignaciones.local = 1`
           );
 
           const total = aa.concat(response);
@@ -107,7 +119,7 @@ export default function Assign() {
             [{tableName:'compradores',alias:'purchaser',foreignKey:'id_purchaser'},{tableName:'rifas',alias:'rifa',foreignKey:'id_raffle'}],
             ['id','number','status','local'],
             [{alias:'purchaser',fields:['id','phone','name','email','deleted']},{alias:'rifa',fields:['deleted']}],
-            `id_raffle = ${id} AND asignaciones.deleted = 0 AND status = 'separado' AND rifa.deleted = 0 AND purchaser.deleted = 0`
+            `id_raffle = ${id} AND asignaciones.deleted = 0 AND rifa.deleted = 0 AND purchaser.deleted = 0`
           );
 
           if(Array.isArray(aa)){
@@ -131,10 +143,19 @@ export default function Assign() {
   }
 
   function OpenConfirm(obj:any,tipo:boolean){
-    tipo===true?setConfirm(true):setConfirm(false);
+   // console.log('funciona');
+   setConfirm(tipo);
     setSelected(obj)
     setConfirmModal(true);
   }
+
+  function openUserModal (asignacion:any){
+      setSelected(asignacion);
+      setOpen(true);
+  }
+
+
+
 
   async function HandleConfirm(){
       try{
@@ -186,15 +207,87 @@ export default function Assign() {
   
       }
   }
+  async function HandleConfirm2(id_asignacion:number){
+    try{
+   if(id_asignacion>=0){
+     
+    const response = await confirmSeparated(id_asignacion);
+ if(response.mensaje){
+  setResponseMessage(response.mensaje);
+  setModal(true);
+  const a = separated.map((obj:any) =>{
+    if(obj.id===id_asignacion){
+        obj.status='pagado';
+        return obj;
+    }else{
+        return obj;
+    }
+
+
+  });
+  setSeparated(a);
+  setSeparated2(a);
+  
+  
+ }else{
+  setResponseMessage(response.error);
+  setModal(true);
+ }
+   }else{
+
+     await db.update('asignaciones',{status:'pagado'},[{id:id_asignacion},""]);
+    const aa = separated.filter(obj => obj.id!==id_asignacion);
+    setSeparated(aa);
+    setSeparated2(aa);
+    console.log('index asignaciones', await db.index('asignaciones'))
+   }
+
+    }catch(e:any){
+
+      if(Platform.OS!=='web'){
+    
+        if(id_asignacion<0){
+          await db.update('asignaciones',{status:'pagado'},[{id:id_asignacion},""]);
+        }else{
+          if(id_asignacion>0){
+          await db.update('asignaciones',{status:'pagado',local:1},[{id:id_asignacion},""]);
+          }
+      }
+        const a = separated.filter(obj => obj.id !== id_asignacion);
+        setSeparated(a);
+        setSeparated2(a);
+        console.log('index asignaciones', await db.index('asignaciones'))
+        setResponseMessage('verifica tu conexion, datos guardados localmente');
+      }else{
+        setResponseMessage('Ha ocurrido un error, verifica tu conexion');
+      }
+      
+      setModal(true);
+
+    }
+}
 
   async function HandleDelete(){
     try{
       if(!selected.local){
         const response = await deleteSeparated(selected.id);
-        setResponseMessage(response.mensaje||response.error);
-        setHasError(!!response.error);
-        setModal(true)
-        handleAsignaciones();
+        if(response.mensaje){
+          setResponseMessage(response.mensaje);
+          setHasError(false);
+          setModal(true)
+          const aa = separated.filter((obj:any) => obj.id!==selected.id);
+          setSeparated(aa);
+          setSeparated2(aa);
+    
+                    
+      }else{
+          setResponseMessage(response.error);
+          setHasError(!!response.error);
+          setModal(true)
+          handleAsignaciones();       
+
+      }
+
       } else{
 
         await db.deleteDataTable('asignaciones',{id:selected.id});
@@ -233,10 +326,74 @@ export default function Assign() {
     
   }
 
+  async function HandleDelete2(id_asignacion:number){
+    try{
+      if(id_asignacion>=0){
+        const response = await deleteSeparated(id_asignacion);
+        if(response.mensaje){
+          setResponseMessage(response.mensaje);
+          setHasError(false);
+          setModal(true)
+          const aa = separated.filter((obj:any) => obj.id!==id_asignacion);
+          setSeparated(aa);
+          setSeparated2(aa);
+    
+                    
+      }else{
+          setResponseMessage(response.error);
+          setHasError(!!response.error);
+          setModal(true)
+          handleAsignaciones();       
+
+      }
+
+      } else{
+
+        await db.deleteDataTable('asignaciones',{id:id_asignacion});
+          //   handleAsignaciones();
+        const aa = separated.filter(obj => obj.id!==id_asignacion);
+        setSeparated(aa);
+        setSeparated2(aa);
+      }
+     
+    //  console.log(response);
+    }catch(e:any){
+       if(Platform.OS!=='web'){
+        if(id_asignacion<0){
+          await db.deleteDataTable('asignaciones',{id:id_asignacion})
+        }else{
+          if(selected.id>0){
+            await db.update('asignaciones',{local:1,deleted:1},[{id:id_asignacion},""]);
+
+            console.log('index asignaciones', await db.index('asignaciones'))
+          }
+          
+        const a = separated.filter(obj => obj.id !== id_asignacion);
+        setSeparated(a);
+        setSeparated2(a);
+        }
+        console.log('index asignaciones', await db.index('asignaciones'))
+        setResponseMessage('verifica tu conexion, datos borrados localmente');
+        
+       }else{
+        setResponseMessage('Ha ocurrido un error, verifica tu conexion');
+       }
+
+      
+        setModal(true);
+    }
+    
+  }
+
+
 
   function find(value:string) {
     setBuscar(value);
     const filtroLowerCase = value.toLowerCase();
+
+    const newArray = separated.filter((obj)=>{
+       obj.status === separadas?'separado':'pagado';
+    })
 
     const filteredArray = separated.filter(obj => {
         const emailLowerCase = obj.purchaser_email.toLowerCase();
@@ -253,9 +410,14 @@ export default function Assign() {
  
 
   return (
-<GradientLayout  navigationItems={navigationItems} hasDrawer={true} >
-  <ScrollView style={styles.main}>
-        <View style={styles.searchContainer}>
+<GradientLayout  navigationItems={navigationItems} hasDrawer={true}  size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}}>
+  <View style={styles.main}>
+        <View  style={[styles.searchContainer,
+             isSmallScreen && {width:'90%' },
+             isMediumScreen && {width:'90%' },
+             isLargeScreen && { width:'60%' },
+             isXLargeScreen && {width:'60%'},
+        ]}>
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar..."
@@ -265,9 +427,43 @@ export default function Assign() {
 
           /> 
         </View>
-        <View style={styles.cardContainer}>
-            {!loading && separated2.length>0 && (
-               separated2.map((obj,index)=>(
+        <View style={[{flexDirection:'row',alignItems:'center',alignContent:'center',marginBottom:20, justifyContent:'center',},
+         isSmallScreen && {width:'95%' },
+         isMediumScreen && {width:'95%' },
+         isLargeScreen && { width:'60%' },
+         isXLargeScreen && {width:'60%'},
+        ]}>
+             
+        <TouchableOpacity
+        style={[{  borderTopLeftRadius: 15,
+          borderBottomLeftRadius: 15, },separadas?styles.buttonPressed:styles.button]}activeOpacity={separadas?1:1}   onPress={()=>{!separadas?setSeparadas(true):undefined}}
+      >
+        <Text style={{ textAlign: 'center', color: '#fff' }}>Separados</Text>
+      </TouchableOpacity>
+
+      {/* Botón elevado */}
+      <TouchableOpacity
+           
+        style={[{borderTopRightRadius: 15,
+          borderBottomRightRadius: 15,},!separadas?styles.buttonPressed:styles.button]}  activeOpacity={!separadas?1:1}  onPress={()=>{separadas?setSeparadas(false):undefined}}
+      >
+        <Text style={{ textAlign: 'center', color:'#fff'  }}>Pagados</Text>
+      </TouchableOpacity>
+
+              
+        </View>
+        <ScrollView 
+           showsVerticalScrollIndicator={false} 
+        style={[styles.cardContainer,  
+          isSmallScreen && {width:'95%' },
+          isMediumScreen && {width:'95%'},
+          isLargeScreen && { width:'60%',  padding:20 },
+          isXLargeScreen && {width:'60%',  padding:40},]}>
+
+            {!loading && separated2.length>0 && separadas  && (
+               separated2.filter((obj)=>
+                obj.status === 'separado'
+             ).map((obj,index)=>(
              <TouchableOpacity key={index} onPress={()=>undefined} activeOpacity={1}>
                 <SeparatedCard
                 key={index}
@@ -275,6 +471,23 @@ export default function Assign() {
                 info={obj}
                 onCancel={(info)=>OpenConfirm(info,false)}
                 onConfirm={(info)=> OpenConfirm(info,true)}
+                
+                /></TouchableOpacity>
+              ))
+            )
+           }
+               {!loading && separated2.length>0 && !separadas && (
+                 separated2.filter((obj)=>
+                  obj.status === 'pagado'
+               ).map((obj,index)=>(
+             <TouchableOpacity key={index} onPress={()=>undefined} activeOpacity={1}>
+                <SeparatedCard
+                key={index}
+                prueba={false}
+                info={obj}
+                onCancel={(info)=>OpenConfirm(info,false)}
+               
+                onConfirm={(info)=>{openUserModal(info)}}
                 /></TouchableOpacity>
               ))
             )
@@ -288,6 +501,7 @@ export default function Assign() {
                 info={obj}
                 onCancel={(info)=>undefined}
                 onConfirm={(info)=> undefined}
+               
                 /></TouchableOpacity>
               ))
 
@@ -297,10 +511,18 @@ export default function Assign() {
           { !loading && separated2.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado asignaciones . . .</Text></View>
             )
-           }                     
+           }
+               { !loading &&  separadas && separated2.filter(obj=>obj.status==='separado').length===0 && (
+               <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado asignaciones . . .</Text></View>
+            )
+           }  
+                 { !loading &&  !separadas && separated2.filter(obj=>obj.status==='pagado').length===0 && (
+               <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado asignaciones . . .</Text></View>
+            )
+           }  
           
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       {(
           <ToastModal
@@ -316,11 +538,25 @@ export default function Assign() {
           mode={confirm===true?"confirm":'delete'}
           message={confirm===true?"Porfavor confirma la asignacion.":"¿Estas seguro de querer cancelar esta asignacion?"}
           visible={confirmModal}
-          onCancel={()=>setConfirmModal(false)}
+          onCancel={()=>{setConfirmModal(false);setSelected(null)}}
           onConfirm={confirm===true?HandleConfirm:HandleDelete}
-          onClose={()=>setConfirmModal(false)}
+          onClose={()=>{setConfirmModal(false);setSelected(null)}}
+          width={400}
           />
               )}
+         {open && (
+            <InfoAssignamentModal
+            visible={open}
+            asignacion={selected}
+            asignaciones={separated}
+            onCancel={()=>{setSelected(null); setOpen(false)}}
+            onClose={()=>{setSelected(null); setOpen(false)}}
+            onDelete={(asignacion)=>{ setSelected(asignacion);  console.log('se quiere borrar la asignacion',asignacion.id);HandleDelete2(asignacion.id)}}
+            onConfirm={(asignacion)=>{ setSelected(asignacion); console.log('se quiere confirmar la asignacion',asignacion.id);HandleConfirm2(asignacion.id)}}
+            />
+        )
+
+        }
       
     </GradientLayout>
   );
@@ -368,6 +604,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#FFFFFF',
+     alignItems:'center'
   },
   searchContainer: {
     flexDirection: 'row',
@@ -397,4 +634,34 @@ const styles = StyleSheet.create({
   cardContainer: {
     marginBottom: 16,
   },
+  buttonPressed:{
+    backgroundColor: '#94a3b8',
+  
+    justifyContent: 'center',
+    width: '45%',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+   
+   
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 1,
+    elevation: -5,
+  },
+  button:{
+    
+      backgroundColor: '#cbd5e1',
+      
+      justifyContent: 'center',
+      width: '45%',
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 0.4,
+      shadowRadius: 4,
+      elevation: 5,
+    
+  }
 });

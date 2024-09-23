@@ -47,6 +47,10 @@ const MainLayout = () => {
         
       }
     } else {
+      if (currentRoute === 'loading') {
+        // Permitir que se quede en la pantalla de carga
+        router.replace('auth/login');
+      }
    
     
       if (!isInPublicRoutes) {

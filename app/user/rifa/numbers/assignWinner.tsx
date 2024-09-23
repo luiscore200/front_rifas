@@ -161,13 +161,7 @@ export default function Assign() {
                  />
             )))
            }
-           {/*
-               <PremioCard  
-            
-               premio={{"id":1,"descripcion":"Primer Premio","loteria":"SINUANO NOCHE","ganador":"","fecha":"2024-05-31"}}
-               onTouch={()=>selectedPremio(0)}
-                />
-         */  }
+         
            { premios.length===0 && (
                <View  style={{marginHorizontal:10,alignItems:"center",marginTop:20}}><Text>. . . No se han encontrado premios . . .</Text></View>
             )

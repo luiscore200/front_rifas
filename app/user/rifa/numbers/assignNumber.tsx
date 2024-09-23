@@ -32,6 +32,10 @@ export default function Assign() {
   const [hasError,setHasError]=useState(false);
   const [touchedOut,setTouchedOut]=useState<boolean>(false);
   const db = new Database();
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
 
   useEffect(() => { handleAsignaciones() }, [id]);
   useEffect(() => { setRifa2(JSON.parse(rifa)) }, [rifa]);
@@ -100,10 +104,16 @@ export default function Assign() {
   };
 
   return (
-    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} touchOut={touchedOut} touchedOut={()=>{setTouchedOut(false)}} >
+    <GradientLayout  navigationItems={navigationItems} hasDrawer={true} touchOut={touchedOut}  size={(a,b,c,d)=>{setIsSmallScreen(a);setIsMediumScreen(b);setIsLargeScreen(c);setIsXLargeScreen(d)}} 
+    touchedOut={()=>{setTouchedOut(false)}} >
 
     
-      <View style={styles.gridContainer}>
+      <View style={[styles.gridContainer,
+           isSmallScreen && { width:'100%' },
+           isMediumScreen && { width:'100%' },
+           isLargeScreen && { paddingHorizontal:'20%' },
+           isXLargeScreen && {paddingHorizontal:'30%'},
+      ]}>
         
           <Text style={{ fontWeight: 'bold', fontSize: 16, margin: 20 }}>Escoja sus números</Text>
           <RifaGrid
@@ -114,6 +124,7 @@ export default function Assign() {
             price={rifa2 != undefined ? rifa2?.precio : 0}
             premios={premios}
             touched={()=>setTouchedOut(true)}
+            scroll={(isXLargeScreen||isLargeScreen)?false:true}
           
           />
        

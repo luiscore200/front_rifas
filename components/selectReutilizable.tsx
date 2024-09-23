@@ -1,43 +1,81 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
 
-interface ConfirmationModalProps {
+interface FormReutilizableModalProps {
   visible: boolean;
-  mode: 'confirm' | 'delete';
+   
   message: string;
-  onConfirm: () => void;
+  //onConfirm: () => void;
   onCancel: () => void;
   onClose: () => void;
-  width?:any;
+  onOne?:()=>void;
+  onTwo?:()=>void;
+  onTree?:()=>void;
+  onFour?:()=>void;
+  onFive?:()=>void;
+  onSix?:()=>void;
+  inputs:any[];
+  
+
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ visible, mode, message,width, onConfirm, onCancel, onClose }) => {
-
-  const handleConfirm = () => {
-    onConfirm();
-    onClose();
-  };
+const FormReutilizableModal: React.FC<FormReutilizableModalProps> = ({ visible,inputs, message, onOne,onTwo,onTree,onFour,onFive,onSix, onCancel, onClose }) => {
 
   const handleCancel = () => {
     onCancel();
     onClose();
   };
 
+  const touched = (index:number)=>{
+    console.log('imdexx',index);
+        if(index===0 && onOne){
+            onOne();
+           
+        }
+        if(index===1 && onTwo){
+            onTwo();
+         
+        }
+        if(index===2 && onTree){
+            onTree();
+           
+        }
+        if(index===3 && onFour){
+            onFour();
+           
+        }
+        if(index===4 && onFive){
+            onFive();
+           
+        }
+        if(index===5 && onSix){
+            onSix();
+          
+        }
+        
+  }
+
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
        <TouchableWithoutFeedback onPress={onClose}>
       <View style={styles.modalOverlay}>
        
-        <View style={[styles.modalContainer,{width}]}>
+        <View style={styles.modalContainer}>
         <TouchableWithoutFeedback>
           <View style={styles.modalContent}>
             <Text style={styles.message}>{message}</Text>
             <View style={styles.buttonGroup}>
-              <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
-                <Text style={{color:"#a1a1aa",fontWeight:'bold'}}>Cancelar</Text>
+          
+              {inputs.map((obj,index)=>(
+                <TouchableOpacity  key={index} style={[styles.button,{backgroundColor:obj.color}]} onPress={()=>{touched(index)}}>
+                <Text style={styles.buttonText}>{obj.obj}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, mode === 'delete' ? styles.deleteButton : styles.confirmButton]} onPress={handleConfirm}>
-                <Text style={styles.buttonText}>{mode === 'delete' ? 'Eliminar' : 'Confirmar'}</Text>
+              ))
+              
+
+              }
+                <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
+                <Text style={{color:"#a1a1aa",fontWeight:'bold'}}>Cancelar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -58,7 +96,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
-    width: '90%',
+    width: '80%',
+    maxWidth:400,    
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
@@ -81,7 +120,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   buttonGroup: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
     width: '100%',
   },
@@ -93,6 +132,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    marginVertical:5,
   },
   confirmButton: {
     backgroundColor: '#34D399',
@@ -112,4 +152,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ConfirmationModal;
+export default FormReutilizableModal;

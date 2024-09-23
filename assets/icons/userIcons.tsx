@@ -266,6 +266,29 @@ export const CrossMarkIcon = (props:any)=> (
 </Svg>
 );
 
+
+export const EyeIcon = (props: any) => (
+  <Svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <Path d="M1 12C2.5 7.5 6.5 4.5 12 4.5s9.5 3 11 7.5c-1.5 4.5-5.5 7.5-11 7.5S2.5 16.5 1 12z" 
+    fill='currentColor'/>
+    <Circle cx="12" cy="12" r="7.5"  fill={props.bgc?props.bgc:'#fff'}/>
+    <Circle cx="12" cy="12" r="3.5"  fill='currentColor'/>
+    <Circle cx="14" cy="9" r="1.5" stroke={props.bgc?props.bgc:'#fff'}  fill={props.bgc?props.bgc:'#fff'}/>
+  </Svg>
+);
+
 export const QuestionMarkIcon = (props: any) => (
   <Svg
   {...props}
@@ -352,6 +375,26 @@ export const PrevIcon = (props: any) => (
   >
     <Path 
       d="M15 18l-6-6 6-6" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+    />
+  </Svg>
+);
+export const BackIcon = (props: any) => (
+  <Svg 
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+  >
+    <Path 
+      d="M19 12H5M12 19l-7-7 7-7" 
       fill="none" 
       stroke="currentColor" 
       strokeWidth="1.5" 

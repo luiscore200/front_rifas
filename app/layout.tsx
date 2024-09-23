@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { MenuIcon2, NotificationBellIcon } from '../assets/icons/userIcons';
 import Database from '../services/sqlite';
 
@@ -20,9 +20,10 @@ interface GradientLayoutProps {
   Touched?:()=> void;
   touchOut?:boolean;
   touchedOut?:()=>void;
+  size?:(a:boolean,b:boolean,c:boolean,d:boolean)=>void;
 }
 
-const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems,hasNotifications=true,touchOut, hasDrawer = false,Touched,touchedOut }) => {
+const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItems,hasNotifications=true,touchOut, hasDrawer = false,Touched,touchedOut,size }) => {
 
   const {online,setOnline,notificacionesContext,setNotificacionesContext}=useAuth();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -30,6 +31,24 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
   const [menu,setMenu]=useState(false);
   const [notificaciones,setNotificaciones]=useState<any>([]);
   const db = new Database();
+  const { width, height } = useWindowDimensions();
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isXLargeScreen, setIsXLargeScreen] = useState(false);
+
+  useEffect(() => {
+    setIsSmallScreen(width < 360);
+    setIsMediumScreen(width >= 360 && width < 768);
+    setIsLargeScreen(width >= 768 && width < 1024);
+    setIsXLargeScreen(width >= 1024);
+  }, [width]);
+
+  useEffect(()=>{
+    if(size){
+      size(isSmallScreen,isMediumScreen,isLargeScreen,isXLargeScreen);
+    }
+  },[isSmallScreen,isMediumScreen,isLargeScreen,isXLargeScreen])
 
   useEffect(()=>{if(touchOut===true){closeAll2()}},[touchOut]);
 
@@ -145,6 +164,49 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
 
 
 
+  const DropDown = (props:any) => {
+   
+  
+    
+  
+    return (
+      <View style={{
+        padding: 10,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        position: 'absolute',
+        top: '7%',
+        right: '1%',
+        zIndex: 2,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5
+      }}>
+    
+        <View style={{ marginVertical: 0 }}>
+          
+        {navigationItems.map((obj:any,index:number)=>{
+    
+    return(
+            <TouchableOpacity key={index} style={{marginRight:5,marginVertical:2}} onPress={obj.status ===1?obj.action:undefined}>
+              <Text style={{color:obj.status===1?'black':'#cbd5e1',fontSize:15}}>{obj.label}</Text>
+            </TouchableOpacity>
+          )
+        })
+
+        }
+        </View>
+      </View>
+    );
+  }
+
+
+
+
   const Notificaciones = (props:any) => {
     const sistema = props.items.filter((obj:any) => obj.type === 'sistema');
     const suscripcion = props.items.filter((obj:any) => obj.type === 'suscripcion');
@@ -221,26 +283,72 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
       end={{ x: 1, y: 0 }}
       style={styles.container}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, 
+      isSmallScreen && { marginTop: '8%',   height: 64,},
+      isMediumScreen && { marginTop: '8%',  height: 64,},
+      isLargeScreen && {  height: 80, },
+      isXLargeScreen && {   height: 80,},
+
+      ]}>
      
-      {hasDrawer && (
+      {hasDrawer && (isSmallScreen || isMediumScreen) && (
           <TouchableOpacity onPress={toggleDrawer} style={styles.menuButtonContainer}>
             <MenuIcon2 style={styles.menuIcon} />
           </TouchableOpacity>
         )}
     <View>   
-       {hasNotifications && (
+       {hasNotifications &&  (isSmallScreen || isMediumScreen)  && (
           <TouchableOpacity style={[styles.menuButtonContainer,{marginHorizontal:15}]} onPress={()=>toggleMenu()}>
-          <NotificationBellIcon number={notificaciones?notificaciones.length:0} style={{color:'white'}} />
+          <NotificationBellIcon number={notificaciones?notificaciones.length:0} style={{color:'white'}}   />
        </TouchableOpacity>
         )}
 
-       
       </View>
+
+      { (isLargeScreen||isXLargeScreen) && (
+
+<View style={{flexDirection:'row',justifyContent:'space-between',width:'100%',alignItems:'center'}}>
+<TouchableOpacity  onPress={()=>router.navigate('loading')} activeOpacity={1} >
+  <Text style={{color:'white',fontSize:25}}>MegaWIN</Text>
+  <Text  style={{color:'white',fontSize:10}}>app de rifas digitales</Text>
+</TouchableOpacity>
+
+{//isLargeScreen && (
+ // <TouchableOpacity onPress={toggleDrawer} style={[styles.menuButtonContainer,{height:40,width:40}]}>
+ // <MenuIcon2 style={styles.menuIcon} />
+ //</TouchableOpacity>
+//)
+
+}
+
+{ (
+    <View style={{alignItems:'center',flexDirection:'row'}}>
+      {navigationItems.map((obj:any,index:number)=>{
+        return(
+        <TouchableOpacity style={{marginRight:20}} key={index}  onPress={obj.status===1?obj.action:undefined}>
+            <Text style={{color:obj.status===1?'white':'#d1d5db',fontSize:15}}>{obj.label}</Text>
+        </TouchableOpacity>
+        )
+      })
+
+      }
+
+    </View>
+    
+)
+
+}
+
+
+
+</View>
+
+)}
+
       
       </View>
 
-      {hasDrawer && (
+      {hasDrawer&& (isSmallScreen||isMediumScreen) && (
         <Animated.View style={[styles.drawer, { transform: [{ translateX: drawerTranslateX }] }]} pointerEvents={'box-none'}>
           <View style={styles.drawer} pointerEvents='box-none'>
             <LinearGradient
@@ -271,9 +379,15 @@ const GradientLayout:React.FC<GradientLayoutProps> = ({ children, navigationItem
  {menu && (
           <Notificaciones  items={notificaciones? notificaciones:[]}/>
         )}
+
+  { //isDrawerOpen && (isLargeScreen) && (
+    //<DropDown></DropDown>
+ // )
+  }
       {children}
     </LinearGradient>
     </TouchableWithoutFeedback>
+ 
   );
 };
 
@@ -282,10 +396,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    marginTop: '8%',
+   
     flexDirection: 'row',
     alignItems: 'center',
-    height: 64,
+  
     justifyContent:'space-between',
     paddingHorizontal: 16,
     backgroundColor: 'transparent',
